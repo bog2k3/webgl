@@ -61,6 +61,10 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	// await ShaderProgramManager.loadProgram(ShaderWater);
 
 	await loadTextures();
+
+	vp1 = new Viewport(0, 0, 1280, 720);
+	vp1.camera().moveTo(new Vector(0, 20, -1));
+	vp1.camera().lookAt(new Vector(0, 0, 1));
 }
 
 function step(): void {
@@ -115,7 +119,6 @@ function initInput(canvas: HTMLCanvasElement) {
 }
 
 function initializeWorld(): void {
-	vp1 = new Viewport(0, 0, 1280, 720);
 	world = new World();
 	const m = Mesh.makeBox(new Vector(), new Vector(0.4, 0.4, 0.4));
 	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(-0.5, +0.5))));

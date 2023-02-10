@@ -26,43 +26,17 @@ export class TextureLoader {
 		const srcFormat = gl.RGBA;
 		const srcType = gl.UNSIGNED_BYTE;
 		const pixels = new Uint8Array([255, 0, 255, 255]); // opaque magenta until the image is loaded
-		gl.texImage2D(
-			gl.TEXTURE_2D,
-			level,
-			internalFormat,
-			width,
-			height,
-			border,
-			srcFormat,
-			srcType,
-			pixels
-		);
+		gl.texImage2D( gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixels);
+
 		return new Promise(resolve => {
 			const image = new Image();
 			image.onload = () => {
 				gl.bindTexture(gl.TEXTURE_2D, texture);
 				if (linearizeValues) {
 					const imageData: Uint8ClampedArray = TextureLoader.getLinearizedImageData(image);
-					gl.texImage2D(
-						gl.TEXTURE_2D,
-						level,
-						internalFormat,
-						srcFormat,
-						srcType,
-						0,
-						internalFormat,
-						srcType,
-						imageData
-					);
+					gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, image.naturalWidth, image.naturalHeight, 0, srcFormat, srcType, imageData);
 				} else {
-					gl.texImage2D(
-						gl.TEXTURE_2D,
-						level,
-						internalFormat,
-						srcFormat,
-						srcType,
-						image
-					);
+					gl.texImage2D( gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
 				}
 
 
@@ -108,10 +82,9 @@ export class TextureLoader {
 		}
 		TextureLoader.canvas.width = image.width;
 		TextureLoader.canvas.height = image.height;
-		const canvasContext = TextureLoader.canvas.getContext("2d");
-		canvasContext.clearRect(0, 0, image.width, image.height);
-		canvasContext.drawImage(image, 0, 0);
-		const data: Uint8ClampedArray = canvasContext.getImageData(0, 0, image.width, image.height).data;
+		TextureLoader.canvasContext.clearRect(0, 0, image.width, image.height);
+		TextureLoader.canvasContext.drawImage(image, 0, 0);
+		const data: Uint8ClampedArray = TextureLoader.canvasContext.getImageData(0, 0, image.width, image.height).data;
 		const gamma = 2.2;
 		for (let i=0; i<data.length; i++) {
 			if (i % 4 === 3) {
@@ -124,6 +97,7 @@ export class TextureLoader {
 
 	private static createCanvas(): void {
 		TextureLoader.canvas = document.createElement("canvas");
+		TextureLoader.canvasContext = TextureLoader.canvas.getContext("2d", { willReadFrequently: true });
 	}
 
 	private static isPowerOf2(value: number): boolean {
@@ -131,4 +105,5 @@ export class TextureLoader {
 	}
 
 	private static canvas: HTMLCanvasElement;
+	private static canvasContext: CanvasRenderingContext2D;
 };
