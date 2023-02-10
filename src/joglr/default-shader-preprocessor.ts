@@ -12,7 +12,18 @@ function isWhiteSpace(c: string): boolean {
 function nextNewLine(code: string, start: number): number {
 	const retPos = code.indexOf("\r", start);
 	const lnPos = code.indexOf("\n", start);
-	return Math.min(retPos, lnPos);
+	if (retPos === -1) {
+		if (lnPos === -1) {
+			// no more new lines
+			return code.length;
+		} else {
+			return lnPos;
+		}
+	} else if (lnPos === -1) {
+		return retPos;
+	} else {
+		return Math.min(retPos, lnPos);
+	}
 }
 
 export async function defaultShaderPreprocessor(code: string, originalPath: string): Promise<string> {
