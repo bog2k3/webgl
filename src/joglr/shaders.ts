@@ -167,6 +167,21 @@ export namespace Shaders {
 		}
 	}
 
+	export async function loadShaderFile(path: string): Promise<string> {
+		let shaderCode: string = await (await fetch(path)).text()
+			.catch(err => {
+				console.error(`Failed to load shader ${path}: `, err);
+				return "";
+			});
+		if (shaderPreprocessor_) {
+			shaderCode = await shaderPreprocessor_(shaderCode, path);
+			if (!shaderCode) {
+				console.error(`Failed to preprocess shader ${path}`);
+			}
+		}
+		return shaderCode;
+	}
+
 	// --------------------- PRIVATE AREA ------------------------ //
 
 	class ShaderDesc {
@@ -193,21 +208,6 @@ export namespace Shaders {
 			case Type.Fragment: return gl.FRAGMENT_SHADER;
 			default: throw new Error(`Invalid WebGL shader type ${type}`);
 		}
-	}
-
-	async function loadShaderFile(path: string): Promise<string> {
-		let shaderCode: string = await (await fetch(path)).text()
-			.catch(err => {
-				console.error(`Failed to load shader ${path}: `, err);
-				return "";
-			});
-		if (shaderPreprocessor_) {
-			shaderCode = await shaderPreprocessor_(shaderCode, path);
-			if (!shaderCode) {
-				console.error(`Failed to preprocess shader ${path}`);
-			}
-		}
-		return shaderCode;
 	}
 
 	function linkProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram | null {

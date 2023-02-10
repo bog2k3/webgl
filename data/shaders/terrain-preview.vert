@@ -1,30 +1,34 @@
-#version 330 core
+#version 100
 
 #include common.glsl
 
-in vec3 pos;
-in vec3 normal;
-in vec4 color;
-in vec4 uv1;
-in vec4 uv2;
-in vec2 uv3;
-in vec4 texBlendFactor;
+attribute vec3 pos;
+attribute vec3 normal;
+attribute vec4 color;
+attribute vec2 uv1;
+attribute vec2 uv2;
+attribute vec2 uv3;
+attribute vec2 uv4;
+attribute vec2 uv5;
+attribute vec4 texBlendFactor;
 
-out FragData {
-	vec3 wPos;
-	vec3 normal;
-	vec3 color;
-	vec2 uv[5];
-	vec4 texBlendFactor;
-} vertexOut;
+varying vec3 fWPos;
+varying vec3 fNormal;
+varying vec3 fColor;
+varying vec2 fUV[5];
+varying vec4 fTexBlendFactor;
 
 void main() {
 	gl_Position = matPV * vec4(pos, 1);
-	gl_ClipDistance[0] = 1;
+	// gl_ClipDistance[0] = 1;
 
-	vertexOut.wPos = pos;
-	vertexOut.normal = normal;
-	vertexOut.color = color.xyz;
-	vertexOut.uv = vec2[5](uv1.xy, uv1.zw, uv2.xy, uv2.zw, uv3.xy);
-	vertexOut.texBlendFactor = texBlendFactor;
+	fWPos = pos;
+	fNormal = normal;
+	fColor = color.xyz;
+	fUV[0] = uv1;
+	fUV[1] = uv2;
+	fUV[2] = uv3;
+	fUV[3] = uv4;
+	fUV[4] = uv5;
+	fTexBlendFactor = texBlendFactor;
 }

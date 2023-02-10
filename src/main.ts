@@ -14,6 +14,8 @@ import { StaticMesh } from "./world/entities/static-mesh.entity";
 import { Matrix } from "./joglr/math/matrix";
 import { DEBUG_ENTRY } from "./test";
 import { ShaderTerrain } from "./render/programs/shader-terrain";
+import { Shaders } from "./joglr/shaders";
+import { defaultShaderPreprocessor } from "./joglr/default-shader-preprocessor";
 
 const MOVE_SPEED = 0.5; // m/s
 
@@ -52,6 +54,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	Mesh.ENABLE_COLOR_DEBUG = true;
 	await MeshRenderer.initialize();
 
+	Shaders.useShaderPreprocessor(defaultShaderPreprocessor);
 	await ShaderProgramManager.loadProgram(ShaderTerrainPreview);
 	// await ShaderProgramManager.loadProgram(ShaderTerrain);
 	// await ShaderProgramManager.loadProgram(ShaderWater);

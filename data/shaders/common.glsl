@@ -5,7 +5,7 @@
 
 const float Zn = 0.15;
 const float Zf = 1000.0;
-const float fov = PI/2.5; // vertical field of view
+const float fov = PI / 2.5; // vertical field of view
 const float waterLevel = 0;
 const float lightIntensity = 2.0;
 vec3 lightColor = normalize(vec3(1.0, 0.95, 0.9));
