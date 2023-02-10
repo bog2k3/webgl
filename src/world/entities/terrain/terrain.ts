@@ -1,4 +1,4 @@
-import { Water } from './water';
+import { Water, WaterParams } from './water';
 import { TerrainConfig } from './../config';
 import { IRenderable } from '../../renderable';
 import { Entity } from './../../entity';
@@ -8,6 +8,8 @@ import { IGLResource } from '../../../joglr/glresource';
 import { gl } from '../../../joglr/glcontext';
 import { AbstractVertex } from '../../../joglr/abstract-vertex';
 import { ShaderTerrain } from './terrain-shader';
+import { rand, randSeed } from "../../../joglr/utils/random";
+import { Triangle, triangulate } from "./triangulation";
 
 type Progress = {completed: number; total: number};
 
@@ -66,8 +68,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.clear();
 		this.config_ = config;
 
-		const nextSeed = new_RID();
-		randSeed(config_.seed);
+		const nextSeed = rand();
+		randSeed(config.seed);
 
 		this.rows_ = Math.ceil(config.length * config.vertexDensity) + 1;
 		this.cols_ = Math.ceil(config.width * config.vertexDensity) + 1;
@@ -76,93 +78,101 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 		// we need to generate some 'skirt' vertices that will encompass the entire terrain in a circle,
 		// in order to extend the sea-bed away from the main terrain
-		// float terrainRadius = sqrtf(config_.width * config_.width + config_.length * config_.length) * 0.5f;
-		// float seaBedRadius = terrainRadius * 2.5f;
-		// float skirtVertSpacing = 30.f; // meters
-		// unsigned nSkirtVerts = (2 * PI * seaBedRadius) / skirtVertSpacing;
-		// float skirtVertSector = 2 * PI / nSkirtVerts; // sector size between two skirt vertices
-		// nVertices_ = rows_ * cols_ + nSkirtVerts;
-		// pVertices_ = (TerrainVertex*)malloc(sizeof(TerrainVertex) * nVertices_);
+		const terrainRadius = Math.sqrt(config.width * config.width + config.length * config.length) * 0.5;
+		const seaBedRadius = terrainRadius * 2.5;
+		const skirtVertSpacing = 30; // meters
+		const nSkirtVerts = Math.floor((2 * Math.PI * seaBedRadius) / skirtVertSpacing);
+		const skirtVertSector = 2 * Math.PI / nSkirtVerts; // sector size between two skirt vertices
+		this.nVertices_ = this.rows_ * this.cols_ + nSkirtVerts;
+		this.vertices_ = new Array(this.nVertices_);
 
-		// glm::vec3 bottomLeft {-config_.width * 0.5f, 0.f, -settings.length * 0.5f};
-		// float dx = config_.width / (cols_ - 1);
-		// float dz = config_.length / (rows_ - 1);
-		// gridSpacing_ = {dx, dz};
-		// // compute terrain vertices
-		// for (unsigned i=0; i<rows_; i++)
-		// 	for (unsigned j=0; j<cols_; j++) {
-		// 		glm::vec2 jitter { randf() * config_.relativeRandomJitter * dx, randf() * config_.relativeRandomJitter * dz };
-		// 		new(&pVertices_[i*cols_ + j]) TerrainVertex {
-		// 			bottomLeft + glm::vec3(dx * j + jitter.x, config_.minElevation, dz * i + jitter.y),	// position
-		// 			{0.f, 1.f, 0.f},																	// normal
-		// 			{1.f, 1.f, 1.f},																	// color
-		// 			{{0.f, 0.f}, {0.f, 0.f}, {0.f, 0.f}, {0.f, 0.f}, {0.f, 0.f}},						// uvs
-		// 			{0.f, 0.f, 0.f, 0.f}																// tex blend factor
-		// 		};
-		// 		// compute UVs
-		// 		for (unsigned t=0; t<TerrainVertex::nTextures; t++) {
-		// 			pVertices_[i*cols_ + j].uv[t].x = (pVertices_[i*cols_ + j].pos.x - bottomLeft.x) / renderData_->textures_[t].wWidth;
-		// 			pVertices_[i*cols_ + j].uv[t].y = (pVertices_[i*cols_ + j].pos.z - bottomLeft.z) / renderData_->textures_[t].wHeight;
-		// 		}
-		// 	}
+		const bottomLeft = new Vector(-config.width * 0.5, 0.0, -config.length * 0.5);
+		const dx = config.width / (this.cols_ - 1);
+		const dz = config.length / (this.rows_ - 1);
+		this.gridSpacing_ = new Vector(dx, 0, dz);
+		// compute terrain vertices
+		for (let i=0; i<this.rows_; i++) {
+			for (let j=0; j<this.cols_; j++) {
+				const jitter = new Vector(Math.random() * config.relativeRandomJitter * dx, Math.random() * config.relativeRandomJitter * dz );
+				this.vertices_[i*this.cols_ + j] = <TerrainVertex>{
+					pos: bottomLeft.add(new Vector(dx * j + jitter.x, config.minElevation, dz * i + jitter.y)),	// position
+					normal: new Vector(0.0, 1.0, 0.0),											// normal
+					color: new Vector(1.0, 1.0, 1.0),											// color
+					uv: [																		// uvs
+						new Vector(0.0, 0.0), new Vector(0.0, 0.0),
+						new Vector(0.0, 0.0), new Vector(0.0, 0.0), new Vector(0.0, 0.0)
+					],
+					texBlendFactor: new Vector(0.0, 0.0, 0.0, 0.0)								// tex blend factor
+				};
+				// compute UVs
+				for (let t=0; t<TerrainVertex.nTextures; t++) {
+					this.vertices_[i*this.cols_ + j].uv[t].x = (this.vertices_[i*this.cols_ + j].pos.x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
+					this.vertices_[i*this.cols_ + j].uv[t].y = (this.vertices_[i*this.cols_ + j].pos.z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+				}
+			}
+		}
 		// // compute skirt vertices
-		// for (unsigned i=0; i<nSkirtVerts; i++) {
-		// 	float x = seaBedRadius * cosf(i*skirtVertSector);
-		// 	float z = seaBedRadius * sinf(i*skirtVertSector);
-		// 	new(&pVertices_[rows_*cols_+i]) TerrainVertex {
-		// 		{ x, -30, z },													// position
-		// 		{ 0.f, 1.f, 0.f },												// normal
-		// 		{ 1.f, 1.f, 1.f },												// color
-		// 		{ {0.f, 0.f}, {0.f, 0.f}, {0.f, 0.f}, {0.f, 0.f}, {0.f, 0.f} },	// uvs
-		// 		{ 0.f, 0.f, 0.f, 1.f }											// tex blend factor
-		// 	};
-		// 	// compute UVs
-		// 	for (unsigned t=0; t<TerrainVertex::nTextures; t++) {
-		// 		pVertices_[rows_*cols_ + i].uv[t].x = (x - bottomLeft.x) / renderData_->textures_[t].wWidth;
-		// 		pVertices_[rows_*cols_ + i].uv[t].y = (z - bottomLeft.z) / renderData_->textures_[t].wHeight;
-		// 	}
-		// }
+		for (let i=0; i<nSkirtVerts; i++) {
+			const x = seaBedRadius * Math.cos(i*skirtVertSector);
+			const z = seaBedRadius * Math.sin(i*skirtVertSector);
+			this.vertices_[this.rows_*this.cols_+i] = <TerrainVertex>{
+				pos: new Vector(x, -30, z),										// position
+				normal: new Vector(0.0, 1.0, 0.0),								// normal
+				color: new Vector(1.0, 1.0, 1.0),								// color
+				uv: [															// uvs
+					new Vector(0.0, 0.0), new Vector(0.0, 0.0),
+					new Vector(0.0, 0.0), new Vector(0.0, 0.0), new Vector(0.0, 0.0)
+				],
+				texBlendFactor: new Vector(0.0, 0.0, 0.0, 1.0)					// tex blend factor
+			};
+			// compute UVs
+			for (let t=0; t<TerrainVertex.nTextures; t++) {
+				this.vertices_[this.rows_*this.cols_ + i].uv[t].x = (x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
+				this.vertices_[this.rows_*this.cols_ + i].uv[t].y = (z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+			}
+		}
 
-		// console.log("Triangulating . . .");
-		// int trRes = triangulate(pVertices_, nVertices_, triangles_);
-		// if (trRes < 0) {
-		// 	ERROR("Failed to triangulate terrain mesh!");
-		// 	randSeed(nextSeed);
-		// 	return;
-		// }
-		// fixTriangleWinding();	// after triangulation some triangles are ccw, we need to fix them
+		console.log("Triangulating . . .");
+		this.triangles_ = triangulate(this.vertices_, (v: TerrainVertex, n: number) => {
+			return n == 0 ? v.pos.x :
+				   n == 1 ? v.pos.z :
+				   0;
+		});
+		// TODO this might not be necessary any more
+		this.fixTriangleWinding();	// after triangulation some triangles are ccw, we need to fix them
 
-		// console.log("Computing displacements . . .");
-		// computeDisplacements(config_.seed);
-		// console.log("Computing normals . . .");
-		// computeNormals();
-		// console.log("Computing texture weights . . .");
-		// computeTextureWeights();
+		console.log("Computing displacements . . .");
+		this.computeDisplacements(config.seed);
+		console.log("Computing normals . . .");
+		this.computeNormals();
+		console.log("Computing texture weights . . .");
+		this.computeTextureWeights();
 
-		// console.log("Creating Binary Space Partitioning tree . . .")
-		// std::vector<unsigned> triIndices;
-		// triIndices.reserve(triangles_.size());
-		// for (unsigned i=0; i<triangles_.size(); i++)
-		// 	triIndices.push_back(i);
-		// BSPConfig bspConfig;
-		// bspConfig.maxDepth = glm::ivec3{ 100, 1, 100 };
-		// bspConfig.minCellSize = glm::vec3{ 2.f, 1000.f, 2.f };
+		console.log("Creating Binary Space Partitioning tree . . .")
+		const triIndices: number[] = new Array(this.triangles_.length);
+		for (let i=0; i<this.triangles_.length; i++) {
+			triIndices.push(i);
+		}
+		// const bspConfig = new BSPConfig();
+		// bspConfig.maxDepth = new Vector(100, 1, 100 );
+		// bspConfig.minCellSize = new Vector(2.0, 1000.0, 2.0);
 		// bspConfig.minObjects = 5;
-		// bspConfig.targetVolume = AABB({-config_.width*0.5f, config_.minElevation - 10.f, -config_.length * 0.5f},
-		// 							{+config_.width*0.5f, config_.maxElevation + 10.f, +config_.length * 0.5f});
+		// bspConfig.targetVolume = <AABB>({-config_.width*0.5f, config_.minElevation - 10.0, -config_.length * 0.5f},
+		// 							{+config_.width*0.5f, config_.maxElevation + 10.0, +config_.length * 0.5f});
 		// bspConfig.dynamic = false;
-		// pBSP_ = new BSPTree<unsigned>(bspConfig, triangleAABBGenerator_, std::move(triIndices));
+		// this.pBSP_ = new BSPTree<unsigned>(bspConfig, triangleAABBGenerator_, std::move(triIndices));
 
-		// console.log("Generating water . . .");
-		// if (pWater_)
-		// 	pWater_->generate(WaterParams {
-		// 		terrainRadius,					// inner radius
-		// 		seaBedRadius - terrainRadius + 200,// outer extent
-		// 		max(0.05f, 2.f / terrainRadius),// vertex density
-		// 		false							// constrain to circle
-		// 	});
-		// console.log("Done generating.");
-		// randSeed(nextSeed);
+		console.log("Generating water . . .");
+		if (this.water_) {
+			this.water_.generate(<WaterParams>{
+				innerRadius: terrainRadius,					// inner radius
+				outerExtent: seaBedRadius - terrainRadius + 200,// outer extent
+				vertexDensity: Math.max(0.05, 2.0 / terrainRadius),// vertex density
+				constrainToCircle: false							// constrain to circle
+			});
+		}
+		console.log("Done generating.");
+		randSeed(nextSeed);
 	}
 
 	// Generate the render buffers and physics data structures
@@ -208,8 +218,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 // ------------- PRIVATE AREA --------------- //
 	private rows_ = 0;
 	private cols_ = 0;
-	private gridSpacing_ = [0, 0];
-	private pVertices_: TerrainVertex[] = null;
+	private gridSpacing_: Vector;
+	private vertices_: TerrainVertex[] = null;
 	private nVertices_ = 0;
 	private triangles_: Triangle[] = null;
 	private config_ = new TerrainConfig();
