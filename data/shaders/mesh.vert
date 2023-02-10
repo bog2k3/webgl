@@ -1,13 +1,13 @@
-#version 300 es
+precision highp float;
 
-in vec3 vPos;
-in vec3 vNormal;
-in vec4 vColor;
-in vec2 vUV1;
+attribute vec3 vPos;
+attribute vec3 vNormal;
+attribute vec4 vColor;
+attribute vec2 vUV1;
 
-out vec4 fColor;
-out vec2 fUV1;
-out vec3 fNormal;
+varying vec4 fColor;
+varying vec2 fUV1;
+varying vec3 fNormal;
 
 uniform mat4 mPVW;
 

@@ -29,7 +29,7 @@ export namespace Shaders {
 	export function createProgram(vertexShaderCode: string, fragmentShaderCode: string): WebGLProgram {
 		// Create the shaders
 		const vertexShader: WebGLShader = createAndCompileShader(vertexShaderCode, Type.Vertex);
-		const fragmentShader: WebGLShader = createAndCompileShader(vertexShaderCode, Type.Fragment);
+		const fragmentShader: WebGLShader = createAndCompileShader(fragmentShaderCode, Type.Fragment);
 		const prog: WebGLProgram = gl.createProgram();
 		gl.attachShader(prog, vertexShader);
 		gl.attachShader(prog, fragmentShader);
