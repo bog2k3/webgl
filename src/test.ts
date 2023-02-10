@@ -1,7 +1,7 @@
 import { Matrix } from "./joglr/math/matrix";
 import { Vector } from "./joglr/math/vector";
 import { Mesh } from "./joglr/mesh";
-import { rand } from "./joglr/utils/random";
+import { rand, randSeed } from "./joglr/utils/random";
 import { TerrainConfig } from "./world/entities/terrain/config";
 import { StaticMesh } from "./world/entities/static-mesh.entity";
 import { Terrain } from "./world/entities/terrain/terrain.entity";
@@ -26,4 +26,13 @@ export function DEBUG_ENTRY() {
 	World.getInstance().addEntity(new StaticMesh(m, Matrix.translate(new Vector(-0.5, -0.5))));
 
 	World.getInstance().addEntity(terrain);
+}
+
+export function testRand() {
+	for (let step = 0; step < 10; step++) {
+		const seed = new Date().getMilliseconds() * new Date().getMilliseconds();
+		randSeed(seed);
+		console.log("Seed ", seed);
+		for (let i = 0; i < 10; i++) console.log("    ", rand());
+	}
 }

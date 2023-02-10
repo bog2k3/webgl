@@ -1,14 +1,14 @@
-import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
-import { RenderData } from "./render/render-data";
-import { ShaderProgramManager } from "./render/shader-program-manager";
-import { Terrain } from "./world/entities/terrain/terrain.entity";
 import { initGL } from "./joglr/glcontext";
 import { Mesh } from "./joglr/mesh";
 import { MeshRenderer } from "./joglr/render/mesh-renderer";
-import { initRender, render } from "./render/render";
-import { DEBUG_ENTRY } from "./test";
-import { World, WorldConfig } from "./world/world";
 import { Shaders } from "./joglr/shaders";
+import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
+import { initRender, render } from "./render/render";
+import { RenderData } from "./render/render-data";
+import { ShaderProgramManager } from "./render/shader-program-manager";
+import { DEBUG_ENTRY } from "./test";
+import { Terrain } from "./world/entities/terrain/terrain.entity";
+import { World, WorldConfig } from "./world/world";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
