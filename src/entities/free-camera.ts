@@ -1,7 +1,7 @@
 import { buildMatrixFromOrientation, clamp } from "../joglr/math/functions";
 import { Matrix } from "../joglr/math/matrix";
 import { Quat } from "../joglr/math/quat";
-import { matrixToQuat } from "../joglr/math/quat-functions";
+import { matrixToQuat, quatRotation } from "../joglr/math/quat-functions";
 import { Vector } from "../joglr/math/vector";
 import { Entity } from "../joglr/world/entity";
 import { IUpdatable } from "../joglr/world/updateable";
@@ -11,7 +11,6 @@ import { Direction, IUserControllable } from "./user-controllable";
 export class FreeCamera extends Entity implements IUserControllable, IUpdatable {
 	constructor(position: Vector, direction: Vector) {
 		super();
-		// TODO implement
 		this.transform_.setPosition(position);
 		const up = new Vector(0, 1, 0);
 		const mRot: Matrix = buildMatrixFromOrientation(new Vector(0), direction, up);
@@ -42,8 +41,8 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 		// compute rotation alteration based on inputs
 		const deltaRot: Vector = this.frameRotateValues_;
 		// TODO implement
-		this.transform_.rotateWorld(new Quat(0, 1, 0, deltaRot.x));
-		this.transform_.rotateLocal(new Quat(1, 0, 0, deltaRot.y));
+		this.transform_.rotateWorld(quatRotation(new Vector(1, 0, 0), deltaRot.x));
+		this.transform_.rotateLocal(quatRotation(new Vector(0, 1, 0), deltaRot.y));
 		this.frameRotateValues_ = new Vector(0);
 	}
 

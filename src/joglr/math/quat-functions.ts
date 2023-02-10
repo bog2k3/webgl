@@ -2,6 +2,7 @@ import { Matrix } from "./matrix";
 import { Quat } from "./quat";
 import { Vector } from "./vector";
 
+/** Creates a rotation quaternion around an axis. The axis is normalized automatically. */
 export function quatRotation(axis: Vector, angle: number): Quat {
 	axis = axis.normalize();
 	const sina2 = Math.sin(angle / 2);
@@ -14,21 +15,21 @@ export function quatRotation(axis: Vector, angle: number): Quat {
 
 export function quatToMatrix(q: Quat): Matrix {
 	// https://automaticaddison.com/how-to-convert-a-quaternion-to-a-rotation-matrix/
-	const q0q0 = q.x * q.x;
-	const q0q1 = q.x * q.y;
-	const q0q2 = q.x * q.z;
-	const q0q3 = q.x * q.w;
-	const q1q1 = q.y * q.y;
-	const q1q2 = q.y * q.z;
-	const q1q3 = q.y * q.w;
-	const q2q2 = q.z * q.z;
-	const q2q3 = q.z * q.w;
-	const q3q3 = q.w * q.w;
+	const q0q0 = q.w * q.w;
+	const q0q1 = q.w * q.x;
+	const q0q2 = q.w * q.y;
+	const q0q3 = q.w * q.z;
+	const q1q1 = q.x * q.x;
+	const q1q2 = q.x * q.y;
+	const q1q3 = q.x * q.z;
+	const q2q2 = q.y * q.y;
+	const q2q3 = q.y * q.z;
+	const q3q3 = q.z * q.z;
 	// prettier-ignore
 	return new Matrix(
-		2 * (q0q0 + q1q1) -1,	2 * (q1q2 - q0q3),		2 * (q1q3 + q0q2), 		0, // TODO this matrix may be transposed
-		2 * (q1q2 + q0q3),		2 * (q0q0 + q2q2) - 1,	2 * (q2q3 - q0q1), 		0,
-		2 * (q1q3 - q0q2),		2 * (q2q3 + q0q1),		2 * (q0q0 + q3q3) - 1, 	0,
+		2 * (q0q0 + q1q1) -1,	2 * (q1q2 + q0q3),		2 * (q1q3 - q0q2), 		0,
+		2 * (q1q2 - q0q3),		2 * (q0q0 + q2q2) - 1,	2 * (q2q3 + q0q1), 		0,
+		2 * (q1q3 + q0q2),		2 * (q2q3 - q0q1),		2 * (q0q0 + q3q3) - 1, 	0,
 		0, 						0, 						0, 						1
 	);
 }

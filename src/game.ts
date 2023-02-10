@@ -11,6 +11,7 @@ import { World } from "./joglr/world/world";
 import { logprefix } from "./joglr/log";
 import { Mesh } from "./joglr/mesh";
 import { StaticMesh } from "./entities/static-mesh.entity";
+import { quatRotation } from "./joglr/math/quat-functions";
 
 const console = logprefix("Game");
 
@@ -41,7 +42,7 @@ export class Game {
 		// camera controller (this one moves the render camera to the position of the target entity)
 		this.cameraCtrl_ = new CameraController(null);
 		World.getInstance().addEntity(this.cameraCtrl_);
-		// this.cameraCtrl_.attachToEntity(this.freeCam_, new Vector(0, 0, 0));
+		this.cameraCtrl_.attachToEntity(this.freeCam_, new Vector(0, 0, 0));
 
 		// player_ = std::make_shared<PlayerEntity>(glm::vec3{0.f, config_.terrainConfig.maxElevation + 10, 0.f}, 0.f);
 		// World::getInstance().takeOwnershipOf(player_);
@@ -50,9 +51,10 @@ export class Game {
 		World.getInstance().addEntity(this.skyBox_);
 
 		// DEBUG---
-		const m: Mesh = Mesh.makeBox(new Vector(0, 0, 1), new Vector(0.5, 0.5, 0.5));
-		const sm = new StaticMesh(m);
-		World.getInstance().addEntity(sm);
+		// const m: Mesh = Mesh.makeBox(new Vector(0, 0, 1), new Vector(0.5, 0.5, 0.5));
+		// const sm = new StaticMesh(m);
+		// sm.getTransform().rotateWorld(quatRotation(new Vector(1, 0, 1), Math.PI / 4));
+		// World.getInstance().addEntity(sm);
 		//---DEBUG
 
 		console.log("Ready");
