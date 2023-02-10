@@ -1,5 +1,6 @@
 #version 100
 precision mediump float;
+precision mediump int;
 
 #include underwater.glsl
 #include terrain-texture.glsl
