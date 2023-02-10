@@ -2,6 +2,7 @@
 
 import { gl, setGl } from "./joglr/glcontext";
 import { renderViewport } from "./joglr/render";
+import { MeshRenderer } from "./joglr/render/mesh-renderer";
 import { SceneGraph } from "./joglr/scene-graph";
 import { Viewport } from "./joglr/viewport";
 
@@ -10,12 +11,13 @@ let lastTime = new Date();
 let vp1: Viewport;
 let scene: SceneGraph;
 
-export function main(): void {
-	initGraphics();
+async function main(): Promise<void> {
+	await initGraphics();
 	requestAnimationFrame(step);
 }
+document.onreadystatechange = main;
 
-function initGraphics(): void {
+async function initGraphics(): Promise<void> {
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	const contextOptions: WebGLContextAttributes = {
 		alpha: true,
@@ -26,6 +28,8 @@ function initGraphics(): void {
 
 	vp1 = new Viewport(0, 0, 1280, 720);
 	scene = new SceneGraph();
+
+	await MeshRenderer.initialize();
 }
 
 function step(): void {
@@ -50,3 +54,4 @@ function render() {
 function update(dt: number): void {
 	scene.update(dt);
 }
+

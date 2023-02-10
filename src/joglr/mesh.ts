@@ -2,21 +2,32 @@ import { AbstractVertex } from "./abstract-vertex";
 import { gl } from "./glcontext";
 import { IGLResource } from "./glresource";
 import { Vector } from "./math/vector";
-import { RenderContext } from "./render-context";
-import { IRenderable } from "./renderable";
 
-enum RenderModes {
+export enum MeshRenderModes {
 	Points = "points",
 	Lines = "lines",
-	Triangles = "triangles",
-	TrianglesWireframe = "trianglesWireframe"
+	Triangles = "triangles"
 };
 
-class MeshVertex extends AbstractVertex {
+export class MeshVertex extends AbstractVertex {
 	position: Vector; // 3
 	normal: Vector; // 3
 	UV1: Vector; // 2
 	color: Vector; // 4
+
+	static getSize(): number {
+		return 4 * (3 + 3 + 2 + 4);
+	}
+
+	static getOffset(field: keyof MeshVertex): number {
+		switch (field) {
+			case "position": return 0;
+			case "normal": return 3;
+			case "UV1": return 6;
+			case "color": return 8;
+			default: throw new Error(`Invalid field specified in MeshVertex.getOffset(): "${field}`);
+		}
+	}
 
 	constructor(data: Partial<MeshVertex>) {
 		super();
@@ -24,7 +35,7 @@ class MeshVertex extends AbstractVertex {
 	}
 
 	override getSize(): number {
-		return 4 * (3 + 3 + 2 + 4);
+		return MeshVertex.getSize();
 	}
 
 	override serialize(target: Float32Array, offset: number) {
@@ -38,8 +49,8 @@ class MeshVertex extends AbstractVertex {
 	}
 };
 
-export class Mesh implements IGLResource, IRenderable {
-	static RenderModes = RenderModes;
+export class Mesh implements IGLResource {
+	static RenderModes = MeshRenderModes;
 
 	constructor() {
 		this.VBO_ = gl.createBuffer();
@@ -50,10 +61,6 @@ export class Mesh implements IGLResource, IRenderable {
 		gl.deleteBuffer(this.VBO_);
 		gl.deleteBuffer(this.IBO_);
 		this.VBO_ = this.IBO_ = null;
-	}
-
-	render(context: RenderContext): void {
-		// TODO
 	}
 
 	static makeBox(center: Vector, size: Vector): Mesh {
@@ -279,7 +286,7 @@ export class Mesh implements IGLResource, IRenderable {
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-		m.mode_ = RenderModes.Triangles;
+		m.mode_ = MeshRenderModes.Triangles;
 		return m;
 	}
 
@@ -295,5 +302,5 @@ export class Mesh implements IGLResource, IRenderable {
 	VBO_: WebGLBuffer;
 	IBO_: WebGLBuffer;
 	indexCount_ = 0;
-	mode_: RenderModes = RenderModes.Triangles;
+	mode_: MeshRenderModes = MeshRenderModes.Triangles;
 }

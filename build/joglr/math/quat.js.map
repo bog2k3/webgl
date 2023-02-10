@@ -1,0 +1,1 @@
+{"version":3,"file":"quat.js","sourceRoot":"","sources":["../../../src/joglr/math/quat.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAE,MAAM,UAAU,CAAC;AAElC,MAAM,OAAO,IAAK,SAAQ,MAAM;IAC/B,YACC,CAAS,EACT,CAAS,EACT,CAAS,EACT,CAAS;QAET,KAAK,CAAC,CAAC,EAAE,CAAC,EAAE,CAAC,EAAE,CAAC,CAAC,CAAC;IACnB,CAAC;CACD"}

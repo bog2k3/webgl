@@ -1,0 +1,37 @@
+import { Matrix } from "./math/matrix";
+import { Quat } from "./math/quat";
+import { Vector } from "./math/vector";
+import { Viewport } from "./viewport";
+export declare class Camera {
+    constructor(vp: Viewport);
+    private viewport_;
+    private fov_;
+    private orthoZoomLevel;
+    private zNear_;
+    private zFar_;
+    private matView_;
+    private matProj_;
+    private matProjView_;
+    private position_;
+    private direction_;
+    private up_;
+    private orthoSize_;
+    matProjView(): Matrix;
+    position(): Vector;
+    direction(): Vector;
+    localX(): Vector;
+    localY(): Vector;
+    move(delta: Vector): void;
+    moveTo(where: Vector): void;
+    lookAt(where: Vector, up?: Vector): void;
+    orbit(center: Vector, rotation: Quat, lookTowardCenter?: boolean): void;
+    mirror(plane: Vector): void;
+    setZPlanes(zNear: number, zFar: number): void;
+    FOV(): number;
+    setFOV(fov: number): void;
+    setOrtho(width: number, height: number): void;
+    getOrthoRect(): Vector;
+    private updateView;
+    private updateProj;
+    private updateProjView;
+}

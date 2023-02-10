@@ -1,4 +1,4 @@
-import { buildProjectionMatrix } from "./math/functions";
+import { buildProjectionMatrix, buildViewMatrix } from "./math/functions";
 import { Matrix } from "./math/matrix";
 import { Quat } from "./math/quat";
 import { Vector } from "./math/vector";
@@ -17,10 +17,15 @@ export class Camera {
 	private zFar_: number = 100;
 	private matView_ = Matrix.identity();
 	private matProj_ = Matrix.identity();
+	private matProjView_ = Matrix.identity();
 	private position_ = new Vector(0, 0, -1);
 	private direction_ = new Vector(0, 0, 1);
 	private up_ = new Vector(0, 1, 0);
 	private orthoSize_: Vector; // in world units
+
+	matProjView(): Matrix {
+		return this.matProjView_;
+	}
 
 	// returns the camera position in world space
 	position(): Vector { return this.position_; }
@@ -112,7 +117,8 @@ export class Camera {
 	}
 
 	private updateView(): void {
-		throw new Error("not implemented");
+		this.matView_ = buildViewMatrix(this.position_, this.direction_, this.up_);
+		this.updateProjView();
 	}
 
 	private updateProj(): void {
@@ -125,5 +131,10 @@ export class Camera {
 			// TODO we should probably include viewport transform into the proj matrix as well
 			this.matProj_ = buildProjectionMatrix(this.fov_, this.viewport_.aspectRatio(), this.zNear_, this.zFar_);
 		}
+		this.updateProjView();
+	}
+
+	private updateProjView(): void {
+		this.matProjView_ = this.matProj_.mul(this.matView_);
 	}
 }
