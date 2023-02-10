@@ -22,9 +22,9 @@ export class MeshVertex extends AbstractVertex {
 	static getOffset(field: keyof MeshVertex): number {
 		switch (field) {
 			case "position": return 0;
-			case "normal": return 3;
-			case "UV1": return 6;
-			case "color": return 8;
+			case "normal": return 3 * 4;
+			case "UV1": return 6 * 4;
+			case "color": return 8 * 4;
 			default: throw new Error(`Invalid field specified in MeshVertex.getOffset(): "${field}`);
 		}
 	}

@@ -9,7 +9,7 @@ export class Viewport {
 		this.viewportArea_ = new Vector(x, y, w, h);
 		this.camera_ = new Camera(this);
 		this.updateVP2UMat();
-		this.camera_.moveTo(new Vector(0, 0, -1));
+		this.camera_.moveTo(new Vector(0, 0, -3));
 	}
 
 	bkColor(): Vector {
@@ -143,7 +143,6 @@ export class Viewport {
 	}
 
 	public prepareForRender() {
-		console.error("not implemented");
 		/*
 		// set up viewport:
 		assertDbg(RenderHelpers::pActiveViewport == nullptr && "Another viewport is already rendering");
@@ -163,7 +162,6 @@ export class Viewport {
 	}
 
 	public resetAfterRender() {
-		console.error("not implemented");
 		// RenderHelpers::pActiveViewport = nullptr;
 	}
 

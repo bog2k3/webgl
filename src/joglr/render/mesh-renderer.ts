@@ -11,6 +11,7 @@ export class MeshRenderer {
 	}
 
 	static initialize(): Promise<void> {
+		console.log("Initializing MeshRenderer...");
 		MeshRenderer.instance_ = new MeshRenderer();
 		return MeshRenderer.instance_.initialize();
 	}
@@ -78,5 +79,8 @@ export class MeshRenderer {
 		this.indexColor_ = gl.getAttribLocation(this.meshShaderProgram_, "vColor");
 		this.indexMatPVW_ = gl.getUniformLocation(this.meshShaderProgram_, "mPVW");
 		checkGLError("getAttribs");
+		if (!this.meshShaderProgram_) {
+			throw new Error("Failed to load mesh shader program");
+		}
 	}
 };

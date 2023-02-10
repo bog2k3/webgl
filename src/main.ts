@@ -11,11 +11,11 @@ let lastTime = new Date();
 let vp1: Viewport;
 let scene: SceneGraph;
 
+window.onload = main;
 async function main(): Promise<void> {
 	await initGraphics();
 	requestAnimationFrame(step);
 }
-document.onreadystatechange = main;
 
 async function initGraphics(): Promise<void> {
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -39,7 +39,7 @@ function step(): void {
 	lastTime = now;
 	update(dt);
 	// schedule next frame
-	requestAnimationFrame(step);
+	// requestAnimationFrame(step);
 }
 
 function render() {
