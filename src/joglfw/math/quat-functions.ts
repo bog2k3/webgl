@@ -37,7 +37,7 @@ export function quatToMatrix(q: Quat): Matrix {
 export function matrixToQuat(mat: Matrix): Quat {
 	// https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	const m: number[] = mat.getColumnMajorValues();
-	const m00 = m[0]; // TODO the indexes may be wrong - check orientation
+	const m00 = m[0];
 	const m01 = m[1];
 	const m02 = m[2];
 	const m10 = m[4];

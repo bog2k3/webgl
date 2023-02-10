@@ -274,7 +274,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.vertices = null;
 		this.nVertices = 0;
 		this.triangles = null;
-		// physicsBodyMeta_.reset(); // TODO enable
+		this.physicsBodyMeta.destroy();
 		this.heightFieldValues = null;
 		this.bspTree = null;
 	}
@@ -848,14 +848,18 @@ class TerrainRenderData implements IGLResource {
 class TriangleAABBGenerator implements AABBGeneratorInterface<number> {
 	constructor(private readonly terrain: Terrain) {}
 
+	private cache: { [index: number]: AABB } = {};
+
 	getAABB(i: number): AABB {
-		// compute the AABB for terrain triangle at index i;
-		// TODO: speed up by caching AABBs for triangles
-		const p1: Vector = this.terrain["vertices"][this.terrain["triangles"][i].iV1].pos;
-		const p2: Vector = this.terrain["vertices"][this.terrain["triangles"][i].iV2].pos;
-		const p3: Vector = this.terrain["vertices"][this.terrain["triangles"][i].iV3].pos;
-		const ret = new AABB();
-		ret.expandInPlace(p1, p2, p3);
-		return ret;
+		if (!this.cache[i]) {
+			// compute the AABB for terrain triangle at index i;
+			const p1: Vector = this.terrain["vertices"][this.terrain["triangles"][i].iV1].pos;
+			const p2: Vector = this.terrain["vertices"][this.terrain["triangles"][i].iV2].pos;
+			const p3: Vector = this.terrain["vertices"][this.terrain["triangles"][i].iV3].pos;
+			this.cache[i] = new AABB();
+			this.cache[i].expandInPlace(p1, p2, p3);
+		}
+		return this.cache[i];
 	}
+	// TODO we should probably clear this after finishing
 }

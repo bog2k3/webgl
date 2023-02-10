@@ -10,6 +10,7 @@ import { PostProcessData, RenderData } from "./render-data";
 import { Terrain } from "../entities/terrain/terrain.entity";
 import { Water } from "../entities/terrain/water";
 import { IRenderable } from "../joglfw/render/renderable";
+import { physWorld } from "../physics/physics";
 
 export function initRender(renderData: RenderData): boolean {
 	SharedUniformPacks.initialize();
@@ -136,7 +137,7 @@ export function render(renderData: RenderData, world: World): void {
 
 		// 4th pass - physics debug draw
 		if (renderData.config.renderPhysicsDebug) {
-			// World::getGlobal<btDiscreteDynamicsWorld>()->debugDrawWorld(); // TODO implement
+			physWorld.debugDrawWorld();
 		}
 	} else {
 		renderData.renderCtx.cameraUnderwater = false;
@@ -145,7 +146,7 @@ export function render(renderData: RenderData, world: World): void {
 		setupRenderPass(renderData, RenderPass.Standard);
 		renderData.viewport.renderList([world], renderData.renderCtx);
 		if (renderData.config.renderPhysicsDebug) {
-			// World::getGlobal<btDiscreteDynamicsWorld>()->debugDrawWorld(); // TODO implement
+			physWorld.debugDrawWorld();
 		}
 		resetRenderPass(renderData, RenderPass.Standard);
 	}
