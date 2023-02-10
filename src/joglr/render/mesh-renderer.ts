@@ -1,4 +1,4 @@
-import { VertexArrayObject } from './../vao';
+import { VertexArrayObject } from "./../vao";
 import { checkGLError, gl } from "../glcontext";
 import { IGLResource } from "../glresource";
 import { Matrix } from "../math/matrix";
@@ -41,16 +41,16 @@ export class MeshRenderer implements IGLResource {
 		vao.bind();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.getIBO());
 		if (mesh.vertexAttribsProgramBinding_ != this.meshShaderProgram_) {
-			const stride = MeshVertex.getStride() * 4;
+			const stride = MeshVertex.getStride();
 			gl.bindBuffer(gl.ARRAY_BUFFER, mesh.getVBO());
 			vao.vertexAttribPointer(this.indexPos_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
 			vao.vertexAttribPointer(this.indexNorm_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
 			vao.vertexAttribPointer(this.indexUV1_, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
 			vao.vertexAttribPointer(this.indexColor_, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
-			gl.enableVertexAttribArray(this.indexPos_);
-			gl.enableVertexAttribArray(this.indexNorm_);
-			gl.enableVertexAttribArray(this.indexUV1_);
-			gl.enableVertexAttribArray(this.indexColor_);
+			// gl.enableVertexAttribArray(this.indexPos_);
+			// gl.enableVertexAttribArray(this.indexNorm_);
+			// gl.enableVertexAttribArray(this.indexUV1_);
+			// gl.enableVertexAttribArray(this.indexColor_); // TODO cleanup
 			mesh.vertexAttribsProgramBinding_ = this.meshShaderProgram_;
 			checkGLError("attrib arrays setup");
 		}
@@ -59,11 +59,14 @@ export class MeshRenderer implements IGLResource {
 		let drawMode = 0;
 		switch (mesh.getRenderMode()) {
 			case MeshRenderModes.Points:
-				drawMode = gl.POINTS; break;
+				drawMode = gl.POINTS;
+				break;
 			case MeshRenderModes.Lines:
-				drawMode = gl.LINES; break;
+				drawMode = gl.LINES;
+				break;
 			case MeshRenderModes.Triangles:
-				drawMode = gl.TRIANGLES; break;
+				drawMode = gl.TRIANGLES;
+				break;
 			default:
 				throw new Error(`Unknown mesh draw mode ${mesh.getRenderMode()}`);
 		}
@@ -88,17 +91,21 @@ export class MeshRenderer implements IGLResource {
 	private indexMatPVW_: WebGLUniformLocation;
 
 	private async initialize(): Promise<void> {
-		await Shaders.createProgram("/data/shaders/mesh.vert", "/data/shaders/mesh-texture.frag", (prog: WebGLProgram) => {
-			this.meshShaderProgram_ = prog;
-			this.indexPos_ = gl.getAttribLocation(this.meshShaderProgram_, "vPos");
-			this.indexNorm_ = gl.getAttribLocation(this.meshShaderProgram_, "vNormal");
-			this.indexUV1_ = gl.getAttribLocation(this.meshShaderProgram_, "vUV1");
-			this.indexColor_ = gl.getAttribLocation(this.meshShaderProgram_, "vColor");
-			this.indexMatPVW_ = gl.getUniformLocation(this.meshShaderProgram_, "mPVW");
-			checkGLError("getAttribs");
-		});
+		await Shaders.createProgram(
+			"/data/shaders/mesh.vert",
+			"/data/shaders/mesh-texture.frag",
+			(prog: WebGLProgram) => {
+				this.meshShaderProgram_ = prog;
+				this.indexPos_ = gl.getAttribLocation(this.meshShaderProgram_, "vPos");
+				this.indexNorm_ = gl.getAttribLocation(this.meshShaderProgram_, "vNormal");
+				this.indexUV1_ = gl.getAttribLocation(this.meshShaderProgram_, "vUV1");
+				this.indexColor_ = gl.getAttribLocation(this.meshShaderProgram_, "vColor");
+				this.indexMatPVW_ = gl.getUniformLocation(this.meshShaderProgram_, "mPVW");
+				checkGLError("getAttribs");
+			},
+		);
 		if (!this.meshShaderProgram_) {
 			throw new Error("Failed to load mesh shader program");
 		}
 	}
-};
+}

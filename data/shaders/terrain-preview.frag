@@ -35,6 +35,7 @@ void main() {
 	color.rgb = pow(color.rgb, vec3(1.0 / gamma));
 	vec4 final = vec4(color, 1.0);
 
-	// gl_FragColor = final;
-	gl_FragColor = vec4(1, 0, 1, 1);
+	gl_FragColor = final;
+
+	// gl_FragColor = vec4(0, (fWPos.y + 2.0) / 6.0, 0, 1);
 }

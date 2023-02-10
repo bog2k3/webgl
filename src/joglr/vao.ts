@@ -1,4 +1,4 @@
-import { gl } from './glcontext';
+import { gl } from "./glcontext";
 import { IGLResource } from "./glresource";
 /**
  * This class abstracts a GL VAO.
@@ -40,30 +40,44 @@ export class VertexArrayObject implements IGLResource {
 	 * If native VAOs are not available, this also records the information so it is replayed when this
 	 * VAO is bound the next time
 	 */
-	vertexAttribPointer(index: number, size: number, type: GLenum, normalized: boolean, stride: number, offset: number): void {
-		this.vertexSources[index] = <VertexSourceDesc>{
-			VBO: gl.getParameter(gl.ARRAY_BUFFER_BINDING),
-			size, type, normalized, stride, offset
-		};
+	vertexAttribPointer(
+		index: number,
+		size: number,
+		type: GLenum,
+		normalized: boolean,
+		stride: number,
+		offset: number,
+	): void {
+		if (!(gl instanceof WebGL2RenderingContext)) {
+			this.vertexSources[index] = <VertexSourceDesc>{
+				VBO: gl.getParameter(gl.ARRAY_BUFFER_BINDING),
+				size,
+				type,
+				normalized,
+				stride,
+				offset,
+			};
+		}
 		gl.enableVertexAttribArray(index);
 		gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
 	}
 
 	// --------------- PRIVATE AREA --------------------- //
 	private nativeVAO: WebGLVertexArrayObject;
-	private vertexSources: {[index: number]: VertexSourceDesc} = {};
+	private vertexSources: { [index: number]: VertexSourceDesc } = {};
 
 	private bindLegacy(): void {
 		for (let indexStr in this.vertexSources) {
 			const index = Number.parseInt(indexStr);
 			gl.enableVertexAttribArray(index);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexSources[index].VBO);
-			gl.vertexAttribPointer(index,
+			gl.vertexAttribPointer(
+				index,
 				this.vertexSources[index].size,
 				this.vertexSources[index].type,
 				this.vertexSources[index].normalized,
 				this.vertexSources[index].stride,
-				this.vertexSources[index].offset
+				this.vertexSources[index].offset,
 			);
 		}
 	}

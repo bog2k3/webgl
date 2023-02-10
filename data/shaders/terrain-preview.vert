@@ -23,7 +23,7 @@ varying vec4 fTexBlendFactor;
 
 void main() {
 	gl_Position = matPV * vec4(pos, 1.0);
-	// gl_ClipDistance[0] = 1;
+	// gl_ClipDistance[0] = 1; // TODO manual implement
 
 	fWPos = pos;
 	fNormal = normal;

@@ -1,68 +1,75 @@
-import { Heightmap, HeightmapParams } from './heightmap';
-import { ShaderTerrainPreview } from './../../../render/programs/shader-terrain-preview';
-import { ShaderProgramManager } from './../../../render/shader-program-manager';
-import { VertexAttribSource } from './../../../joglr/shader-program';
-import { VertexArrayObject } from './../../../joglr/vao';
-import { AbstractVertex } from '../../../joglr/abstract-vertex';
-import { checkGLError, gl } from '../../../joglr/glcontext';
-import { IGLResource } from '../../../joglr/glresource';
-import { Vector } from '../../../joglr/math/vector';
-import { RenderContext } from '../../../joglr/render-context';
+import { Heightmap, HeightmapParams } from "./heightmap";
+import { ShaderTerrainPreview } from "./../../../render/programs/shader-terrain-preview";
+import { ShaderProgramManager } from "./../../../render/shader-program-manager";
+import { VertexAttribSource } from "./../../../joglr/shader-program";
+import { VertexArrayObject } from "./../../../joglr/vao";
+import { AbstractVertex } from "../../../joglr/abstract-vertex";
+import { checkGLError, gl } from "../../../joglr/glcontext";
+import { IGLResource } from "../../../joglr/glresource";
+import { Vector } from "../../../joglr/math/vector";
+import { RenderContext } from "../../../joglr/render-context";
 import { rand, randSeed } from "../../../joglr/utils/random";
 import { Progress } from "../../../progress";
 import { CustomRenderContext } from "../../../render/custom-render-context";
-import { ShaderTerrain } from '../../../render/programs/shader-terrain';
-import { Entity } from '../../entity';
-import { IRenderable } from '../../../joglr/renderable';
-import { TerrainConfig } from '../config';
-import { TextureInfo, TextureLoader } from './../../../joglr/texture-loader';
-import { RenderPass } from './../../../render/custom-render-context';
+import { ShaderTerrain } from "../../../render/programs/shader-terrain";
+import { Entity } from "../../entity";
+import { IRenderable } from "../../../joglr/renderable";
+import { TerrainConfig } from "./config";
+import { TextureInfo, TextureLoader } from "./../../../joglr/texture-loader";
+import { RenderPass } from "./../../../render/custom-render-context";
 import { Triangle, triangulate } from "./triangulation";
-import { Water, WaterConfig } from './water';
+import { Water, WaterConfig } from "./water";
 import { assert } from "../../../joglr/utils/assert";
 import { EntityType } from "../entity-types";
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
 	static async loadTextures(step: number): Promise<Progress> {
 		console.log("Loading terrain textures...");
-		const textureInfo = [{
-			url: "data/textures/terrain/dirt3.png",
-			wWidth: 2,
-			wHeight: 2
-		}, {
-			url: "data/textures/terrain/grass1.png",
-			wWidth: 3,
-			wHeight: 3
-		}, {
-			url: "data/textures/terrain/rock1.png",
-			wWidth: 3,
-			wHeight: 3
-		}, {
-			url: "data/textures/terrain/rock3.png",
-			wWidth: 4,
-			wHeight: 4
-		}, {
-			url: "data/textures/terrain/sand1.png",
-			wWidth: 4,
-			wHeight: 4
-		}];
-		await Promise.all(textureInfo.map((tInfo, index) =>
-			TextureLoader.loadFromPNG(tInfo.url, true)
-				.then((result: TextureInfo) => {
+		const textureInfo = [
+			{
+				url: "data/textures/terrain/dirt3.png",
+				wWidth: 2,
+				wHeight: 2,
+			},
+			{
+				url: "data/textures/terrain/grass1.png",
+				wWidth: 3,
+				wHeight: 3,
+			},
+			{
+				url: "data/textures/terrain/rock1.png",
+				wWidth: 3,
+				wHeight: 3,
+			},
+			{
+				url: "data/textures/terrain/rock3.png",
+				wWidth: 4,
+				wHeight: 4,
+			},
+			{
+				url: "data/textures/terrain/sand1.png",
+				wWidth: 4,
+				wHeight: 4,
+			},
+		];
+		await Promise.all(
+			textureInfo.map((tInfo, index) =>
+				TextureLoader.loadFromPNG(tInfo.url, true).then((result: TextureInfo) => {
 					TerrainRenderData.textures_[index] = new TerrainTextureInfo({
 						texture: result.texture,
 						wWidth: tInfo.wWidth,
-						wHeight: tInfo.wHeight
+						wHeight: tInfo.wHeight,
 					});
 					gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[index].texture);
 					gl.generateMipmap(gl.TEXTURE_2D);
 					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-				})
-		));
+				}),
+			),
+		);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		console.log("Terrain textures loaded.");
-		return {completed: step+1, total: 1};
+		return { completed: step + 1, total: 1 };
 	}
 
 	static unloadAllResources(): void {
@@ -76,7 +83,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		super();
 		this.renderData_ = new TerrainRenderData();
 		if (previewMode_) {
-			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderTerrainPreview>(ShaderTerrainPreview);
+			this.renderData_.shaderProgram_ =
+				ShaderProgramManager.requestProgram<ShaderTerrainPreview>(ShaderTerrainPreview);
 		} else {
 			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderTerrain>(ShaderTerrain);
 		}
@@ -86,8 +94,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		});
 		this.setupVAO();
 
-		if (!previewMode_)
-		this.water_ = new Water();
+		if (!previewMode_) this.water_ = new Water();
 
 		this.triangleAABBGenerator_ = null; // TODO new TriangleAABBGenerator(this);
 	}
@@ -99,8 +106,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	override destroy(): void {
 		this.clear();
 		this.release();
-		if (this.water_)
-			this.water_ = null;
+		if (this.water_) this.water_ = null;
 		this.triangleAABBGenerator_ = null;
 	}
 
@@ -111,8 +117,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		}
 		this.renderData_.release();
 		this.renderData_ = null;
-		if (this.water_)
-			this.water_.release();
+		if (this.water_) this.water_.release();
 	}
 
 	// unsigned getEntityType() const override { return EntityTypes::TERRAIN; }
@@ -130,7 +135,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// Render buffers and Physics data structures will not be generated at this point, thus allowing the user to make modifications
 	// to the terrain geometry before that.
 	// Call finishGenerate() to generate these objects after you're done.
-	generate(config: TerrainConfig) : void {
+	generate(config: TerrainConfig): void {
 		console.log("[TERRAIN] Generating . . .");
 		this.validateSettings(config);
 		this.clear();
@@ -148,7 +153,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		const seaBedRadius = terrainRadius * 2.5;
 		const skirtVertSpacing = 30; // meters
 		const nSkirtVerts = Math.floor((2 * Math.PI * seaBedRadius) / skirtVertSpacing);
-		const skirtVertSector = 2 * Math.PI / nSkirtVerts; // sector size between two skirt vertices
+		const skirtVertSector = (2 * Math.PI) / nSkirtVerts; // sector size between two skirt vertices
 		this.nVertices_ = this.rows_ * this.cols_ + nSkirtVerts;
 		this.vertices_ = new Array(this.nVertices_);
 
@@ -157,10 +162,13 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		const dz = config.length / (this.rows_ - 1);
 		this.gridSpacing_ = new Vector(dx, 0, dz);
 		// compute terrain vertices
-		for (let i=0; i<this.rows_; i++) {
-			for (let j=0; j<this.cols_; j++) {
-				const jitter = new Vector(rand() * config.relativeRandomJitter * dx, rand() * config.relativeRandomJitter * dz );
-				this.vertices_[i*this.cols_ + j] = new TerrainVertex({
+		for (let i = 0; i < this.rows_; i++) {
+			for (let j = 0; j < this.cols_; j++) {
+				const jitter = new Vector(
+					rand() * config.relativeRandomJitter * dx,
+					rand() * config.relativeRandomJitter * dz,
+				);
+				this.vertices_[i * this.cols_ + j] = new TerrainVertex({
 					pos: bottomLeft.add(new Vector(dx * j + jitter.x, config.minElevation, dz * i + jitter.y)),
 					normal: new Vector(0.0, 1.0, 0.0),
 					color: new Vector(1.0, 1.0, 1.0),
@@ -169,21 +177,25 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 					uv3: new Vector(0.0, 0.0),
 					uv4: new Vector(0.0, 0.0),
 					uv5: new Vector(0.0, 0.0),
-					texBlendFactor: new Vector(0.0, 0.0, 0.0, 0.0)
+					texBlendFactor: new Vector(0.0, 0.0, 0.0, 0.0),
 				});
 				// compute UVs
 				for (let t = 0; t < TerrainVertex.nTextures; t++) {
-					this.vertices_[i*this.cols_ + j][`uv${t + 1}`].x = (this.vertices_[i*this.cols_ + j].pos.x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
-					this.vertices_[i*this.cols_ + j][`uv${t + 1}`].y = (this.vertices_[i*this.cols_ + j].pos.z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+					this.vertices_[i * this.cols_ + j][`uv${t + 1}`].x =
+						(this.vertices_[i * this.cols_ + j].pos.x - bottomLeft.x) /
+						TerrainRenderData.textures_[t].wWidth;
+					this.vertices_[i * this.cols_ + j][`uv${t + 1}`].y =
+						(this.vertices_[i * this.cols_ + j].pos.z - bottomLeft.z) /
+						TerrainRenderData.textures_[t].wHeight;
 				}
 			}
 		}
 		// // compute skirt vertices
-		for (let i=0; i<nSkirtVerts; i++) {
-			const x = seaBedRadius * Math.cos(i*skirtVertSector);
-			const z = seaBedRadius * Math.sin(i*skirtVertSector);
-			this.vertices_[this.rows_*this.cols_+i] = new TerrainVertex({
-				pos: new Vector(x, -30, z),
+		for (let i = 0; i < nSkirtVerts; i++) {
+			const x = seaBedRadius * Math.cos(i * skirtVertSector);
+			const z = seaBedRadius * Math.sin(i * skirtVertSector);
+			this.vertices_[this.rows_ * this.cols_ + i] = new TerrainVertex({
+				pos: new Vector(x, this.config_.minElevation - 20, z),
 				normal: new Vector(0.0, 1.0, 0.0),
 				color: new Vector(1.0, 1.0, 1.0),
 				uv1: new Vector(0.0, 0.0),
@@ -191,23 +203,23 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 				uv3: new Vector(0.0, 0.0),
 				uv4: new Vector(0.0, 0.0),
 				uv5: new Vector(0.0, 0.0),
-				texBlendFactor: new Vector(0.0, 0.0, 0.0, 1.0)
+				texBlendFactor: new Vector(0.0, 0.0, 0.0, 1.0),
 			});
 			// compute UVs
 			for (let t = 0; t < TerrainVertex.nTextures; t++) {
-				this.vertices_[this.rows_*this.cols_ + i][`uv${t + 1}`].x = (x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
-				this.vertices_[this.rows_*this.cols_ + i][`uv${t + 1}`].y = (z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+				this.vertices_[this.rows_ * this.cols_ + i][`uv${t + 1}`].x =
+					(x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
+				this.vertices_[this.rows_ * this.cols_ + i][`uv${t + 1}`].y =
+					(z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
 			}
 		}
 
 		console.log("[TERRAIN] Triangulating . . .");
 		this.triangles_ = triangulate(this.vertices_, (v: TerrainVertex, n: number) => {
-			return n == 0 ? v.pos.x :
-				   n == 1 ? v.pos.z :
-				   0;
+			return n == 0 ? v.pos.x : n == 1 ? v.pos.z : 0;
 		});
 		// TODO this might not be necessary any more
-		// this.fixTriangleWinding();	// after triangulation some triangles are ccw, we need to fix them
+		this.fixTriangleWinding(); // after triangulation some triangles are ccw, we need to fix them
 
 		console.log("[TERRAIN] Computing displacements . . .");
 		this.computeDisplacements(config.seed);
@@ -216,11 +228,12 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		console.log("[TERRAIN] Computing texture weights . . .");
 		this.computeTextureWeights();
 
-		console.log("[TERRAIN] Creating Binary Space Partitioning tree . . .")
-		const triIndices: number[] = new Array(this.triangles_.length);
-		for (let i=0; i<this.triangles_.length; i++) {
-			triIndices.push(i);
-		}
+		// TODO BSP
+		// console.log("[TERRAIN] Creating Binary Space Partitioning tree . . .");
+		// const triIndices: number[] = new Array(this.triangles_.length);
+		// for (let i = 0; i < this.triangles_.length; i++) {
+		// 	triIndices.push(i);
+		// }
 		// const bspConfig = new BSPConfig();
 		// bspConfig.maxDepth = new Vector(100, 1, 100 );
 		// bspConfig.minCellSize = new Vector(2.0, 1000.0, 2.0);
@@ -231,14 +244,14 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// this.pBSP_ = new BSPTree<unsigned>(bspConfig, triangleAABBGenerator_, std::move(triIndices));
 
 		console.log("[TERRAIN] Generating water . . .");
-		if (this.water_) {
-			this.water_.generate(<WaterConfig>{
-				innerRadius: terrainRadius,					// inner radius
-				outerExtent: seaBedRadius - terrainRadius + 200,// outer extent
-				vertexDensity: Math.max(0.05, 2.0 / terrainRadius),// vertex density
-				constrainToCircle: false							// constrain to circle
-			});
-		}
+		// if (this.water_) {
+		// 	this.water_.generate(<WaterConfig>{
+		// 		innerRadius: terrainRadius, // inner radius
+		// 		outerExtent: seaBedRadius - terrainRadius + 200, // outer extent
+		// 		vertexDensity: Math.max(0.05, 2.0 / terrainRadius), // vertex density
+		// 		constrainToCircle: false, // constrain to circle
+		// 	});
+		// }
 		console.log("[TERRAIN] Done generating.");
 		randSeed(nextSeed);
 	}
@@ -247,8 +260,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	finishGenerate(): void {
 		console.log("[TERRAIN] Updating render and physics objects . . .");
 		this.updateRenderBuffers();
-		if (!this.previewMode_)
-			this.updatePhysics();
+		if (!this.previewMode_) this.updatePhysics();
 	}
 
 	// clear all terrain data
@@ -270,7 +282,11 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 		const rctx = CustomRenderContext.fromCtx(context);
 
-		if (rctx.renderPass == RenderPass.Standard || rctx.renderPass == RenderPass.WaterReflection || rctx.renderPass == RenderPass.WaterRefraction) {
+		if (
+			rctx.renderPass == RenderPass.Standard ||
+			rctx.renderPass == RenderPass.WaterReflection ||
+			rctx.renderPass == RenderPass.WaterRefraction
+		) {
 			// set-up textures
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[0].texture);
@@ -282,7 +298,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texture);
 			gl.activeTexture(gl.TEXTURE4);
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texture);
-			for (let i=0; i<TerrainVertex.nTextures; i++) {
+			for (let i = 0; i < TerrainVertex.nTextures; i++) {
 				this.renderData_.shaderProgram_.uniforms().setTextureSampler(i, i);
 			}
 			if (this.water_) {
@@ -300,11 +316,21 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 					gl.drawElements(gl.TRIANGLES, this.renderData_.trisBelowWater_ * 3, gl.UNSIGNED_SHORT, 0);
 				} else {
 					// draw above-water subspace:
-					gl.drawElements(gl.TRIANGLES, this.renderData_.trisAboveWater_ * 3, gl.UNSIGNED_SHORT, this.renderData_.trisBelowWater_*3*4);
+					gl.drawElements(
+						gl.TRIANGLES,
+						this.renderData_.trisAboveWater_ * 3,
+						gl.UNSIGNED_SHORT,
+						this.renderData_.trisBelowWater_ * 3 * 4,
+					);
 				}
 			} else {
 				// render all in one call
-				gl.drawElements(gl.TRIANGLES, this.renderData_.trisBelowWater_ + this.renderData_.trisAboveWater_ * 3, gl.UNSIGNED_SHORT, 0);
+				gl.drawElements(
+					gl.TRIANGLES,
+					(this.renderData_.trisBelowWater_ + this.renderData_.trisAboveWater_) * 3,
+					gl.UNSIGNED_SHORT,
+					0,
+				);
 			}
 
 			// unbind stuff
@@ -324,8 +350,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 			checkGLError("Terrain.render()");
 		} else if (rctx.renderPass === RenderPass.WaterSurface) {
-			if (this.water_)
-				this.water_.render(context);
+			if (this.water_) this.water_.render(context);
 		}
 	}
 
@@ -333,7 +358,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.water_?.update(dt);
 	}
 
-	getHeightValue(where: Vector): number { // only x and z coords are used from the input pointer
+	getHeightValue(where: Vector): number {
+		// only x and z coords are used from the input pointer
 		throw new Error("not implemented"); // TODO implement
 		// auto *node = pBSP_->getNodeAtPoint(where);
 		// glm::vec3 intersectionPoint;
@@ -349,9 +375,15 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// return config_.minElevation;	// no triangles exist at the given location
 	}
 
-	getConfig(): TerrainConfig { return this.config_; }
-	getHeightField(): number[] { return this.heightFieldValues_; }
-	getGridSize(): Vector { return new Vector(this.cols_, this.rows_); }
+	getConfig(): TerrainConfig {
+		return this.config_;
+	}
+	getHeightField(): number[] {
+		return this.heightFieldValues_;
+	}
+	getGridSize(): Vector {
+		return new Vector(this.cols_, this.rows_);
+	}
 
 	// set a 2D texture for water reflection
 	setWaterReflectionTex(texture: WebGLTexture): void {
@@ -366,7 +398,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		return this.water_?.getNormalTexture() ?? null;
 	}
 
-// ------------- PRIVATE AREA --------------- //
+	// ------------- PRIVATE AREA --------------- //
 
 	private rows_ = 0;
 	private cols_ = 0;
@@ -388,9 +420,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		for (const t of this.triangles_) {
 			const n: Vector = this.vertices_[t.iV2].pos
 				.sub(this.vertices_[t.iV1].pos)
-				.cross(this.vertices_[t.iV3].pos
-					.sub(this.vertices_[t.iV1].pos)
-				);
+				.cross(this.vertices_[t.iV3].pos.sub(this.vertices_[t.iV1].pos));
 			if (n.y < 0) {
 				// triangle is CCW, we need to reverse it
 				// exchange vertices 1 and 3
@@ -407,8 +437,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 	private computeDisplacements(seed: number): void {
 		const hparam = new HeightmapParams();
-		hparam.width = this.config_.width / 2;
-		hparam.length = this.config_.length / 2;
+		hparam.width = Math.floor(this.config_.width / 2);
+		hparam.length = Math.floor(this.config_.length / 2);
 		hparam.minHeight = this.config_.minElevation;
 		hparam.maxHeight = this.config_.maxElevation;
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
@@ -421,9 +451,13 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// TODO perlin noise
 
 		const bottomLeft = new Vector(-this.config_.width * 0.5, 0, -this.config_.length * 0.5);
-		for (let i=1; i<this.rows_-1; i++) // we leave the edge vertices at zero to avoid artifacts with the skirt
-			for (let j=1; j<this.cols_-1; j++) {
-				const k = i*this.cols_ + j;
+		for (
+			let i = 1;
+			i < this.rows_ - 1;
+			i++ // we leave the edge vertices at zero to avoid artifacts with the skirt
+		)
+			for (let j = 1; j < this.cols_ - 1; j++) {
+				const k = i * this.cols_ + j;
 				const u = (this.vertices_[k].pos.x - bottomLeft.x) / this.config_.width;
 				const v = (this.vertices_[k].pos.z - bottomLeft.z) / this.config_.length;
 
@@ -550,7 +584,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// 										+ 0.1 * pnoise.get(u*0.6, v*0.6, 2.f);	// dirt / grass
 		// 	// #2 Rock1 vs Rock2 factor
 		// 	pVertices_[i].texBlendFactor.y = pnoise.getNorm(v*0.15, u*0.15, 7.f) + 0.5 * pnoise.get(v*0.6, u*0.6, 2.f);	// rock1 / rock2
-
 		// 	// #3 Rock vs Grass/Sand factor (highest priority)
 		// 	float cutoffY = 0.80f;	// y-component of normal above which grass is used instead of rock
 		// 	if (pVertices_[i].pos.y > 0) {
@@ -577,7 +610,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// 				pVertices_[i].texBlendFactor.z = 0.2f; // steep underwater areas are still rock
 		// 		}
 		// 	}
-
 		// 	// #4 Grass vs Sand factor -> some distance above water level and everything below is sand or rock
 		// 	float beachHeight = 1.f + 1.5f * pnoise.getNorm(u*1.5, v*1.5, 1.f); // meters
 		// 	if (pVertices_[i].pos.y < beachHeight) {
@@ -593,39 +625,45 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		gl.bufferData(gl.ARRAY_BUFFER, AbstractVertex.arrayToBuffer(this.vertices_), gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-		const indices = new Uint16Array(3 * this.triangles_.length);
-		this.renderData_.trisBelowWater_ = 0;
 		const waterLevelTolerance = 0.01;
+		const indices = new Uint16Array(6 * this.triangles_.length); // alocate double the number of triangle points to make sure we don't overflow
+		this.renderData_.trisBelowWater_ = 0;
 		// first loop: indices for tris below water
-		for (let i=0; i<this.triangles_.length; i++) {
+		for (let i = 0; i < this.triangles_.length; i++) {
 			// decide if triangle is at least partially submerged:
-			if (this.vertices_[this.triangles_[i].iV1].pos.y >= waterLevelTolerance
-				&& this.vertices_[this.triangles_[i].iV2].pos.y >= waterLevelTolerance
-				&& this.vertices_[this.triangles_[i].iV3].pos.y >= waterLevelTolerance
+			if (
+				this.vertices_[this.triangles_[i].iV1].pos.y >= waterLevelTolerance &&
+				this.vertices_[this.triangles_[i].iV2].pos.y >= waterLevelTolerance &&
+				this.vertices_[this.triangles_[i].iV3].pos.y >= waterLevelTolerance
 			) {
 				continue;
 			}
-			indices[this.renderData_.trisBelowWater_*3 + 0] = this.triangles_[i].iV1;
-			indices[this.renderData_.trisBelowWater_*3 + 1] = this.triangles_[i].iV2;
-			indices[this.renderData_.trisBelowWater_*3 + 2] = this.triangles_[i].iV3;
+			indices[this.renderData_.trisBelowWater_ * 3 + 0] = this.triangles_[i].iV1;
+			indices[this.renderData_.trisBelowWater_ * 3 + 1] = this.triangles_[i].iV2;
+			indices[this.renderData_.trisBelowWater_ * 3 + 2] = this.triangles_[i].iV3;
 			this.renderData_.trisBelowWater_++;
 		}
 		// second loop: indices for tris above water
 		this.renderData_.trisAboveWater_ = 0;
-		for (let i=0; i<this.triangles_.length; i++) {
+		const offset = this.renderData_.trisBelowWater_ * 3;
+		for (let i = 0; i < this.triangles_.length; i++) {
 			// check if the triangle is at least partially above water
-			if (this.vertices_[this.triangles_[i].iV1].pos.y <= -waterLevelTolerance
-				&& this.vertices_[this.triangles_[i].iV2].pos.y <= -waterLevelTolerance
-				&& this.vertices_[this.triangles_[i].iV3].pos.y <= -waterLevelTolerance)
+			if (
+				this.vertices_[this.triangles_[i].iV1].pos.y <= -waterLevelTolerance &&
+				this.vertices_[this.triangles_[i].iV2].pos.y <= -waterLevelTolerance &&
+				this.vertices_[this.triangles_[i].iV3].pos.y <= -waterLevelTolerance
+			) {
 				continue;
-			indices[this.renderData_.trisBelowWater_*3 + this.renderData_.trisAboveWater_*3 + 0] = this.triangles_[i].iV1;
-			indices[this.renderData_.trisBelowWater_*3 + this.renderData_.trisAboveWater_*3 + 1] = this.triangles_[i].iV2;
-			indices[this.renderData_.trisBelowWater_*3 + this.renderData_.trisAboveWater_*3 + 2] = this.triangles_[i].iV3;
+			}
+			indices[offset + this.renderData_.trisAboveWater_ * 3 + 0] = this.triangles_[i].iV1;
+			indices[offset + this.renderData_.trisAboveWater_ * 3 + 1] = this.triangles_[i].iV2;
+			indices[offset + this.renderData_.trisAboveWater_ * 3 + 2] = this.triangles_[i].iV3;
 			this.renderData_.trisAboveWater_++;
 		}
 		assert(this.renderData_.trisBelowWater_ + this.renderData_.trisAboveWater_ >= this.triangles_.length);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData_.IBO_);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+		const totalIndices: number = (this.renderData_.trisBelowWater_ + this.renderData_.trisAboveWater_) * 3;
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW, 0, totalIndices);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	}
 
@@ -643,7 +681,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// for (unsigned i=0; i<hfRows; i++)
 		// 	for (unsigned j=0; j<hfCols; j++)
 		// 		heightFieldValues_[i*hfCols+j] = getHeightValue(bottomLeft + glm::vec3{j*dx, 0, i*dz}) + heightOffset;
-
 		// // create ground body
 		// physicsBodyMeta_.reset();
 		// PhysBodyConfig bodyCfg;
@@ -652,74 +689,118 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// bodyCfg.friction = 0.5f;
 		// bodyCfg.shape = std::make_shared<btHeightfieldTerrainShape>(hfCols, hfRows, heightFieldValues_, 1.f,
 		// 						config_.minElevation, config_.maxElevation, 1, PHY_FLOAT, false);
-
 		// physicsBodyMeta_.createBody(bodyCfg);
 	}
 
 	private setupVAO(): void {
 		const mapVertexSources: Record<string, VertexAttribSource> = {
-			"pos": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("pos") },
-			"normal": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("normal") },
-			"color": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("color") },
-			"uv1": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv1") },
-			"uv2": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv2") },
-			"uv3": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv3") },
-			"uv4": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv4") },
-			"uv5": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv5") },
-			"texBlendFactor": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("texBlendFactor") }
+			pos: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("pos"),
+			},
+			normal: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("normal"),
+			},
+			color: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("color"),
+			},
+			uv1: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("uv1"),
+			},
+			uv2: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("uv2"),
+			},
+			uv3: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("uv3"),
+			},
+			uv4: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("uv4"),
+			},
+			uv5: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("uv5"),
+			},
+			texBlendFactor: {
+				VBO: this.renderData_.VBO_,
+				stride: TerrainVertex.getStride(),
+				offset: TerrainVertex.getOffset("texBlendFactor"),
+			},
 		};
 		this.renderData_.shaderProgram_.setupVertexStreams(this.renderData_.VAO_, mapVertexSources);
 	}
-};
+}
 
 class TerrainTextureInfo implements IGLResource {
-	texture: WebGLTexture;	// GL texture ID
-	wWidth = 1.0;			// width of texture in world units (meters)
-	wHeight = 1.0;			// height/length of texture in world units (meters)
+	texture: WebGLTexture; // GL texture ID
+	wWidth = 1.0; // width of texture in world units (meters)
+	wHeight = 1.0; // height/length of texture in world units (meters)
 
 	constructor(data: Partial<TerrainTextureInfo>) {
 		Object.assign(this, data);
 	}
 
 	release(): void {
-		if (this.texture)
-			gl.deleteTexture(this.texture);
+		if (this.texture) gl.deleteTexture(this.texture);
 	}
-};
+}
 
 class TerrainVertex extends AbstractVertex {
 	static readonly nTextures = 5;
 
-	pos: Vector;	// 3
-	normal: Vector;	// 3
-	color: Vector;	// 3
-	uv1: Vector;	// 2 uvs for each texture layer
-	uv2: Vector;	// 2
-	uv3: Vector;	// 2
-	uv4: Vector;	// 2
-	uv5: Vector;	// 2
-	texBlendFactor: Vector; // 4 texture blend factors: x is between grass1 & grass2,
-								//						y between rock1 & rock2
-								//						z between grass/sand and rock (highest priority)
-								//						w between grass and sand
+	pos = new Vector(); // 3
+	normal = new Vector(); // 3
+	color = new Vector(); // 3
+	uv1 = new Vector(); // 2 uvs for each texture layer
+	uv2 = new Vector(); // 2
+	uv3 = new Vector(); // 2
+	uv4 = new Vector(); // 2
+	uv5 = new Vector(); // 2
+	texBlendFactor = new Vector(); // 4 texture blend factors: x is between grass1 & grass2,
+	//						y between rock1 & rock2
+	//						z between grass/sand and rock (highest priority)
+	//						w between grass and sand
 
 	static getStride(): number {
-		return 4 * (3 + 3 + 3 + 5*2 + 4);
+		return 4 * (3 + 3 + 3 + 5 * 2 + 4);
 	}
 
-	/** returns the offset of a component, in number of floats */
+	/** returns the offset of a component, in number of bytes */
 	static getOffset(field: keyof TerrainVertex): number {
 		switch (field) {
-			case 'pos': return 4 * 0;
-			case 'normal': return 4 * 3;
-			case 'color': return 4 * 6;
-			case 'uv1': return 4 * 9;
-			case 'uv2': return 4 * 11;
-			case 'uv3': return 4 * 13;
-			case 'uv4': return 4 * 15;
-			case 'uv5': return 4 * 17;
-			case 'texBlendFactor': return 4 * 19;
-			default: throw new Error(`Invalid field specified in TerrainVertex.getOffset(): "${field}`);
+			case "pos":
+				return 4 * 0;
+			case "normal":
+				return 4 * 3;
+			case "color":
+				return 4 * 6;
+			case "uv1":
+				return 4 * 9;
+			case "uv2":
+				return 4 * 11;
+			case "uv3":
+				return 4 * 13;
+			case "uv4":
+				return 4 * 15;
+			case "uv5":
+				return 4 * 17;
+			case "texBlendFactor":
+				return 4 * 19;
+			default:
+				throw new Error(`Invalid field specified in TerrainVertex.getOffset(): "${field}`);
 		}
 	}
 
@@ -742,11 +823,11 @@ class TerrainVertex extends AbstractVertex {
 			...this.uv3.values(2),
 			...this.uv4.values(2),
 			...this.uv5.values(2),
-			...this.texBlendFactor.values(4)
+			...this.texBlendFactor.values(4),
 		];
 		target.set(values, offset);
 	}
-};
+}
 
 class TerrainRenderData implements IGLResource {
 	VAO_ = new VertexArrayObject();
@@ -775,4 +856,4 @@ class TerrainRenderData implements IGLResource {
 	}
 
 	static textures_: TerrainTextureInfo[] = [];
-};
+}

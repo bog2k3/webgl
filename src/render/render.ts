@@ -4,12 +4,12 @@ import { assert } from "../joglr/utils/assert";
 import { Terrain } from "../world/entities/terrain/terrain.entity";
 import { IRenderable } from "../joglr/renderable";
 import { World } from "../world/world";
-import { gl } from './../joglr/glcontext';
-import { Water } from './../world/entities/terrain/water';
-import { Entity } from './../world/entity';
-import { RenderPass } from './custom-render-context';
+import { gl } from "./../joglr/glcontext";
+import { Water } from "./../world/entities/terrain/water";
+import { Entity } from "./../world/entity";
+import { RenderPass } from "./custom-render-context";
 import { SharedUniformPacks } from "./programs/shared-uniform-packs";
-import { PostProcessData, RenderData } from './render-data';
+import { PostProcessData, RenderData } from "./render-data";
 
 export function initRender(renderData: RenderData): boolean {
 	SharedUniformPacks.initialize();
@@ -17,8 +17,10 @@ export function initRender(renderData: RenderData): boolean {
 
 	// configure backface culling
 	gl.frontFace(gl.CW);
-	gl.enable(gl.CULL_FACE);
 	gl.cullFace(gl.BACK);
+	// gl.enable(gl.CULL_FACE);
+	gl.disable(gl.CULL_FACE);
+
 	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LESS);
 
@@ -49,7 +51,7 @@ export function initRender(renderData: RenderData): boolean {
 	renderData.waterRenderData.reflectionFBDesc.height = renderData.windowH / 2;
 	renderData.waterRenderData.reflectionFBDesc.format = gl.RGBA;
 	renderData.waterRenderData.reflectionFBDesc.multisamples = 0;
-	renderData.waterRenderData.reflectionFBDesc.requireDepthBuffer = true;;
+	renderData.waterRenderData.reflectionFBDesc.requireDepthBuffer = true;
 	if (!renderData.waterRenderData.reflectionFramebuffer.create(renderData.waterRenderData.reflectionFBDesc))
 		return false;
 	gl.bindTexture(gl.TEXTURE_2D, renderData.waterRenderData.reflectionFramebuffer.fbTexture());
@@ -68,6 +70,8 @@ export function initRender(renderData: RenderData): boolean {
 	renderData.viewport.setBkColor(new Vector(0, 0, 0));
 	renderData.viewport.camera().setFOV(Math.PI / 2.5);
 	renderData.viewport.camera().setZPlanes(0.15, 1000);
+	renderData.viewport.camera().moveTo(new Vector(-5, 5, -5));
+	renderData.viewport.camera().lookAt(new Vector(0, 0, 0));
 
 	// done
 	return true;
@@ -89,39 +93,46 @@ export function render(renderData: RenderData, world: World): void {
 		renderData.renderCtx.cameraUnderwater = renderData.viewport.camera().position().y < 0;
 
 		const underDraw: IRenderable[] = [];
-		const underEntities: Entity[] = world.getEntities([], {renderable: true});
+		const underEntities: Entity[] = world.getEntities([], { renderable: true });
 		// append all drawable entities from world:
 		// TODO - use a BSP or something to only get entities under water level
 		for (let e of underEntities) {
-			if (e === renderData.skyBox)
-				continue;
+			if (e === renderData.skyBox) continue;
 			underDraw.push(e as unknown as IRenderable);
 		}
 
 		const aboveDraw: IRenderable[] = [];
-		const aboveEntities: Entity[] = world.getEntities([], {renderable: true});
+		const aboveEntities: Entity[] = world.getEntities([], { renderable: true });
 		// append all drawable entities from world:
 		// TODO - use a BSP or something to only get entities above water level
-		for (let e of aboveEntities)
-			aboveDraw.push(e as unknown as IRenderable);
+		for (let e of aboveEntities) aboveDraw.push(e as unknown as IRenderable);
 
 		checkGLError("render() setup");
 
 		// 1st pass - reflection
 		setupRenderPass(renderData, RenderPass.WaterReflection);
-		renderData.viewport.renderList(renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw, renderData.renderCtx);
+		renderData.viewport.renderList(
+			renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw,
+			renderData.renderCtx,
+		);
 		resetRenderPass(renderData, RenderPass.WaterReflection);
 		checkGLError("render() pass #1");
 
 		// 2nd pass - refraction
 		setupRenderPass(renderData, RenderPass.WaterRefraction);
-		renderData.viewport.renderList(renderData.renderCtx.cameraUnderwater ? aboveDraw : underDraw, renderData.renderCtx);
+		renderData.viewport.renderList(
+			renderData.renderCtx.cameraUnderwater ? aboveDraw : underDraw,
+			renderData.renderCtx,
+		);
 		resetRenderPass(renderData, RenderPass.WaterRefraction);
 		checkGLError("render() pass #2");
 
 		// 3rd pass - standard rendering of scene
 		setupRenderPass(renderData, RenderPass.Standard);
-		renderData.viewport.renderList(renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw, renderData.renderCtx);
+		renderData.viewport.renderList(
+			renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw,
+			renderData.renderCtx,
+		);
 		resetRenderPass(renderData, RenderPass.Standard);
 		checkGLError("render() pass #3");
 
@@ -172,43 +183,57 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 
 	const waterDepthFactor = Math.pow(1.0 / (Math.max(0, -renderData.viewport.camera().position().y) + 1), 0.5);
 	switch (renderData.renderCtx.renderPass) {
-	case RenderPass.WaterReflection:
-		renderData.waterRenderData.reflectionFramebuffer.bind();
-		renderData.viewport.setArea(0, 0, renderData.waterRenderData.reflectionFBDesc.width, renderData.waterRenderData.reflectionFBDesc.height);
-		renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
-		renderData.viewport.clear();
-		renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? -1.0 : +1.0;
-		renderData.renderCtx.enableClipPlane = true;
-		renderData.viewport.camera().mirror(new Vector(0, renderData.renderCtx.subspace, 0, 0));
-	break;
-	case RenderPass.WaterRefraction: {
-		renderData.waterRenderData.refractionFramebuffer.bind();
-		renderData.viewport.setArea(0, 0, renderData.waterRenderData.refractionFBDesc.width, renderData.waterRenderData.refractionFBDesc.height);
-		renderData.viewport.setBkColor(new Vector(0.07, 0.16, 0.2, 1.0));
-		renderData.viewport.clear();
-		renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? +1.0 : -1.0;
-		renderData.renderCtx.enableClipPlane = true;
-	} break;
-	case RenderPass.Standard: {
-		renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater  ? -1.0 : +1.0;
-		renderData.renderCtx.enableClipPlane = renderData.renderCtx.enableWaterRender;
-		if (renderData.renderCtx.cameraUnderwater) {
+		case RenderPass.WaterReflection:
+			renderData.waterRenderData.reflectionFramebuffer.bind();
+			renderData.viewport.setArea(
+				0,
+				0,
+				renderData.waterRenderData.reflectionFBDesc.width,
+				renderData.waterRenderData.reflectionFBDesc.height,
+			);
 			renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
 			renderData.viewport.clear();
-		}
-	} break;
-	case RenderPass.WaterSurface:
-	break;
-	case RenderPass.UI:
-		gl.disable(gl.DEPTH_TEST);
-		if (renderData.config.renderWireFrame) {
-			throw new Error("wireframe rendering not implemented");
-			// gl.polygonMode(gl.FRONT_AND_BACK, gl.FILL);
-			// gl.lineWidth(1.0);
-		}
-	break;
-	case RenderPass.None:
-	break;
+			renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? -1.0 : +1.0;
+			renderData.renderCtx.enableClipPlane = true;
+			renderData.viewport.camera().mirror(new Vector(0, renderData.renderCtx.subspace, 0, 0));
+			break;
+		case RenderPass.WaterRefraction:
+			{
+				renderData.waterRenderData.refractionFramebuffer.bind();
+				renderData.viewport.setArea(
+					0,
+					0,
+					renderData.waterRenderData.refractionFBDesc.width,
+					renderData.waterRenderData.refractionFBDesc.height,
+				);
+				renderData.viewport.setBkColor(new Vector(0.07, 0.16, 0.2, 1.0));
+				renderData.viewport.clear();
+				renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? +1.0 : -1.0;
+				renderData.renderCtx.enableClipPlane = true;
+			}
+			break;
+		case RenderPass.Standard:
+			{
+				renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? -1.0 : +1.0;
+				renderData.renderCtx.enableClipPlane = renderData.renderCtx.enableWaterRender;
+				if (renderData.renderCtx.cameraUnderwater) {
+					renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
+					renderData.viewport.clear();
+				}
+			}
+			break;
+		case RenderPass.WaterSurface:
+			break;
+		case RenderPass.UI:
+			gl.disable(gl.DEPTH_TEST);
+			if (renderData.config.renderWireFrame) {
+				throw new Error("wireframe rendering not implemented");
+				// gl.polygonMode(gl.FRONT_AND_BACK, gl.FILL);
+				// gl.lineWidth(1.0);
+			}
+			break;
+		case RenderPass.None:
+			break;
 	}
 
 	renderData.renderCtx.updateCommonUniforms();
@@ -232,23 +257,23 @@ function resetRenderPass(renderData: RenderData, pass: RenderPass): void {
 	switch (pass) {
 		case RenderPass.Standard:
 			renderData.viewport.setBkColor(new Vector(0, 0, 0));
-		break;
+			break;
 		case RenderPass.UI:
 			gl.enable(gl.DEPTH_TEST);
-		break;
+			break;
 		case RenderPass.WaterReflection:
 			renderData.waterRenderData.reflectionFramebuffer.unbind();
 			renderData.viewport.setArea(0, 0, renderData.windowW, renderData.windowH);
 			renderData.viewport.camera().mirror(new Vector(0, renderData.renderCtx.subspace, 0, 0));
 			renderData.viewport.setBkColor(new Vector(0, 0, 0));
-		break;
+			break;
 		case RenderPass.WaterRefraction:
 			renderData.waterRenderData.refractionFramebuffer.unbind();
 			renderData.viewport.setArea(0, 0, renderData.windowW, renderData.windowH);
 			renderData.viewport.setBkColor(new Vector(0, 0, 0));
-		break;
+			break;
 		case RenderPass.WaterSurface:
-		break;
+			break;
 	}
 }
 

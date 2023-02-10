@@ -1,13 +1,14 @@
-import { ShaderTerrainPreview } from './render/programs/shader-terrain-preview';
-import { RenderData } from './render/render-data';
-import { ShaderProgramManager } from './render/shader-program-manager';
-import { Terrain } from './world/entities/terrain/terrain.entity';
+import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
+import { RenderData } from "./render/render-data";
+import { ShaderProgramManager } from "./render/shader-program-manager";
+import { Terrain } from "./world/entities/terrain/terrain.entity";
 import { initGL } from "./joglr/glcontext";
 import { Mesh } from "./joglr/mesh";
 import { MeshRenderer } from "./joglr/render/mesh-renderer";
 import { initRender, render } from "./render/render";
 import { DEBUG_ENTRY } from "./test";
 import { World, WorldConfig } from "./world/world";
+import { Shaders } from "./joglr/shaders";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -36,7 +37,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	const contextOptions: WebGLContextAttributes = {
 		alpha: true,
 		depth: true,
-		preserveDrawingBuffer: true
+		preserveDrawingBuffer: true,
 	};
 	initGL(canvas, contextOptions);
 
@@ -64,19 +65,39 @@ function step(): void {
 }
 
 function update(dt: number): void {
-	if (keys['ArrowLeft']) {
-		renderData.viewport.camera().move(renderData.viewport.camera().localX().scale(-MOVE_SPEED * dt));
+	if (keys["ArrowLeft"]) {
+		renderData.viewport.camera().move(
+			renderData.viewport
+				.camera()
+				.localX()
+				.scale(-MOVE_SPEED * dt),
+		);
 	}
 
-	if (keys['ArrowRight']) {
-		renderData.viewport.camera().move(renderData.viewport.camera().localX().scale(+MOVE_SPEED * dt));
+	if (keys["ArrowRight"]) {
+		renderData.viewport.camera().move(
+			renderData.viewport
+				.camera()
+				.localX()
+				.scale(+MOVE_SPEED * dt),
+		);
 	}
 
-	if (keys['ArrowUp']) {
-		renderData.viewport.camera().move(renderData.viewport.camera().direction().scale(+MOVE_SPEED * dt));
+	if (keys["ArrowUp"]) {
+		renderData.viewport.camera().move(
+			renderData.viewport
+				.camera()
+				.direction()
+				.scale(+MOVE_SPEED * dt),
+		);
 	}
-	if (keys['ArrowDown']) {
-		renderData.viewport.camera().move(renderData.viewport.camera().direction().scale(-MOVE_SPEED * dt));
+	if (keys["ArrowDown"]) {
+		renderData.viewport.camera().move(
+			renderData.viewport
+				.camera()
+				.direction()
+				.scale(-MOVE_SPEED * dt),
+		);
 	}
 
 	world.update(dt);
@@ -85,13 +106,21 @@ function update(dt: number): void {
 function initInput(canvas: HTMLCanvasElement) {
 	document.onkeydown = (ev) => {
 		keys[ev.key] = true;
-	}
+		handleKeyDown(ev);
+	};
 	document.onkeyup = (ev) => {
 		keys[ev.key] = false;
+	};
+	canvas.addEventListener("click", () => canvas.requestPointerLock());
+}
+
+function handleKeyDown(ev: KeyboardEvent): void {
+	switch (ev.key) {
+		case "R":
+		case "r":
+			Shaders.reloadAllShaders();
+			break;
 	}
-	canvas.addEventListener("click", () =>
-		canvas.requestPointerLock()
-	);
 }
 
 function initializeWorld(): void {
