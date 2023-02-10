@@ -19,7 +19,7 @@ export class Camera {
 	private matView_ = Matrix.identity();
 	private matProj_ = Matrix.identity();
 	private matViewProj_ = Matrix.identity();
-	private position_ = new Vector(0, 0, -1);
+	private position_ = new Vector(0, 0, 0);
 	private direction_ = new Vector(0, 0, 1);
 	private up_ = new Vector(0, 1, 0);
 	private orthoSize_: Vector; // in world units

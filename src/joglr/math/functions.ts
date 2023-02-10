@@ -28,7 +28,12 @@ export function sqr(x: number): number {
 /** Transforms a vector from world-space into homogenous space and applies perspective division */
 export function project(v: Vector, matWorldViewProj: Matrix) {
 	v.w = 1;
-	return v.mul(matWorldViewProj);
+	const vHomg = v.mul(matWorldViewProj);
+	const wInv = 1.0 / v.w;
+	vHomg.x *= wInv;
+	vHomg.y *= wInv;
+	vHomg.z *= wInv;
+	return vHomg;
 }
 
 /**
@@ -54,8 +59,14 @@ export function buildProjectionMatrix(vFOV: number, aspectRatio: number, zNear: 
 		cotHalfFov / aspectRatio, 0, 0, 0,
 		0, cotHalfFov, 0, 0,
 		0, 0, (zNear + zFar) / (zFar - zNear), 1,
-		0, 0, -2 * zNear * zFar / (zFar - zNear), 1
+		0, 0, -2 * zNear * zFar / (zFar - zNear), 0
 	);
+	// return new Matrix(
+	// 	cotHalfFov / aspectRatio, 0, 0, 0,
+	// 	0, cotHalfFov, 0, 0,
+	// 	0, 0, -(zNear + zFar) / (zFar - zNear), -1,
+	// 	0, 0, -2 * zNear * zFar / (zFar - zNear), 0
+	// );
 }
 
 /**

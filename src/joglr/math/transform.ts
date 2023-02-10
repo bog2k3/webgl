@@ -87,13 +87,13 @@ export class Transform {
 
 	/** rotate the transform by a quaternion expressed in *WORLD* coordinates */
 	rotateWorld(rot: Quat): void {
-		this.orient_ = this.orient_.combine(rot);
+		this.orient_ = rot.combine(this.orient_);
 		this.matDirty_ = true;
 	}
 
 	/** rotate the transform by a quaternion expressed in *LOCAL* coordinates */
 	rotateLocal(rot: Quat): void {
-		this.orient_ = rot.combine(this.orient_);
+		this.orient_ = this.orient_.combine(rot);
 		this.matDirty_ = true;
 	}
 

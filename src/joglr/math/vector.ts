@@ -94,7 +94,7 @@ export class Vector {
 		const s: number = q.w;
 		return u
 			.scale(2 * u.dot(this))
-			.add(this.scale(s * s - u.dot(u))) // TODO the order of subtration may be broken
-			.add(u.cross(this).scale(2 * s)); // TODO the order of cross may be broken
+			.add(this.scale(s * s - u.dot(u)))
+			.add(this.cross(u).scale(2 * s));
 	}
 }

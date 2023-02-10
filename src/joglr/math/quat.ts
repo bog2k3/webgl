@@ -1,8 +1,17 @@
+import { quatRotation } from "./quat-functions";
 import { Vector } from "./vector";
 
 export class Quat extends Vector {
 	public constructor(x: number, y: number, z: number, w: number) {
 		super(x, y, z, w);
+	}
+
+	static identity(): Quat {
+		return new Quat(0, 0, 0, 1);
+	}
+
+	static axisAngle(axis: Vector, angle: number): Quat {
+		return quatRotation(axis, angle);
 	}
 
 	/** Combines the rotations of two quaternions.

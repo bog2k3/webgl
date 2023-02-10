@@ -40,9 +40,8 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 
 		// compute rotation alteration based on inputs
 		const deltaRot: Vector = this.frameRotateValues_;
-		// TODO implement
-		this.transform_.rotateWorld(quatRotation(new Vector(1, 0, 0), deltaRot.x));
-		this.transform_.rotateLocal(quatRotation(new Vector(0, 1, 0), deltaRot.y));
+		this.transform_.rotateLocal(quatRotation(new Vector(1, 0, 0), deltaRot.x));
+		this.transform_.rotateWorld(quatRotation(new Vector(0, 1, 0), deltaRot.y));
 		this.frameRotateValues_ = new Vector(0);
 	}
 

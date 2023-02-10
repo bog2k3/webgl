@@ -12,6 +12,8 @@ import { logprefix } from "./joglr/log";
 import { Mesh } from "./joglr/mesh";
 import { StaticMesh } from "./entities/static-mesh.entity";
 import { quatRotation } from "./joglr/math/quat-functions";
+import { Matrix } from "./joglr/math/matrix";
+import { Quat } from "./joglr/math/quat";
 
 const console = logprefix("Game");
 
@@ -51,10 +53,16 @@ export class Game {
 		World.getInstance().addEntity(this.skyBox_);
 
 		// DEBUG---
-		// const m: Mesh = Mesh.makeBox(new Vector(0, 0, 1), new Vector(0.5, 0.5, 0.5));
-		// const sm = new StaticMesh(m);
-		// sm.getTransform().rotateWorld(quatRotation(new Vector(1, 0, 1), Math.PI / 4));
-		// World.getInstance().addEntity(sm);
+		const m: Mesh = Mesh.makeBox(new Vector(0, 0, 0), new Vector(0.5, 0.5, 0.5));
+		const sm = new StaticMesh(m);
+		// sm.getTransform().rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), Math.PI / 6));
+		// Object.assign(
+		// 	sm.getTransform().glMatrix().getColumnMajorValues(),
+		// 	Matrix.roll(Math.PI / 6).getColumnMajorValues(),
+		// );
+		// console.log(new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 0, 1), 0.1)).values(3));
+		// console.log(new Vector(1, 1, 1).mulQ(Quat.identity()).values(3));
+		World.getInstance().addEntity(sm);
 		//---DEBUG
 
 		console.log("Ready");

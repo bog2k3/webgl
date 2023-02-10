@@ -65,9 +65,9 @@ export class Matrix {
 		const sina = Math.sin(alpha);
 		// prettier-ignore
 		return new Matrix(
-			cosa, 0, sina, 0,
+			cosa, 0, -sina, 0,
 			0, 1, 0, 0,
-			-sina, 0, cosa, 0,
+			sina, 0, cosa, 0,
 			0, 0, 0, 1
 		);
 	}
@@ -78,8 +78,8 @@ export class Matrix {
 		// prettier-ignore
 		return new Matrix(
 			1, 0, 0, 0,
-			0, cosa, -sina, 0,
-			0, sina, cosa, 0,
+			0, cosa, sina, 0,
+			0, -sina, cosa, 0,
 			0, 0, 0, 1
 		);
 	}
@@ -89,8 +89,8 @@ export class Matrix {
 		const sina = Math.sin(alpha);
 		// prettier-ignore
 		return new Matrix(
-			cosa, -sina, 0, 0,
-			sina, cosa, 0, 0,
+			cosa, sina, 0, 0,
+			-sina, cosa, 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		);
