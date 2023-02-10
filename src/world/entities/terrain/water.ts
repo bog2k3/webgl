@@ -41,7 +41,16 @@ export class Water implements IRenderable, IGLResource {
 	}
 
 	constructor() {
-		// TODO implement
+		this.renderData_ = new RenderData;
+		this.renderData_.shaderProgram_ = ShaderProgramManager::requestProgram<ShaderWater>();
+		gl.genVertexArrays(1, &renderData_.VAO_);
+		gl.genBuffers(1, &renderData_.VBO_);
+		gl.genBuffers(1, &renderData_.IBO_);
+
+		this.renderData_.reloadHandler = renderData_.shaderProgram_.onProgramReloaded.add([this](auto const&) {
+			this->setupVAO();
+		});
+		setupVAO();
 	}
 
 	release(): void {
@@ -116,7 +125,7 @@ class WaterVertex extends AbstractVertex {
 		}
 	}
 
-	getSize(): number {
+	getStride(): number {
 		return WaterVertex.getSize();
 	}
 

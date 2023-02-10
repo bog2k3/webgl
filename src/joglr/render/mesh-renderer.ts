@@ -36,7 +36,7 @@ export class MeshRenderer implements IGLResource {
 		gl.uniformMatrix4fv(this.indexMatPVW_, false, matPVW.m);
 		checkGLError("mPVW uniform setup");
 
-		const stride = MeshVertex.getSize() * 4;
+		const stride = MeshVertex.getStride() * 4;
 		gl.bindBuffer(gl.ARRAY_BUFFER, mesh.VBO_);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.IBO_);
 		gl.vertexAttribPointer(this.indexPos_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));

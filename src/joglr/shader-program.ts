@@ -139,7 +139,7 @@ export class ShaderProgram implements IGLResource {
 	private fragPath_: string;
 }
 
-class VertexAttribSource {
+export class VertexAttribSource {
 	VBO: WebGLBuffer;	// VBO to stream a vertex attribute from
 	stride: number;		// stride of the vertex attribute within the VBO
 	offset: number;		// offset of the first vertex attribute from the start of the buffer

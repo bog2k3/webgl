@@ -1,7 +1,7 @@
 export abstract class AbstractVertex {
 
 	/** Returns the size of the vertex, in bytes */
-	abstract getSize(): number;
+	abstract getStride(): number;
 
 	abstract serialize(target: Float32Array, offset: number);
 
@@ -9,7 +9,7 @@ export abstract class AbstractVertex {
 		if (!array.length) {
 			return null;
 		}
-		const elementSize = array[0].getSize();
+		const elementSize = array[0].getStride();
 		const ab = new Float32Array(array.length * elementSize);
 		let offs = 0;
 		for (let v of array) {

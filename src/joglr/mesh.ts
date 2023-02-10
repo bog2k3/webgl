@@ -1,3 +1,4 @@
+import { VertexArrayObject } from './vao';
 import { AbstractVertex } from "./abstract-vertex";
 import { gl } from "./glcontext";
 import { IGLResource } from "./glresource";
@@ -15,7 +16,8 @@ export class MeshVertex extends AbstractVertex {
 	UV1 = new Vector(); // 2
 	color = new Vector(1, 0, 1); // 4
 
-	static getSize(): number {
+	// returns the size in bytes
+	static getStride(): number {
 		return 4 * (3 + 3 + 2 + 4);
 	}
 
@@ -34,8 +36,8 @@ export class MeshVertex extends AbstractVertex {
 		Object.assign(this, data);
 	}
 
-	override getSize(): number {
-		return MeshVertex.getSize();
+	override getStride(): number {
+		return MeshVertex.getStride();
 	}
 
 	override serialize(target: Float32Array, offset: number) {
@@ -64,6 +66,29 @@ export class Mesh implements IGLResource {
 		this.VBO_ = this.IBO_ = null;
 		this.indexCount_ = 0;
 	}
+
+	getRenderMode(): MeshRenderModes {
+		return this.mode_;
+	}
+
+	getElementsCount(): number {
+		return this.indexCount_;
+	}
+
+	getVAO(): VertexArrayObject {
+		return this.VAO_;
+	}
+
+	getVBO(): WebGLBuffer {
+		return this.VBO_;
+	}
+
+	getIBO(): WebGLBuffer {
+		return this.IBO_;
+	}
+
+	// the following are used only by Mesh renderers
+	vertexAttribsProgramBinding_: VertexArrayObject = null;
 
 	static makeScreenQuad(): Mesh {
 		const vertices: MeshVertex[] = [
@@ -309,10 +334,12 @@ export class Mesh implements IGLResource {
 	}
 
 	// ----------------------- PRIVATE AREA ---------------------- //
-	VBO_: WebGLBuffer;
-	IBO_: WebGLBuffer;
-	indexCount_ = 0;
-	mode_: MeshRenderModes = MeshRenderModes.Triangles;
+
+	private VAO_: VertexArrayObject;
+	private VBO_: WebGLBuffer;
+	private IBO_: WebGLBuffer;
+	private indexCount_ = 0;
+	private mode_: MeshRenderModes = MeshRenderModes.Triangles;
 
 	private static makeMesh(vertices: MeshVertex[], indices: Uint16Array): Mesh {
 		const m = new Mesh();

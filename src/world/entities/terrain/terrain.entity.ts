@@ -1,3 +1,5 @@
+import { VertexAttribSource } from './../../../joglr/shader-program';
+import { VertexArrayObject } from './../../../joglr/vao';
 import { AbstractVertex } from '../../../joglr/abstract-vertex';
 import { gl } from '../../../joglr/glcontext';
 import { IGLResource } from '../../../joglr/glresource';
@@ -72,8 +74,39 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// static unloadAllResources(): void;
 
 	// specify previewMode=true to enable "preview" (simplified) rendering for rendering in the menu.
-	constructor(previewMode = false) {
+	constructor(private previewMode_ = false) {
 		super();
+		this.renderData_ = new TerrainRenderData();
+		if (previewMode_) {
+			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram(ShaderTerrainPreview);
+		} else {
+			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram(ShaderTerrain);
+		}
+
+		this.renderData_.reloadHandler = this.renderData_.shaderProgram_.onProgramReloaded.add(() => {
+			this.setupVAO();
+		});
+		this.setupVAO();
+
+		if (!previewMode_)
+		this.water_ = new Water();
+
+		this.triangleAABBGenerator_ = null; // TODO new TriangleAABBGenerator(this);
+	}
+
+	setupVAO(): void {
+		this.renderData_.VAO_.bind();
+		const mapVertexSources: Record<string, VertexAttribSource> = {
+			"pos": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("pos") },
+			"normal": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("normal") },
+			"color": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("color") },
+			"uv1": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv[0]") },
+			"uv2": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv[2]") },
+			"uv3": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv[4]") },
+			"texBlendFactor": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("texBlendFactor") }
+		};
+		this.renderData_.shaderProgram_.setupVertexStreams(mapVertexSources);
+		this.renderData_.VAO_.unbind();
 	}
 
 	override destroy(): void {
@@ -273,8 +306,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			}
 			// set-up shader & vertex buffer
 			this.renderData_.shaderProgram_.begin();
-			//glBindVertexArray(this.renderData_.VAO_);
-			// TODO bind buffers and set pointers
+			this.renderData_.VAO_.bind();
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData_.IBO_);
 			if (rctx.enableClipPlane) {
 				if (rctx.subspace < 0) {
 					// draw below-water subspace:
@@ -289,8 +322,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			}
 
 			// unbind stuff
-			// gl.bindVertexArray(0); // TODO
+			this.renderData_.VAO_.unbind();
 			this.renderData_.shaderProgram_.end();
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, 0);
 
@@ -342,7 +376,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	private triangles_: Triangle[] = null;
 	private config_ = new TerrainConfig();
 	private renderData_: TerrainRenderData = null;
-	private previewMode_ = false;
 	private water_: Water = null;
 	private triangleAABBGenerator_ = null;
 	// private BSPTree<unsigned> *pBSP_ = nullptr;
@@ -410,7 +443,7 @@ class TerrainVertex extends AbstractVertex {
 								//						z between grass/sand and rock (highest priority)
 								//						w between grass and sand
 
-	static getSize(): number {
+	static getStride(): number {
 		return 4 * (3 + 3 + 3 + 5*2 + 4);
 	}
 
@@ -425,8 +458,8 @@ class TerrainVertex extends AbstractVertex {
 		}
 	}
 
-	getSize(): number {
-		return TerrainVertex.getSize();
+	getStride(): number {
+		return TerrainVertex.getStride();
 	}
 
 	serialize(target: Float32Array, offset: number) {
@@ -442,8 +475,9 @@ class TerrainVertex extends AbstractVertex {
 };
 
 class TerrainRenderData implements IGLResource {
-	VBO_: WebGLBuffer = null;
-	IBO_: WebGLBuffer = null;
+	VAO_ = new VertexArrayObject();
+	VBO_: WebGLBuffer = gl.createBuffer();
+	IBO_: WebGLBuffer = gl.createBuffer();
 	trisBelowWater_: number = 0;
 	trisAboveWater_: number = 0;
 
@@ -451,6 +485,7 @@ class TerrainRenderData implements IGLResource {
 	reloadHandler: number;
 
 	release(): void {
+		this.VAO_.release();
 		if (this.VBO_) {
 			gl.deleteBuffer(this.VBO_);
 			this.VBO_ = null;
