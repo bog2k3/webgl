@@ -39,8 +39,8 @@ export class CustomRenderContext extends RenderContext {
 		const unifCommon = SharedUniformPacks.upCommon;
 		unifCommon.setbReflection(this.renderPass == RenderPass.WaterReflection);
 		unifCommon.setbRefraction(this.renderPass == RenderPass.WaterRefraction);
-		unifCommon.setEyePos(this.activeViewport.camera().position());
-		unifCommon.setMatProjView(this.activeViewport.camera().matProjView());
+		unifCommon.setEyePos(this.viewport.camera().position());
+		unifCommon.setMatProjView(this.viewport.camera().matProjView());
 		unifCommon.setEnableClipping(this.enableClipPlane);
 		unifCommon.setSubspace(this.subspace);
 		unifCommon.setTime(this.time);

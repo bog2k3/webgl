@@ -1,7 +1,23 @@
+import { gl } from './../../joglr/glcontext';
+import { SharedUniformPacks } from './shared-uniform-packs';
 import { UPackTerrain } from './uniform-pack-terrain';
 import { ShaderProgram } from '../../joglr/shader-program';
 
 export class ShaderTerrain extends ShaderProgram {
+	constructor() {
+		super();
+		this.useUniformPack(SharedUniformPacks.upCommon);
+		this.useUniformPack(SharedUniformPacks.upWaterSurface);
+		this.useUniformPack(this.upackTerrain_);
+
+		this.defineVertexAttrib("pos", gl.FLOAT, 3);
+		this.defineVertexAttrib("normal", gl.FLOAT, 3);
+		this.defineVertexAttrib("color", gl.FLOAT, 4);
+		this.defineVertexAttrib("uv1", gl.FLOAT, 4);
+		this.defineVertexAttrib("uv2", gl.FLOAT, 4);
+		this.defineVertexAttrib("uv3", gl.FLOAT, 2);
+		this.defineVertexAttrib("texBlendFactor", gl.FLOAT, 4);
+	}
 
 	async load(): Promise<boolean> {
 		if (this.isValid())
@@ -17,5 +33,5 @@ export class ShaderTerrain extends ShaderProgram {
 		return this.upackTerrain_;
 	}
 
-	private upackTerrain_ = new UPackTerrain();
+	protected upackTerrain_ = new UPackTerrain();
 }

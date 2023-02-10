@@ -2,7 +2,6 @@ import { ShaderProgram } from './../../joglr/shader-program';
 import { ShaderTerrain } from './shader-terrain';
 
 export class ShaderTerrainPreview extends ShaderTerrain {
-
 	async load(): Promise<boolean> {
 		if (this.isValid())
 			return; // already loaded

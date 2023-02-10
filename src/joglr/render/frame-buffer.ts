@@ -1,12 +1,13 @@
 import { IGLResource } from './../glresource';
-// Describes a framebuffer's parameters.
-// depending on multisamples parameter, the behaviour is slightly different:
-//		if [multisamples]==0 then the created framebuffer will get a texture attached as the color attachment;
-//		if [multisamples] > 0 then the created framebuffer will get a renderbuffer attached as the color attachment;
-
 import { checkGLError, gl } from "../glcontext";
 import { assert } from "../utils/assert";
 
+/**
+ * Describes a framebuffer's parameters.
+ * depending on multisamples parameter, the behaviour is slightly different:
+ * 	if [multisamples]==0 then the created framebuffer will get a texture attached as the color attachment;
+ * 	if [multisamples] > 0 then the created framebuffer will get a renderbuffer attached as the color attachment;
+ */
 export class FrameBufferDescriptor {
 	width = 256;
 	height = 256;
@@ -16,6 +17,7 @@ export class FrameBufferDescriptor {
 
 	validate(): boolean {
 		let formatCorrect = false;
+		const acceptedFramebufferFormats: number[] = [gl.RGB, gl.RGBA];
 		for (let acceptedFormat of acceptedFramebufferFormats)
 			if (this.format == acceptedFormat) {
 				formatCorrect = true;
@@ -228,8 +230,3 @@ export class FrameBuffer implements IGLResource {
 	private previousFramebufferBindingRead_ = 0;
 	private previousDepthMask_ = false;
 };
-
-const acceptedFramebufferFormats: number[] = [
-	gl.RGB,
-	gl.RGBA
-];

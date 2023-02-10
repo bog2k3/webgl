@@ -1,28 +1,21 @@
-import { Terrain } from './world/entities/terrain/terrain.entity';
-import { ShaderWater } from './render/programs/shader-water';
 import { ShaderTerrainPreview } from './render/programs/shader-terrain-preview';
+import { RenderData } from './render/render-data';
 import { ShaderProgramManager } from './render/shader-program-manager';
-// https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
-
-import { gl, initGL } from "./joglr/glcontext";
+import { Terrain } from './world/entities/terrain/terrain.entity';
+import { initGL } from "./joglr/glcontext";
 import { Mesh } from "./joglr/mesh";
 import { MeshRenderer } from "./joglr/render/mesh-renderer";
-import { World } from "./world/world";
-import { Viewport } from "./joglr/viewport";
-import { renderViewport } from "./world/render";
-import { Vector } from "./joglr/math/vector";
-import { StaticMesh } from "./world/entities/static-mesh.entity";
-import { Matrix } from "./joglr/math/matrix";
+import { initRender, render } from "./render/render";
 import { DEBUG_ENTRY } from "./test";
-import { ShaderTerrain } from "./render/programs/shader-terrain";
-import { Shaders } from "./joglr/shaders";
-import { defaultShaderPreprocessor } from "./joglr/default-shader-preprocessor";
+import { World, WorldConfig } from "./world/world";
+
+// https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
 const MOVE_SPEED = 0.5; // m/s
 
 let lastTime = new Date();
 
-let vp1: Viewport;
+let renderData: RenderData;
 let world: World;
 const keys = {};
 
@@ -35,7 +28,7 @@ async function main(): Promise<void> {
 	requestAnimationFrame(step);
 
 	if (true) {
-		DEBUG_ENTRY(world, vp1);
+		DEBUG_ENTRY();
 	}
 }
 
@@ -47,60 +40,43 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	};
 	initGL(canvas, contextOptions);
 
-	gl.enable(gl.CULL_FACE);
-	gl.cullFace(gl.FRONT);
-	gl.enable(gl.DEPTH_TEST);
-	gl.depthFunc(gl.LESS);
+	renderData = new RenderData(canvas.width, canvas.height);
+	initRender(renderData);
 
 	Mesh.ENABLE_COLOR_DEBUG = true;
 	await MeshRenderer.initialize();
 
-	Shaders.useShaderPreprocessor(defaultShaderPreprocessor);
 	await ShaderProgramManager.loadProgram(ShaderTerrainPreview);
 	// await ShaderProgramManager.loadProgram(ShaderTerrain);
 	// await ShaderProgramManager.loadProgram(ShaderWater);
 
 	await loadTextures();
-
-	vp1 = new Viewport(0, 0, 1280, 720);
-	vp1.camera().moveTo(new Vector(0, 20, -1));
-	vp1.camera().lookAt(new Vector(0, 0, 1));
 }
 
 function step(): void {
-	render();
+	render(renderData, world);
 	const now = new Date();
 	const dt = Math.min(100, now.getTime() - lastTime.getTime()) / 1000;
 	lastTime = now;
 	update(dt);
 	// schedule next frame
-	requestAnimationFrame(step);
-}
-
-function render() {
-	// clear screen
-	gl.clearColor(1, 1, 1, 1);
-	gl.clearDepth(1);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-	renderViewport(vp1, world);
-	gl.flush();
+	// requestAnimationFrame(step);
 }
 
 function update(dt: number): void {
 	if (keys['ArrowLeft']) {
-		vp1.camera().move(vp1.camera().localX().scale(-MOVE_SPEED * dt));
+		renderData.viewport.camera().move(renderData.viewport.camera().localX().scale(-MOVE_SPEED * dt));
 	}
 
 	if (keys['ArrowRight']) {
-		vp1.camera().move(vp1.camera().localX().scale(+MOVE_SPEED * dt));
+		renderData.viewport.camera().move(renderData.viewport.camera().localX().scale(+MOVE_SPEED * dt));
 	}
 
 	if (keys['ArrowUp']) {
-		vp1.camera().move(vp1.camera().direction().scale(+MOVE_SPEED * dt));
+		renderData.viewport.camera().move(renderData.viewport.camera().direction().scale(+MOVE_SPEED * dt));
 	}
 	if (keys['ArrowDown']) {
-		vp1.camera().move(vp1.camera().direction().scale(-MOVE_SPEED * dt));
+		renderData.viewport.camera().move(renderData.viewport.camera().direction().scale(-MOVE_SPEED * dt));
 	}
 
 	world.update(dt);
@@ -119,14 +95,9 @@ function initInput(canvas: HTMLCanvasElement) {
 }
 
 function initializeWorld(): void {
-	world = new World();
-	const m = Mesh.makeBox(new Vector(), new Vector(0.4, 0.4, 0.4));
-	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(-0.5, +0.5))));
-	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(+0.5, +0.5))));
-	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(+0.5, -0.5))));
-	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(-0.5, -0.5))));
-
-	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(0, -1, 0)).mul(Matrix.scale(10, 0.1, 10))));
+	const worldConfig = new WorldConfig();
+	worldConfig.drawBoundaries = false;
+	world = new World(worldConfig);
 }
 
 async function loadTextures() {

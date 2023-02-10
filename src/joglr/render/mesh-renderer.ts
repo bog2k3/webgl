@@ -31,7 +31,7 @@ export class MeshRenderer implements IGLResource {
 			return;
 		}
 		gl.useProgram(this.meshShaderProgram_);
-		const matPV = context.activeViewport.camera().matProjView();
+		const matPV = context.viewport.camera().matProjView();
 
 		const matPVW = matPV.mul(worldTransform);
 		gl.uniformMatrix4fv(this.indexMatPVW_, false, matPVW.m);

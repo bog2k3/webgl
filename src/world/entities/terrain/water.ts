@@ -2,14 +2,14 @@ import { ShaderProgramManager } from './../../../render/shader-program-manager';
 import { VertexAttribSource } from './../../../joglr/shader-program';
 import { VertexArrayObject } from './../../../joglr/vao';
 import { TextureLoader } from './../../../joglr/texture-loader';
-import { gl } from './../../../joglr/glcontext';
+import { checkGLError, gl } from './../../../joglr/glcontext';
 import { ShaderWater } from '../../../render/programs/shader-water';
 import { Vector } from './../../../joglr/math/vector';
 import { Triangle, triangulate } from './triangulation';
 import { IGLResource } from "../../../joglr/glresource";
 import { RenderContext } from "../../../joglr/render-context";
 import { Progress } from "../../../progress";
-import { IRenderable } from "../../renderable";
+import { IRenderable } from "../../../joglr/renderable";
 import { AbstractVertex } from "../../../joglr/abstract-vertex";
 import { assert } from "../../../joglr/utils/assert";
 import { srand } from "../../../joglr/utils/random";
@@ -33,8 +33,8 @@ export class Water implements IRenderable, IGLResource {
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			break;
 			case 1:
-				WaterRenderData.textureFoam = (await TextureLoader.loadFromPNG("data/textures/water/foam.png", true)).texture;
-				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam);
+				WaterRenderData.textureFoam_ = (await TextureLoader.loadFromPNG("data/textures/water/foam.png", true)).texture;
+				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam_);
 				gl.generateMipmap(gl.TEXTURE_2D);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -43,6 +43,12 @@ export class Water implements IRenderable, IGLResource {
 		gl.bindTexture(gl.TEXTURE_2D, 0);
 
 		return {completed: step+1, total: 2};
+	}
+
+	static unloadAllResources(): void {
+		for (let tex of [WaterRenderData.textureFoam_, WaterRenderData.textureNormal_]) {
+			gl.deleteTexture(tex);
+		}
 	}
 
 	constructor() {
@@ -94,7 +100,7 @@ export class Water implements IRenderable, IGLResource {
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData_.textureRefraction_Cube_);
 		this.renderData_.shaderProgram_.uniforms().setRefractionCubeTexSampler(3);
 		gl.activeTexture(gl.TEXTURE4);
-		gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam);
+		gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam_);
 		this.renderData_.shaderProgram_.uniforms().setFoamTexSampler(4);
 
 		// set-up shader and vertex buffer
@@ -110,6 +116,8 @@ export class Water implements IRenderable, IGLResource {
 
 		gl.enable(gl.CULL_FACE);
 		gl.disable(gl.BLEND);
+
+		checkGLError("Water.render()");
 	}
 
 	generate(config: WaterConfig): void {
@@ -246,7 +254,7 @@ class WaterRenderData {
 	reloadHandler: number;
 
 	static textureNormal_: WebGLTexture;
-	static textureFoam: WebGLTexture;
+	static textureFoam_: WebGLTexture;
 
 	textureReflection_: WebGLTexture;
 	textureRefraction_Cube_: WebGLTexture;

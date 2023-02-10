@@ -1,6 +1,10 @@
+import { IRenderable } from "./renderable";
 import { Camera } from "./camera";
+import { checkGLError, gl } from "./glcontext";
 import { Matrix } from "./math/matrix";
 import { Vector } from "./math/vector";
+import { RenderContext } from "./render-context";
+import { assert } from "./utils/assert";
 
 export class Viewport {
 	constructor(
@@ -100,7 +104,10 @@ export class Viewport {
 	}
 
 	clear(): void {
-		throw new Error("not implemented");
+		gl.clearColor(1, 1, 1, 1);
+		gl.clearDepth(1);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		// TODO this will clear the whole screen instead of the viewport, fix
 		/*
 		SSDescriptor ssDesc;
 		bool ssEnabled = gltGetSuperSampleInfo(ssDesc);
@@ -117,51 +124,48 @@ export class Viewport {
 		*/
 	}
 
-	renderList(list: unknown[], ctx: unknown): void {
-		throw new Error("not implemented");
-		/*
-		if (!isEnabled())
+	renderList(list: IRenderable[], ctx: RenderContext): void {
+		if (!this.isEnabled())
 			return;
 
-		checkGLError("Viewport::render before prepare");
-		prepareRendering(ctx);
+		checkGLError("Viewport.render before prepare");
+		this.prepareForRender(ctx);
 		checkGLError("Viewport::render after prepare, before element.draw()");
 
 		// render objects from list:
-		for (auto &x : list) {
-			x.draw(ctx);
+		for (let x of list) {
+			x.render(ctx);
 			checkGLError("Viewport::render after element.draw()");
 		}
 		// flush all render helpers' pending commands
-		RenderHelpers::flushAll();
+		// RenderHelpers::flushAll(); // TODO implement
 		checkGLError("Viewport::render after flushAll()");
 
-		resetRendering();
+		this.resetAfterRender();
 		checkGLError("Viewport::render end.");
-		*/
 	}
 
-	public prepareForRender() {
-		/*
+	public prepareForRender(ctx: RenderContext) {
 		// set up viewport:
-		assertDbg(RenderHelpers::pActiveViewport == nullptr && "Another viewport is already rendering");
-		RenderHelpers::pActiveViewport = this;
+		// assert(RenderHelpers::pActiveViewport == nullptr && "Another viewport is already rendering");
+		// RenderHelpers::pActiveViewport = this;
+		// TODO do we need this?
 
-		SSDescriptor ssDesc;
-		bool ssEnabled = gltGetSuperSampleInfo(ssDesc);
-		// when super sample is enabled we must adjust the viewport accordingly
-		unsigned vpfx = ssEnabled ? ssDesc.getLinearSampleFactor() : 1;
-		unsigned vpfy = ssEnabled ? ssDesc.getLinearSampleFactor() : 1;
-		auto vpp = position();
-		glViewport(vpp.x * vpfx, vpp.y * vpfy, width() * vpfx, height() * vpfy);
+		// ssDesc: SSDescriptor;
+		// bool ssEnabled = gltGetSuperSampleInfo(ssDesc);
+		// TODO when super sample is enabled we must adjust the viewport accordingly
+		const ssEnabled = false;
+		const vpfx = ssEnabled ? 1 /*ssDesc.getLinearSampleFactor()*/ : 1;
+		const vpfy = ssEnabled ? 1 /*ssDesc.getLinearSampleFactor()*/ : 1;
+		const vpp = this.position();
+		gl.viewport(vpp.x * vpfx, vpp.y * vpfy, this.width() * vpfx, this.height() * vpfy);
 
 		// make sure the context is refering to this viewport:
-		ctx.pViewport = this;
-		*/
+		ctx.viewport = this;
 	}
 
 	public resetAfterRender() {
-		// RenderHelpers::pActiveViewport = nullptr;
+		// RenderHelpers::pActiveViewport = nullptr; // TODO implement
 	}
 
 	// ----------------- PRIVATE AREA ---------------------------- //

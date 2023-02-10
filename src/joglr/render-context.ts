@@ -1,5 +1,5 @@
 import { Viewport } from "./viewport";
 
 export class RenderContext {
-	activeViewport: Viewport | null;
+	viewport: Viewport | null;
 }

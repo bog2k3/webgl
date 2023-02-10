@@ -4,7 +4,7 @@ import { ShaderProgramManager } from './../../../render/shader-program-manager';
 import { VertexAttribSource } from './../../../joglr/shader-program';
 import { VertexArrayObject } from './../../../joglr/vao';
 import { AbstractVertex } from '../../../joglr/abstract-vertex';
-import { gl } from '../../../joglr/glcontext';
+import { checkGLError, gl } from '../../../joglr/glcontext';
 import { IGLResource } from '../../../joglr/glresource';
 import { Vector } from '../../../joglr/math/vector';
 import { RenderContext } from '../../../joglr/render-context';
@@ -13,79 +13,63 @@ import { Progress } from "../../../progress";
 import { CustomRenderContext } from "../../../render/custom-render-context";
 import { ShaderTerrain } from '../../../render/programs/shader-terrain';
 import { Entity } from '../../entity';
-import { IRenderable } from '../../renderable';
+import { IRenderable } from '../../../joglr/renderable';
 import { TerrainConfig } from '../config';
-import { TextureLoader } from './../../../joglr/texture-loader';
+import { TextureInfo, TextureLoader } from './../../../joglr/texture-loader';
 import { RenderPass } from './../../../render/custom-render-context';
 import { Triangle, triangulate } from "./triangulation";
 import { Water, WaterConfig } from './water';
 import { assert } from "../../../joglr/utils/assert";
+import { EntityType } from "../entity-types";
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
 	static async loadTextures(step: number): Promise<Progress> {
-		switch (step) {
-		case 0:
-			console.log("Loading terrain textures . . .");
-			TerrainRenderData.textures_[0] = new TerrainTextureInfo({
-				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/dirt3.png", true)).texture,
-				wWidth: 2,
-				wHeight: 2
-			});
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[0].texture);
-			gl.generateMipmap(gl.TEXTURE_2D);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		break;
-		case 1:
-			TerrainRenderData.textures_[1] = new TerrainTextureInfo({
-				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/grass1.png", true)).texture,
-				wWidth: 3,
-				wHeight: 3
-			});
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[1].texture);
-			gl.generateMipmap(gl.TEXTURE_2D);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		break;
-		case 2:
-			TerrainRenderData.textures_[2] = new TerrainTextureInfo({
-				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/rock1.png", true)).texture,
-				wWidth: 3,
-				wHeight: 3
-			});
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[2].texture);
-			gl.generateMipmap(gl.TEXTURE_2D);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		break;
-		case 3:
-			TerrainRenderData.textures_[3] = new TerrainTextureInfo({
-				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/rock3.png", true)).texture,
-				wWidth: 4,
-				wHeight: 4
-			});
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texture);
-			gl.generateMipmap(gl.TEXTURE_2D);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		break;
-		case 4:
-			TerrainRenderData.textures_[4] = new TerrainTextureInfo({
-				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/sand1.png", true)).texture,
-				wWidth: 4,
-				wHeight: 4
-			});
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texture);
-			gl.generateMipmap(gl.TEXTURE_2D);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			console.log("Terrain textures loaded.");
-		break;
-		}
+		console.log("Loading terrain textures...");
+		const textureInfo = [{
+			url: "data/textures/terrain/dirt3.png",
+			wWidth: 2,
+			wHeight: 2
+		}, {
+			url: "data/textures/terrain/grass1.png",
+			wWidth: 3,
+			wHeight: 3
+		}, {
+			url: "data/textures/terrain/rock1.png",
+			wWidth: 3,
+			wHeight: 3
+		}, {
+			url: "data/textures/terrain/rock3.png",
+			wWidth: 4,
+			wHeight: 4
+		}, {
+			url: "data/textures/terrain/sand1.png",
+			wWidth: 4,
+			wHeight: 4
+		}];
+		await Promise.all(textureInfo.map((tInfo, index) =>
+			TextureLoader.loadFromPNG(tInfo.url, true)
+				.then((result: TextureInfo) => {
+					TerrainRenderData.textures_[index] = new TerrainTextureInfo({
+						texture: result.texture,
+						wWidth: tInfo.wWidth,
+						wHeight: tInfo.wHeight
+					});
+					gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[index].texture);
+					gl.generateMipmap(gl.TEXTURE_2D);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				})
+		));
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		return {completed: step+1, total: 5};
+		console.log("Terrain textures loaded.");
+		return {completed: step+1, total: 1};
 	}
-	// static unloadAllResources(): void;
+
+	static unloadAllResources(): void {
+		for (let tex of TerrainRenderData.textures_) {
+			tex.release();
+		}
+	}
 
 	// specify previewMode=true to enable "preview" (simplified) rendering for rendering in the menu.
 	constructor(private previewMode_ = false) {
@@ -106,6 +90,10 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.water_ = new Water();
 
 		this.triangleAABBGenerator_ = null; // TODO new TriangleAABBGenerator(this);
+	}
+
+	override getType(): EntityType {
+		return EntityType.Terrain;
 	}
 
 	override destroy(): void {
@@ -332,6 +320,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			//BSPDebugDraw::draw(*pBSP_);
 			//for (unsigned i=0; i<triangles_.length / 10; i++)
 			//	Shape3D::get()->drawAABB(triangleAABBGenerator_->getAABB(i), glm::vec3{0.f, 1.f, 0.f});
+
+			checkGLError("Terrain.render()");
 		} else if (rctx.renderPass === RenderPass.WaterSurface) {
 			if (this.water_)
 				this.water_.render(context);

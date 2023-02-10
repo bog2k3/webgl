@@ -3,7 +3,8 @@ import { Matrix } from "../../joglr/math/matrix";
 import { Mesh } from "../../joglr/mesh";
 import { RenderContext } from "../../joglr/render-context";
 import { MeshRenderer } from "../../joglr/render/mesh-renderer";
-import { IRenderable } from "../renderable";
+import { IRenderable } from "../../joglr/renderable";
+import { EntityType } from "./entity-types";
 
 export class StaticMesh extends Entity implements IRenderable {
 	constructor(
@@ -11,6 +12,10 @@ export class StaticMesh extends Entity implements IRenderable {
 		public matW: Matrix = Matrix.identity()
 	) {
 		super();
+	}
+
+	override getType(): EntityType {
+		return EntityType.StaticMesh;
 	}
 
 	render(context: RenderContext): void {

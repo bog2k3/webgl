@@ -1,6 +1,6 @@
 import { RenderContext } from './../render-context';
 import { Viewport } from './../viewport';
-import { IRenderable } from './../../world/renderable';
+import { IRenderable } from '../renderable';
 import { IGLResource } from './../glresource';
 import { FrameBuffer, FrameBufferDescriptor } from "./frame-buffer";
 import { assert } from "../utils/assert";
@@ -85,7 +85,7 @@ class OffscreenRendererData implements IGLResource {
 	constructor(bufW: number, bufH: number, renderContext: RenderContext) {
 		this.renderContext = renderContext;
 		this.viewport = new Viewport(0, 0, bufW, bufH);
-		this.renderContext.activeViewport = this.viewport;
+		this.renderContext.viewport = this.viewport;
 	}
 
 	release(): void {
