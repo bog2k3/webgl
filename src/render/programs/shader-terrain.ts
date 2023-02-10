@@ -3,8 +3,7 @@ import { ShaderProgram } from '../../joglr/shader-program';
 
 export class ShaderTerrain extends ShaderProgram {
 
-	// TODO this is not necessary to override
-	override async load(vertPath: string, fragPath: string): Promise<boolean> {
+	load(): Promise<boolean> {
 		if (this.isValid())
 			return; // already loaded
 

@@ -1,0 +1,1 @@
+export type Progress = {completed: number; total: number};

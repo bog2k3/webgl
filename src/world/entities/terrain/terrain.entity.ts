@@ -1,24 +1,73 @@
-import { RenderPass } from './../../../render/custom-render-context';
-import { Water, WaterParams } from './water';
-import { TerrainConfig } from '../config';
-import { IRenderable } from '../../renderable';
-import { Entity } from '../../entity';
-import { RenderContext } from '../../../joglr/render-context';
-import { Vector } from '../../../joglr/math/vector';
-import { IGLResource } from '../../../joglr/glresource';
-import { gl } from '../../../joglr/glcontext';
 import { AbstractVertex } from '../../../joglr/abstract-vertex';
-import { ShaderTerrain } from '../../../render/programs/terrain-shader';
+import { gl } from '../../../joglr/glcontext';
+import { IGLResource } from '../../../joglr/glresource';
+import { Vector } from '../../../joglr/math/vector';
+import { RenderContext } from '../../../joglr/render-context';
 import { rand, randSeed } from "../../../joglr/utils/random";
-import { Triangle, triangulate } from "./triangulation";
+import { Progress } from "../../../progress";
 import { CustomRenderContext } from "../../../render/custom-render-context";
-
-type Progress = {completed: number; total: number};
+import { ShaderTerrain } from '../../../render/programs/shader-terrain';
+import { Entity } from '../../entity';
+import { IRenderable } from '../../renderable';
+import { TerrainConfig } from '../config';
+import { TextureLoader } from './../../../joglr/texture-loader';
+import { RenderPass } from './../../../render/custom-render-context';
+import { Triangle, triangulate } from "./triangulation";
+import { Water, WaterConfig } from './water';
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
 	static loadTextures(step: number): Progress {
-		return {completed: 0, total: 0};
-		// TODO implement
+		switch (step) {
+		case 0:
+			console.log("Loading terrain textures . . .");
+			TerrainRenderData.textures_[0].texture = TextureLoader.loadFromPNG("data/textures/terrain/dirt3.png", true).texture;
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[0].texture);
+			gl.generateMipmap(gl.TEXTURE_2D);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			TerrainRenderData.textures_[0].wWidth = 2;
+			TerrainRenderData.textures_[0].wHeight = 2;
+		break;
+		case 1:
+			TerrainRenderData.textures_[1].texture = TextureLoader.loadFromPNG("data/textures/terrain/grass1.png", true).texture;
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[1].texture);
+			gl.generateMipmap(gl.TEXTURE_2D);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			TerrainRenderData.textures_[1].wWidth = 3;
+			TerrainRenderData.textures_[1].wHeight = 3;
+		break;
+		case 2:
+			TerrainRenderData.textures_[2].texture = TextureLoader.loadFromPNG("data/textures/terrain/rock1.png", true).texture;
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[2].texture);
+			gl.generateMipmap(gl.TEXTURE_2D);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			TerrainRenderData.textures_[2].wWidth = 3;
+			TerrainRenderData.textures_[2].wHeight = 3;
+		break;
+		case 3:
+			TerrainRenderData.textures_[3].texture = TextureLoader.loadFromPNG("data/textures/terrain/rock3.png", true).texture;
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texture);
+			gl.generateMipmap(gl.TEXTURE_2D);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			TerrainRenderData.textures_[3].wWidth = 4;
+			TerrainRenderData.textures_[3].wHeight = 4;
+		break;
+		case 4:
+			TerrainRenderData.textures_[4].texture = TextureLoader.loadFromPNG("data/textures/terrain/sand1.png", true).texture;
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texture);
+			gl.generateMipmap(gl.TEXTURE_2D);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			TerrainRenderData.textures_[4].wWidth = 4;
+			TerrainRenderData.textures_[4].wHeight = 4;
+			console.log("Terrain textures loaded.");
+		break;
+		}
+		gl.bindTexture(gl.TEXTURE_2D, 0);
+		return {completed: step+1, total: 5};
 	}
 	// static unloadAllResources(): void;
 
@@ -76,8 +125,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 		this.rows_ = Math.ceil(config.length * config.vertexDensity) + 1;
 		this.cols_ = Math.ceil(config.width * config.vertexDensity) + 1;
-
-		// TODO continue here
 
 		// we need to generate some 'skirt' vertices that will encompass the entire terrain in a circle,
 		// in order to extend the sea-bed away from the main terrain
@@ -167,7 +214,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 		console.log("[TERRAIN] Generating water . . .");
 		if (this.water_) {
-			this.water_.generate(<WaterParams>{
+			this.water_.generate(<WaterConfig>{
 				innerRadius: terrainRadius,					// inner radius
 				outerExtent: seaBedRadius - terrainRadius + 200,// outer extent
 				vertexDensity: Math.max(0.05, 2.0 / terrainRadius),// vertex density
@@ -208,15 +255,15 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		if (rctx.renderPass == RenderPass.Standard || rctx.renderPass == RenderPass.WaterReflection || rctx.renderPass == RenderPass.WaterRefraction) {
 			// set-up textures
 			gl.activeTexture(gl.TEXTURE0);
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[0].texID);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[0].texture);
 			gl.activeTexture(gl.TEXTURE1);
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[1].texID);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[1].texture);
 			gl.activeTexture(gl.TEXTURE2);
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[2].texID);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[2].texture);
 			gl.activeTexture(gl.TEXTURE3);
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texID);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texture);
 			gl.activeTexture(gl.TEXTURE4);
-			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texID);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texture);
 			for (let i=0; i<TerrainVertex.nTextures; i++)
 				this.renderData_.shaderProgram_.uniforms().setTextureSampler(i, i);
 			if (this.water_) {
@@ -341,13 +388,13 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 };
 
 class TerrainTextureInfo implements IGLResource {
-	texID: WebGLTexture;	// GL texture ID
+	texture: WebGLTexture;	// GL texture ID
 	wWidth = 1.0;			// width of texture in world units (meters)
 	wHeight = 1.0;			// height/length of texture in world units (meters)
 
 	release(): void {
-		if (this.texID)
-			gl.deleteTexture(this.texID);
+		if (this.texture)
+			gl.deleteTexture(this.texture);
 	}
 };
 
