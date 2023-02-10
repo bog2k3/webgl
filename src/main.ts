@@ -2,6 +2,7 @@ import { Terrain } from "./entities/terrain/terrain.entity";
 import { Game } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglr/glcontext";
+import { Vector } from "./joglr/math/vector";
 import { Mesh } from "./joglr/mesh";
 import { MeshRenderer } from "./joglr/render/mesh-renderer";
 import { Shaders } from "./joglr/render/shaders";
@@ -81,8 +82,10 @@ function update(dt: number): void {
 }
 
 function onGameStarted(): void {
+	renderData.viewport.camera().moveTo(new Vector(0, 0, -1));
+	renderData.viewport.camera().lookAt(new Vector(0, +0.5, 0));
 	playerInputHandler.setTargetObject(game.freeCam());
-	game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
+	// game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
 	game.terrain()?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	// TODO activate these
 	// game.terrain().setWaterRefractionTex(renderData.waterRenderData.refractionFramebuffer.fbTexture(), game.skyBox().getCubeMapTexture());

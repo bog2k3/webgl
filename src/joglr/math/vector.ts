@@ -48,7 +48,7 @@ export class Vector {
 	 * In fact Z always equals X cross Y no matter what
 	 */
 	cross(v: Vector): Vector {
-		return new Vector(this.z * v.y - this.y * v.z, this.x * v.z - this.z * v.x, this.y * v.x - this.x * v.y, 0);
+		return new Vector(this.y * v.z - this.z * v.y, this.z * v.x - this.x * v.z, this.x * v.y - this.y * v.x, 0);
 	}
 
 	lerp(v: Vector, f: number): Vector {
@@ -95,6 +95,6 @@ export class Vector {
 		return u
 			.scale(2 * u.dot(this))
 			.add(this.scale(s * s - u.dot(u)))
-			.add(this.cross(u).scale(2 * s));
+			.add(u.cross(this).scale(2 * s));
 	}
 }

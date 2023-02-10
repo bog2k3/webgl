@@ -77,8 +77,8 @@ export function buildProjectionMatrix(vFOV: number, aspectRatio: number, zNear: 
  */
 export function buildViewMatrix(cameraPosition: Vector, cameraDirection: Vector, upVector: Vector): Matrix {
 	const cZAxis = cameraDirection;
-	const cXAxis = cZAxis.cross(upVector).normalize();
-	const cYAxis = cXAxis.cross(cZAxis).normalize();
+	const cXAxis = upVector.cross(cZAxis).normalize();
+	const cYAxis = cZAxis.cross(cXAxis).normalize();
 	const cTransInv = new Vector(-cameraPosition.dot(cXAxis), -cameraPosition.dot(cYAxis), -cameraPosition.dot(cZAxis));
 	// prettier-ignore
 	return new Matrix(

@@ -46,10 +46,34 @@ export function matrixToQuat(mat: Matrix): Quat {
 	const m20 = m[8];
 	const m21 = m[9];
 	const m22 = m[10];
-	const w = Math.sqrt(1 + m00 + m11 + m22) / 2;
-	const w4 = w * 4;
-	const x = (m21 - m12) / w4; // TODO the order of subtraction may be wrong
-	const y = (m02 - m20) / w4;
-	const z = (m10 - m01) / w4;
-	return new Quat(x, y, z, w);
+
+	const tr = m00 + m11 + m22;
+	let qw, qx, qy, qz;
+
+	if (tr > 0) {
+		const S = Math.sqrt(tr + 1.0) * 2; // S=4*qw
+		qw = 0.25 * S;
+		qx = (m21 - m12) / S;
+		qy = (m02 - m20) / S;
+		qz = (m10 - m01) / S;
+	} else if (m00 > m11 && m00 > m22) {
+		const S = Math.sqrt(1.0 + m00 - m11 - m22) * 2; // S=4*qx
+		qw = (m21 - m12) / S;
+		qx = 0.25 * S;
+		qy = (m01 + m10) / S;
+		qz = (m02 + m20) / S;
+	} else if (m11 > m22) {
+		const S = Math.sqrt(1.0 + m11 - m00 - m22) * 2; // S=4*qy
+		qw = (m02 - m20) / S;
+		qx = (m01 + m10) / S;
+		qy = 0.25 * S;
+		qz = (m12 + m21) / S;
+	} else {
+		const S = Math.sqrt(1.0 + m22 - m00 - m11) * 2; // S=4*qz
+		qw = (m10 - m01) / S;
+		qx = (m02 + m20) / S;
+		qy = (m12 + m21) / S;
+		qz = 0.25 * S;
+	}
+	return new Quat(qx, qy, qz, qw);
 }

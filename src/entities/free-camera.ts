@@ -1,6 +1,5 @@
 import { buildMatrixFromOrientation, clamp } from "../joglr/math/functions";
 import { Matrix } from "../joglr/math/matrix";
-import { Quat } from "../joglr/math/quat";
 import { matrixToQuat, quatRotation } from "../joglr/math/quat-functions";
 import { Vector } from "../joglr/math/vector";
 import { Entity } from "../joglr/world/entity";

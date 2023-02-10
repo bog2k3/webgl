@@ -30,15 +30,15 @@ export class Game {
 		tc.width = 200;
 		tc.minElevation = -2;
 		tc.maxElevation = 4;
-		this.terrain_ = new Terrain(true);
-		this.terrain_.generate(tc);
-		this.terrain_.finishGenerate();
+		// this.terrain_ = new Terrain(true);
+		// this.terrain_.generate(tc);
+		// this.terrain_.finishGenerate();
 
-		World.getInstance().addEntity(this.terrain_);
+		// World.getInstance().addEntity(this.terrain_);
 
 		// this.freeCam_ = new FreeCamera(new Vector(140, 50, 180), new Vector(-1, -0.5, -1));
 		// this.freeCam_ = new FreeCamera(new Vector(0, 50, 0), new Vector(0, -0.9, 0.1));
-		this.freeCam_ = new FreeCamera(new Vector(0, 0, 0), new Vector(0, 0, 1));
+		this.freeCam_ = new FreeCamera(new Vector(0.5, 1, -1), new Vector(0, -1, 1));
 		World.getInstance().addEntity(this.freeCam_);
 
 		// camera controller (this one moves the render camera to the position of the target entity)
