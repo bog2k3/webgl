@@ -64,8 +64,11 @@ export class Vector {
 	/** returns a new vector obtained by rotating this vector by a quaternion */
 	rotate(q: Quat): Vector {
 		// 1. set w=1, 2. quat multiplication q*v, 3. return .xyz()
-		throw new Error("not implemented");
-		return new Vector();
+		const u: Vector = q.xyz();
+		const s: number = q.w;
+		return u.scale(2 * u.dot(this))
+			.add(this.scale(s*s - u.dot(u)))
+			.add(u.cross(this).scale(2*s));
 	}
 
 	/** returns the multiplication of the vector by a matrix, as a new vector */

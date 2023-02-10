@@ -39,7 +39,7 @@ async function initGraphics(): Promise<void> {
 	Mesh.ENABLE_COLOR_DEBUG = true;
 
 	vp1 = new Viewport(0, 0, 1280, 720);
-	scene = new SceneGraph();
+	scene = new SceneGraph(vp1.camera());
 
 	await MeshRenderer.initialize();
 }
