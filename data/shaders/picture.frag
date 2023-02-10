@@ -16,7 +16,7 @@ const int BLEND_MODE_ADD = 1;
 const int BLEND_MODE_MULTIPLY = 2;
 
 void main() {
-	vec4 texColor = texture(texPicture, fragIn.uv);
+	vec4 texColor = texture2D(texPicture, fragIn.uv);
 	float factor = blendFactor;
 	factor *= mulTextureAlpha > 0 ? texColor.a : 1.0;
 

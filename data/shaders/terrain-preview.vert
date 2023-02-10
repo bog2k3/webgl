@@ -1,5 +1,7 @@
 #version 100
 
+precision mediump float;
+
 #include common.glsl
 
 attribute vec3 pos;
@@ -19,7 +21,7 @@ varying vec2 fUV[5];
 varying vec4 fTexBlendFactor;
 
 void main() {
-	gl_Position = matPV * vec4(pos, 1);
+	gl_Position = matPV * vec4(pos, 1.0);
 	// gl_ClipDistance[0] = 1;
 
 	fWPos = pos;

@@ -16,16 +16,16 @@ uniform sampler2D tex[5];
 void main() {
 	float lowFreqFactor = 0.05;
 	// sample textures at two frequencies:
-	vec4 t0 = texture(tex[0], frag.uv[0]);
-	vec4 t0low = texture(tex[0], frag.uv[0] * lowFreqFactor);
-	vec4 t1 = texture(tex[1], frag.uv[1]);
-	vec4 t1low = texture(tex[1], frag.uv[1] * lowFreqFactor);
-	vec4 t2 = texture(tex[2], frag.uv[2]);
-	vec4 t2low = texture(tex[2], frag.uv[2] * lowFreqFactor);
-	vec4 t3 = texture(tex[3], frag.uv[3]);
-	vec4 t3low = texture(tex[3], frag.uv[3] * lowFreqFactor);
-	vec4 t4 = texture(tex[4], frag.uv[4]);
-	vec4 t4low = texture(tex[4], frag.uv[4] * lowFreqFactor);
+	vec4 t0 = texture2D(tex[0], frag.uv[0]);
+	vec4 t0low = texture2D(tex[0], frag.uv[0] * lowFreqFactor);
+	vec4 t1 = texture2D(tex[1], frag.uv[1]);
+	vec4 t1low = texture2D(tex[1], frag.uv[1] * lowFreqFactor);
+	vec4 t2 = texture2D(tex[2], frag.uv[2]);
+	vec4 t2low = texture2D(tex[2], frag.uv[2] * lowFreqFactor);
+	vec4 t3 = texture2D(tex[3], frag.uv[3]);
+	vec4 t3low = texture2D(tex[3], frag.uv[3] * lowFreqFactor);
+	vec4 t4 = texture2D(tex[4], frag.uv[4]);
+	vec4 t4low = texture2D(tex[4], frag.uv[4] * lowFreqFactor);
 
 	// mix texture frequencies
 	t0 = t0 * t0low * 2.5;

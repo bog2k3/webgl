@@ -47,7 +47,7 @@ float fresnel(vec3 normal, vec3 incident, float n1, float n2) {
 }
 
 vec4 underToAboveTransm(vec3 normal, vec2 screenCoord, float dxyW, vec3 eyeDir, float eyeDist, out vec3 foamColor) {
-	vec4 refractTarget = texture(textureRefraction, screenCoord);
+	vec4 refractTarget = texture2D(textureRefraction, screenCoord);
 	//float targetZ = Zn + (Zf - Zn) * refractTarget.a;
 	//float targetDist = sqrt(targetZ*targetZ * (1 + dxyW*dxyW / (Zn*Zn)));
 	//float targetDistUW = targetDist - eyeDist; // distance through water to target 0
@@ -67,7 +67,7 @@ vec4 underToAboveTransm(vec3 normal, vec2 screenCoord, float dxyW, vec3 eyeDir, 
 	vec2 s_perturbation = (matPV * vec4(w_perturbation, 0)).xy;
 	s_perturbation *= pow(clamp(targetDepth*0.4, 0, 1), 1) * transmitSampleOutsideFactor;
 	vec2 sampleCoord = screenCoord + s_perturbation;
-	vec3 transmitColor = texture(textureRefraction, sampleCoord).rgb;
+	vec3 transmitColor = texture2D(textureRefraction, sampleCoord).rgb;
 
 	foamColor = transmitColor;
 
@@ -78,7 +78,7 @@ vec4 underToAboveTransm(vec3 normal, vec2 screenCoord, float dxyW, vec3 eyeDir, 
 
 vec4 aboveToUnderTransm(vec3 normal, vec3 eyeDir, float eyeDist, out vec3 foamColor) {
 	vec3 T = refract(-eyeDir, -normal, n_water);
-	vec4 refractTarget = texture(textureRefractionCube, T);
+	vec4 refractTarget = textureCube(textureRefractionCube, T);
 
 	foamColor = vec3(1.0);
 
@@ -103,7 +103,7 @@ vec4 reflection(vec3 normal, vec2 screenCoord, vec3 eyeDir, float eyeDist) {
 	vec2 s_perturb = (matPV * vec4(normal - waterSmoothNormal, 0)).xy * displacement;
 	vec2 reflectCoord = vec2(1 - screenCoord.x, screenCoord.y) + s_perturb;
 
-	vec4 reflectColor = texture(textureReflection, reflectCoord);
+	vec4 reflectColor = texture2D(textureReflection, reflectCoord);
 	return reflectColor;
 }
 
@@ -172,8 +172,8 @@ void main() {
 // foam at water edges
 	float foamTile1 = 1;
 	float foamTile2 = 5;
-	vec4 foamSamp1 = texture(textureFoam, fWPos.xz * foamTile1 + time * 0.2 * vec2(0.0101020, 0.0987987));
-	vec4 foamSamp2 = texture(textureFoam, fWPos.xz * foamTile2 - time * 2 * vec2(0.09859954, 0.112345));
+	vec4 foamSamp1 = texture2D(textureFoam, fWPos.xz * foamTile1 + time * 0.2 * vec2(0.0101020, 0.0987987));
+	vec4 foamSamp2 = texture2D(textureFoam, fWPos.xz * foamTile2 - time * 2 * vec2(0.09859954, 0.112345));
 	float foamTransp = (foamSamp1 + foamSamp2).x * 0.5;
 	foamTransp = pow(abs(foamTransp - 0.38) * 3, 3);
 	float foamFactor = pow(1.0 / (1 + transmitUWDist), 8);

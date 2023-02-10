@@ -23,16 +23,16 @@ void main() {
 	// blend the textures:
 	vec4 texColor = mixTerrainTextures(t0, t1, t2, t3, t4, fTexBlendFactor);
 
-	float eyeDist = length(eyePos - frag.wPos);
+	float eyeDist = length(eyePos - fWPos);
 
 	// compute lighting
-	bool underwater = frag.wPos.y < 0.0;
-	vec3 light = underwater ? computeLightingUnderwaterSimple(frag.wPos, normalize(frag.normal)) : computeLightingAboveWater(normalize(frag.normal));
+	bool underwater = fWPos.y < 0.0;
+	vec3 light = underwater ? computeLightingUnderwaterSimple(fWPos, normalize(fNormal)) : computeLightingAboveWater(normalize(fNormal));
 
-	vec3 color = light * (vec4(frag.color, 1) * texColor).xyz;
+	vec3 color = light * (vec4(fColor, 1.0) * texColor).xyz;
 	float gamma = 2.2;
 	color.rgb = pow(color.rgb, vec3(1.0 / gamma));
-	vec4 final = vec4(color, 1);
+	vec4 final = vec4(color, 1.0);
 
 	gl_FragColor = final;
 }
