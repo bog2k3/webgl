@@ -75,33 +75,52 @@ export class UniformPack {
 		}
 		const el: UniformElement = this.elements_[indexInPack];
 
-		for (let i=0; i < el.descriptor.arrayLength; i++) {
-			if (i > 0) {
-				throw new Error("setting array locations after #0 not implemented");
-			}
-			switch (el.descriptor.type) {
-				case UniformType.INT:
-					gl.uniform1i(glLocation /*+ i*/, el.values[i]);
-				break;
-				case UniformType.FLOAT:
-					gl.uniform1f(glLocation /*+ i*/, el.values[i]);
-				break;
-				case UniformType.VEC2:
-				case UniformType.iVEC2:
-					gl.uniform2fv(glLocation /*+ i*/, (el.values[i] as Vector).values(2));
-				break;
-				case UniformType.VEC3:
-				case UniformType.iVEC3:
-					gl.uniform3fv(glLocation /*+ i*/, (el.values[i] as Vector).values(3));
-				break;
-				case UniformType.VEC4:
-				case UniformType.iVEC4:
-					gl.uniform4fv(glLocation /*+ i*/, (el.values[i] as Vector).values(4));
-				break;
-				case UniformType.MAT4:
-					gl.uniformMatrix4fv(glLocation /*+ 4*i*/, false, (el.values[i] as Matrix).m); // TODO https://www.gamedev.net/forums/topic/658191-webgl-how-to-send-an-array-of-matrices-to-the-vertex-shader/
-				break;
-			}
+		switch (el.descriptor.type) {
+			case UniformType.INT:
+				if (el.descriptor.arrayLength > 1) {
+					gl.uniform1iv(glLocation, el.values);
+				} else {
+					gl.uniform1i(glLocation, el.values[0]);
+				}
+			break;
+			case UniformType.FLOAT:
+				if (el.descriptor.arrayLength > 1) {
+					gl.uniform1fv(glLocation, el.values);
+				} else {
+					gl.uniform1f(glLocation, el.values[0]);
+				}
+			break;
+			case UniformType.VEC2:
+			case UniformType.iVEC2:
+				if (el.descriptor.arrayLength > 1) {
+					gl.uniform2fv(glLocation, (el.values as Vector[]).map(v => v.values(2)).flat());
+				} else {
+					gl.uniform2fv(glLocation, (el.values[0] as Vector).values(2));
+				}
+			break;
+			case UniformType.VEC3:
+			case UniformType.iVEC3:
+				if (el.descriptor.arrayLength > 1) {
+					gl.uniform2fv(glLocation, (el.values as Vector[]).map(v => v.values(3)).flat());
+				} else {
+					gl.uniform3fv(glLocation, (el.values[0] as Vector).values(3));
+				}
+			break;
+			case UniformType.VEC4:
+			case UniformType.iVEC4:
+				if (el.descriptor.arrayLength > 1) {
+					gl.uniform2fv(glLocation, (el.values as Vector[]).map(v => v.values(4)).flat());
+				} else {
+					gl.uniform4fv(glLocation, (el.values[0] as Vector).values(4));
+				}
+			break;
+			case UniformType.MAT4:
+				if (el.descriptor.arrayLength > 1) {
+					gl.uniformMatrix4fv(glLocation, false, (el.values as Matrix[]).map(m => m.m).flat()); // TODO https://www.gamedev.net/forums/topic/658191-webgl-how-to-send-an-array-of-matrices-to-the-vertex-shader/
+				} else {
+					gl.uniformMatrix4fv(glLocation, false, (el.values[0] as Matrix).m);
+				}
+			break;
 		}
 		checkGLError("UniformPack::pushValue");
 	}
