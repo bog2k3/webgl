@@ -1,15 +1,15 @@
-import { RenderContext } from "../joglr/render/render-context";
+import { RenderContext } from "../joglfw/render/render-context";
 import { CustomRenderContext } from "./custom-render-context";
-import { Viewport } from "../joglr/render/viewport";
-import { FrameBuffer, FrameBufferDescriptor } from "./../joglr/render/frame-buffer";
-import { Vector } from "./../joglr/math/vector";
-import { defaultShaderPreprocessor } from "../joglr/render/default-shader-preprocessor";
+import { Viewport } from "../joglfw/render/viewport";
+import { FrameBuffer, FrameBufferDescriptor } from "./../joglfw/render/frame-buffer";
+import { Vector } from "./../joglfw/math/vector";
+import { defaultShaderPreprocessor } from "../joglfw/render/default-shader-preprocessor";
 import { CustomMeshRenderer } from "./custom-mesh-renderer";
-import { VertexArrayObject } from "../joglr/render/vao";
-import { IGLResource } from "../joglr/glresource";
+import { VertexArrayObject } from "../joglfw/render/vao";
+import { IGLResource } from "../joglfw/glresource";
 import { SkyBox } from "../entities/skybox";
 import { Terrain } from "../entities/terrain/terrain.entity";
-import { Shaders } from "../joglr/render/shaders";
+import { Shaders } from "../joglfw/render/shaders";
 
 export class PostProcessData {
 	VAO = new VertexArrayObject();

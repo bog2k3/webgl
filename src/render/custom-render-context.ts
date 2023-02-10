@@ -1,6 +1,6 @@
 import { SharedUniformPacks } from "./programs/shared-uniform-packs";
 import { CustomMeshRenderer } from "./custom-mesh-renderer";
-import { RenderContext } from "../joglr/render/render-context";
+import { RenderContext } from "../joglfw/render/render-context";
 
 export enum RenderPass {
 	None = "None",

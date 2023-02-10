@@ -1,4 +1,4 @@
-import { StockEntityTypes } from "../joglr/world/stock-entity-types";
+import { StockEntityTypes } from "../joglfw/world/stock-entity-types";
 
 export enum CustomEntityType {
 	StaticMesh = "StaticMesh",

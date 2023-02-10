@@ -1,5 +1,5 @@
-import { ShaderProgram } from "../../joglr/render/shader-program";
-import { gl } from "./../../joglr/glcontext";
+import { ShaderProgram } from "../../joglfw/render/shader-program";
+import { gl } from "./../../joglfw/glcontext";
 import { SharedUniformPacks } from "./shared-uniform-packs";
 import { UPackTerrain } from "./uniform-pack-terrain";
 

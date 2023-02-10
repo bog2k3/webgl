@@ -1,6 +1,6 @@
-import { rand } from "../../joglr/utils/random";
-import { clamp, nextPowerOfTwo } from "../../joglr/math/functions";
-import { srand } from "../../joglr/utils/random";
+import { rand } from "../../joglfw/utils/random";
+import { clamp, nextPowerOfTwo } from "../../joglfw/math/functions";
+import { srand } from "../../joglfw/utils/random";
 import { blurImage } from "../../util/image-blur";
 
 export class HeightmapParams {

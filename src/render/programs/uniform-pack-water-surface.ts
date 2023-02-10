@@ -1,4 +1,4 @@
-import { UniformPack, UniformType } from "../../joglr/render/uniform-pack";
+import { UniformPack, UniformType } from "../../joglfw/render/uniform-pack";
 
 // provides a uniform pack for "water-surface" uniforms from water-surface.glsl
 export class UPackWaterSurface extends UniformPack {

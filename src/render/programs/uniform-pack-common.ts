@@ -1,6 +1,6 @@
-import { Matrix } from "./../../joglr/math/matrix";
-import { Vector } from "./../../joglr/math/vector";
-import { UniformPack, UniformType } from "../../joglr/render/uniform-pack";
+import { Matrix } from "./../../joglfw/math/matrix";
+import { Vector } from "./../../joglfw/math/vector";
+import { UniformPack, UniformType } from "../../joglfw/render/uniform-pack";
 
 export class UPackCommon extends UniformPack {
 	constructor() {

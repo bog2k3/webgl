@@ -1,9 +1,9 @@
-import { matrixFromPositionDirection, clamp } from "../joglr/math/functions";
-import { Matrix } from "../joglr/math/matrix";
-import { matrixToQuat, quatRotation } from "../joglr/math/quat-functions";
-import { Vector } from "../joglr/math/vector";
-import { Entity } from "../joglr/world/entity";
-import { IUpdatable } from "../joglr/world/updateable";
+import { matrixFromPositionDirection, clamp } from "../joglfw/math/functions";
+import { Matrix } from "../joglfw/math/matrix";
+import { matrixToQuat, quatRotation } from "../joglfw/math/quat-functions";
+import { Vector } from "../joglfw/math/vector";
+import { Entity } from "../joglfw/world/entity";
+import { IUpdatable } from "../joglfw/world/updateable";
 import { EntityTypes } from "./entity-types";
 import { Direction, IUserControllable } from "./user-controllable";
 

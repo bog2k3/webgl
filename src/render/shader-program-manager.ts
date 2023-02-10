@@ -1,4 +1,4 @@
-import { ShaderProgram } from "../joglr/render/shader-program";
+import { ShaderProgram } from "../joglfw/render/shader-program";
 
 export class ShaderProgramManager {
 	static async loadProgram(shaderClass: new () => ShaderProgram): Promise<void> {

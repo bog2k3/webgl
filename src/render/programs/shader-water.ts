@@ -1,4 +1,4 @@
-import { ShaderProgram } from "../../joglr/render/shader-program";
+import { ShaderProgram } from "../../joglfw/render/shader-program";
 import { UPackWater } from "./uniform-pack-water";
 
 export class ShaderWater extends ShaderProgram {

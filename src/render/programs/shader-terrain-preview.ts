@@ -1,4 +1,4 @@
-import { ShaderProgram } from "../../joglr/render/shader-program";
+import { ShaderProgram } from "../../joglfw/render/shader-program";
 import { ShaderTerrain } from "./shader-terrain";
 
 export class ShaderTerrainPreview extends ShaderTerrain {

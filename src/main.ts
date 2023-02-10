@@ -1,11 +1,11 @@
 import { Terrain } from "./entities/terrain/terrain.entity";
 import { Game } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
-import { initGL } from "./joglr/glcontext";
-import { Mesh } from "./joglr/mesh";
-import { MeshRenderer } from "./joglr/render/mesh-renderer";
-import { Shaders } from "./joglr/render/shaders";
-import { World, WorldConfig } from "./joglr/world/world";
+import { initGL } from "./joglfw/glcontext";
+import { Mesh } from "./joglfw/mesh";
+import { MeshRenderer } from "./joglfw/render/mesh-renderer";
+import { Shaders } from "./joglfw/render/shaders";
+import { World, WorldConfig } from "./joglfw/world/world";
 import { PlayerInputHandler } from "./player-input-handler";
 import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
 import { initRender, render } from "./render/render";

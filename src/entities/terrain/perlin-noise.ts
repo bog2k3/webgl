@@ -1,5 +1,5 @@
-import { Vector } from "../../joglr/math/vector";
-import { randomShuffle, srand } from "../../joglr/utils/random";
+import { Vector } from "../../joglfw/math/vector";
+import { randomShuffle, srand } from "../../joglfw/utils/random";
 
 export class PerlinNoise {
 	/** Constructs a new 2D perlin noise function with a lattice of [width]x[height] size. */

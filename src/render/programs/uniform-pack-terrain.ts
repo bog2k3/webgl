@@ -1,5 +1,5 @@
 import { SharedUniformPacks } from "./shared-uniform-packs";
-import { UniformPack, UniformType } from "../../joglr/render/uniform-pack";
+import { UniformPack, UniformType } from "../../joglfw/render/uniform-pack";
 
 export class UPackTerrain extends UniformPack {
 	constructor() {

@@ -1,6 +1,6 @@
 import { Direction, IUserControllable } from "./entities/user-controllable";
 import { InputEvent, InputEventType, MouseButton } from "./input";
-import { IUpdatable } from "./joglr/world/updateable";
+import { IUpdatable } from "./joglfw/world/updateable";
 
 export enum PlayerActions {
 	MOVE_FORWARD = 0,

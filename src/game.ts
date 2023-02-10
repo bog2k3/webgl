@@ -3,14 +3,14 @@ import { SkyBox } from "./entities/skybox";
 import { StaticMesh } from "./entities/static-mesh.entity";
 import { TerrainConfig } from "./entities/terrain/config";
 import { Terrain } from "./entities/terrain/terrain.entity";
-import { logprefix } from "./joglr/log";
-import { Vector } from "./joglr/math/vector";
-import { Mesh } from "./joglr/mesh";
-import { assert } from "./joglr/utils/assert";
-import { Event } from "./joglr/utils/event";
-import { rand } from "./joglr/utils/random";
-import { CameraController } from "./joglr/world/camera-controller";
-import { World } from "./joglr/world/world";
+import { logprefix } from "./joglfw/log";
+import { Vector } from "./joglfw/math/vector";
+import { Mesh } from "./joglfw/mesh";
+import { assert } from "./joglfw/utils/assert";
+import { Event } from "./joglfw/utils/event";
+import { rand } from "./joglfw/utils/random";
+import { CameraController } from "./joglfw/world/camera-controller";
+import { World } from "./joglfw/world/world";
 
 const console = logprefix("Game");
 
