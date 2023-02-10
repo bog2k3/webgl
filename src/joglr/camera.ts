@@ -18,14 +18,14 @@ export class Camera {
 	private zFar_: number = 100;
 	private matView_ = Matrix.identity();
 	private matProj_ = Matrix.identity();
-	private matProjView_ = Matrix.identity();
+	private matViewProj_ = Matrix.identity();
 	private position_ = new Vector(0, 0, -1);
 	private direction_ = new Vector(0, 0, 1);
 	private up_ = new Vector(0, 1, 0);
 	private orthoSize_: Vector; // in world units
 
-	matProjView(): Matrix {
-		return this.matProjView_;
+	matViewProj(): Matrix {
+		return this.matViewProj_;
 	}
 
 	// returns the camera position in world space
@@ -71,7 +71,7 @@ export class Camera {
 	 */
 	orbit(center: Vector, rotation: Quat, lookTowardCenter: boolean = true): void {
 		const offset = this.position_.sub(center);
-		const newOffset = offset.rotate(rotation);
+		const newOffset = offset.mulQ(rotation);
 		this.position_ = center.add(newOffset);
 		if (lookTowardCenter) {
 			this.direction_ = newOffset.scale(-1).normalize();
@@ -122,7 +122,7 @@ export class Camera {
 
 	private updateView(): void {
 		this.matView_ = buildViewMatrix(this.position_, this.direction_, this.up_);
-		this.updateProjView();
+		this.updateViewProj();
 	}
 
 	private updateProj(): void {
@@ -135,10 +135,10 @@ export class Camera {
 			// TODO we should probably include viewport transform into the proj matrix as well
 			this.matProj_ = buildProjectionMatrix(this.fov_, this.viewport_.aspectRatio(), this.zNear_, this.zFar_);
 		}
-		this.updateProjView();
+		this.updateViewProj();
 	}
 
-	private updateProjView(): void {
-		this.matProjView_ = this.matProj_.mul(this.matView_);
+	private updateViewProj(): void {
+		this.matViewProj_ = this.matView_.mul(this.matProj_);
 	}
 }

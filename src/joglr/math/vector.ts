@@ -42,6 +42,11 @@ export class Vector {
 		return new Vector(this.x * invLen, this.y * invLen, this.z * invLen, this.w * invLen);
 	}
 
+	/**
+	 * The orientation of the cross product follows the Right Hand rule in Right-Handed Coordinate Systems (RHCS)
+	 * and Left Hand rule in LHCS.
+	 * In fact Z always equals X cross Y no matter what
+	 */
 	cross(v: Vector): Vector {
 		return new Vector(this.z * v.y - this.y * v.z, this.x * v.z - this.z * v.x, this.y * v.x - this.x * v.y, 0);
 	}
@@ -53,21 +58,6 @@ export class Vector {
 	// returns a projection of this vector onto the given axis (axis is assumed to be normalized)
 	project(axis: Vector): Vector {
 		return axis.scale(this.dot(axis));
-	}
-
-	/** returns a new vector obtained by rotating this vector by a quaternion */
-	rotate(q: Quat): Vector {
-		const u: Vector = q.xyz();
-		const s: number = q.w;
-		return u
-			.scale(2 * u.dot(this))
-			.add(this.scale(s * s - u.dot(u)))
-			.add(u.cross(this).scale(2 * s));
-	}
-
-	/** returns the multiplication of the vector by a matrix, as a new vector */
-	mul(m: Matrix): Vector {
-		return new Vector(this.dot(m.col(0)), this.dot(m.col(1)), this.dot(m.col(2)), this.dot(m.col(3)));
 	}
 
 	/** returns a new vector with the z and w components stripped */
@@ -86,5 +76,25 @@ export class Vector {
 		if (count > 2) ret.push(this.z);
 		if (count > 3) ret.push(this.w);
 		return ret;
+	}
+
+	/** Transforms the vector by a matrix in the order V * M, returning a new vector */
+	mul(m: Matrix): Vector {
+		// prettier-ignore
+		return new Vector(
+			this.dot(m.col(0)), this.dot(m.col(1)), this.dot(m.col(2)), this.dot(m.col(3))
+		);
+	}
+
+	/** rotates this vector by a quaternion, returning a new vector
+	 * Equivalent to V * Q
+	 */
+	mulQ(q: Quat): Vector {
+		const u: Vector = q.xyz();
+		const s: number = q.w;
+		return u
+			.scale(2 * u.dot(this))
+			.add(this.scale(s * s - u.dot(u))) // TODO the order of subtration may be broken
+			.add(u.cross(this).scale(2 * s)); // TODO the order of cross may be broken
 	}
 }

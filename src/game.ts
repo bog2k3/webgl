@@ -9,6 +9,8 @@ import { rand } from "./joglr/utils/random";
 import { CameraController } from "./joglr/world/camera-controller";
 import { World } from "./joglr/world/world";
 import { logprefix } from "./joglr/log";
+import { Mesh } from "./joglr/mesh";
+import { StaticMesh } from "./entities/static-mesh.entity";
 
 const console = logprefix("Game");
 
@@ -32,19 +34,26 @@ export class Game {
 		World.getInstance().addEntity(this.terrain_);
 
 		// this.freeCam_ = new FreeCamera(new Vector(140, 50, 180), new Vector(-1, -0.5, -1));
-		this.freeCam_ = new FreeCamera(new Vector(0, 50, 0), new Vector(0, -0.9, 0.1));
+		// this.freeCam_ = new FreeCamera(new Vector(0, 50, 0), new Vector(0, -0.9, 0.1));
+		this.freeCam_ = new FreeCamera(new Vector(0, 0, 0), new Vector(0, 0, 1));
 		World.getInstance().addEntity(this.freeCam_);
 
 		// camera controller (this one moves the render camera to the position of the target entity)
 		this.cameraCtrl_ = new CameraController(null);
 		World.getInstance().addEntity(this.cameraCtrl_);
-		this.cameraCtrl_.attachToEntity(this.freeCam_, new Vector(0, 0, 0));
+		// this.cameraCtrl_.attachToEntity(this.freeCam_, new Vector(0, 0, 0));
 
 		// player_ = std::make_shared<PlayerEntity>(glm::vec3{0.f, config_.terrainConfig.maxElevation + 10, 0.f}, 0.f);
 		// World::getInstance().takeOwnershipOf(player_);
 
 		this.skyBox_ = new SkyBox();
 		World.getInstance().addEntity(this.skyBox_);
+
+		// DEBUG---
+		const m: Mesh = Mesh.makeBox(new Vector(0, 0, 1), new Vector(0.5, 0.5, 0.5));
+		const sm = new StaticMesh(m);
+		World.getInstance().addEntity(sm);
+		//---DEBUG
 
 		console.log("Ready");
 	}

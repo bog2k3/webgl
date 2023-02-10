@@ -29,15 +29,15 @@ export class Transform {
 
 	/** returns the local X axis expressed in world coordinates */
 	axisX(): Vector {
-		return new Vector(1, 0, 0).rotate(this.orient_);
+		return new Vector(1, 0, 0).mulQ(this.orient_);
 	}
 	/** returns the local Y axis expressed in world coordinates */
 	axisY(): Vector {
-		return new Vector(0, 1, 0).rotate(this.orient_);
+		return new Vector(0, 1, 0).mulQ(this.orient_);
 	}
 	/** returns the local Z axis expressed in world coordinates */
 	axisZ(): Vector {
-		return new Vector(0, 0, 1).rotate(this.orient_);
+		return new Vector(0, 0, 1).mulQ(this.orient_);
 	}
 
 	/** set a new world position for the transform */
@@ -74,7 +74,7 @@ export class Transform {
 
 	/** move the transform by an amount expressed in *LOCAL* coordinates */
 	moveLocal(delta: Vector): void {
-		const wDelta = delta.rotate(this.orient_);
+		const wDelta = delta.mulQ(this.orient_);
 		this.pos_ = this.pos_.add(wDelta);
 		this.matDirty_ = true;
 	}
@@ -99,7 +99,7 @@ export class Transform {
 
 	/** combine two transforms */
 	combine(right: Transform): Transform {
-		return new Transform(this.pos_.add(right.pos_.rotate(this.orient_)), this.orient_.combine(right.orient_));
+		return new Transform(this.pos_.add(right.pos_.mulQ(this.orient_)), this.orient_.combine(right.orient_));
 	}
 
 	// -------------------- PRIVATE AREA ----------------------------- //
@@ -110,9 +110,10 @@ export class Transform {
 
 	private updateGLMat(): void {
 		this.glMat_ = quatToMatrix(this.orient_);
-		this.glMat_.m[3 * 4 + 0] = this.pos_.x;
-		this.glMat_.m[3 * 4 + 1] = this.pos_.y;
-		this.glMat_.m[3 * 4 + 2] = this.pos_.z;
+		const matrixValues: number[] = this.glMat_.getColumnMajorValues();
+		matrixValues[0 * 4 + 3] = this.pos_.x;
+		matrixValues[1 * 4 + 3] = this.pos_.y;
+		matrixValues[2 * 4 + 3] = this.pos_.z;
 		this.matDirty_ = false;
 	}
 }

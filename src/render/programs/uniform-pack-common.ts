@@ -11,7 +11,7 @@ export class UPackCommon extends UniformPack {
 		this.ibRefraction = this.addUniform({ name: "bRefraction", type: UniformType.INT, arrayLength: 1 });
 		this.ibReflection = this.addUniform({ name: "bReflection", type: UniformType.INT, arrayLength: 1 });
 		this.iTime = this.addUniform({ name: "time", type: UniformType.FLOAT, arrayLength: 1 });
-		this.iMatPV = this.addUniform({ name: "matPV", type: UniformType.MAT4, arrayLength: 1 });
+		this.iMatVP = this.addUniform({ name: "matVP", type: UniformType.MAT4, arrayLength: 1 });
 	}
 
 	setEyePos(val: Vector): void {
@@ -32,8 +32,8 @@ export class UPackCommon extends UniformPack {
 	setTime(val: number): void {
 		this.setUniform(this.iTime, val);
 	}
-	setMatProjView(val: Matrix): void {
-		this.setUniform(this.iMatPV, val);
+	setMatViewProj(val: Matrix): void {
+		this.setUniform(this.iMatVP, val);
 	}
 
 	// ---------------- PRIVATE AREA ----------------//
@@ -44,5 +44,5 @@ export class UPackCommon extends UniformPack {
 	private ibRefraction: number;
 	private ibReflection: number;
 	private iTime: number;
-	private iMatPV: number;
+	private iMatVP: number;
 }

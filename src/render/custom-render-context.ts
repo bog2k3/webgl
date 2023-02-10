@@ -40,7 +40,7 @@ export class CustomRenderContext extends RenderContext {
 		unifCommon.setbReflection(this.renderPass == RenderPass.WaterReflection);
 		unifCommon.setbRefraction(this.renderPass == RenderPass.WaterRefraction);
 		unifCommon.setEyePos(this.viewport.camera().position());
-		unifCommon.setMatProjView(this.viewport.camera().matProjView());
+		unifCommon.setMatViewProj(this.viewport.camera().matViewProj());
 		unifCommon.setEnableClipping(this.enableClipPlane);
 		unifCommon.setSubspace(this.subspace);
 		unifCommon.setTime(this.time);

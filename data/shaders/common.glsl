@@ -20,7 +20,7 @@ uniform int bRefraction;
 uniform int bReflection;
 uniform float time;
 
-uniform mat4 matPV;	// proj-view matrix
+uniform mat4 matVP;	// view-projection matrix
 
 float lightContribution(vec3 normal) {
 	return max(dot(-lightDir, normal), 0.0);

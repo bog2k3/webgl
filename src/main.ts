@@ -11,6 +11,7 @@ import { Terrain } from "./entities/terrain/terrain.entity";
 import { InputEvent, InputEventType, HtmlInputHandler } from "./input";
 import { PlayerInputHandler } from "./player-input-handler";
 import { Game } from "./game";
+import { Vector } from "./joglr/math/vector";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -83,7 +84,7 @@ function update(dt: number): void {
 function onGameStarted(): void {
 	playerInputHandler.setTargetObject(game.freeCam());
 	game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
-	game.terrain().setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
+	game.terrain()?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	// TODO activate these
 	// game.terrain().setWaterRefractionTex(renderData.waterRenderData.refractionFramebuffer.fbTexture(), game.skyBox().getCubeMapTexture());
 	// renderData.renderCtx.meshRenderer.setWaterNormalTexture(game.terrain().getWaterNormalTexture());
@@ -127,6 +128,7 @@ function handleDebugKeys(ev: InputEvent) {
 	switch (ev.keyCode) {
 		case "KeyR":
 			Shaders.reloadAllShaders();
+			break;
 		default:
 			return; // return without consuming the event if it's not handled
 	}
@@ -137,6 +139,26 @@ function handleGUIInputs(ev: InputEvent): void {}
 
 function handlePlayerInputs(ev: InputEvent): void {
 	playerInputHandler.handleInputEvent(ev);
+
+	if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowLeft") {
+		renderData.viewport.camera().move(new Vector(-0.2, 0, 0));
+	}
+	if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowRight") {
+		renderData.viewport.camera().move(new Vector(+0.2, 0, 0));
+	}
+	if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowUp") {
+		renderData.viewport.camera().move(new Vector(0, +0.2, 0));
+	}
+	if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowDown") {
+		renderData.viewport.camera().move(new Vector(0, -0.2, 0));
+	}
+
+	if (ev.type === InputEventType.KeyDown && ev.keyCode === "Home") {
+		renderData.viewport.camera().move(new Vector(0, 0, +0.2));
+	}
+	if (ev.type === InputEventType.KeyDown && ev.keyCode === "End") {
+		renderData.viewport.camera().move(new Vector(0, 0, -0.2));
+	}
 }
 
 function initializeWorld(): void {

@@ -90,7 +90,7 @@ export class Viewport {
 
 	// returns a transformation matrix from viewport space to device uniform space -> useful for drawing viewport-space stuff
 	viewport2Uniform(): Matrix {
-		return this.mViewport2Uniform_.copy();
+		return this.mViewport2Uniform_;
 	}
 
 	setEnabled(enabled: boolean): void {

@@ -5,7 +5,9 @@ export class Quat extends Vector {
 		super(x, y, z, w);
 	}
 
-	/** Combines the rotations of two quaternions */
+	/** Combines the rotations of two quaternions.
+	 * Equivalent to this * other
+	 */
 	combine(other: Quat): Quat {
 		return new Quat(
 			this.w * other.x + this.x * other.w + this.y * other.z - this.z * other.y, // i
@@ -16,6 +18,7 @@ export class Quat extends Vector {
 	}
 
 	override normalize(): Quat {
-		return super.normalize() as Quat;
+		const normVec: Vector = super.normalize();
+		return new Quat(normVec.x, normVec.y, normVec.z, normVec.w);
 	}
 }

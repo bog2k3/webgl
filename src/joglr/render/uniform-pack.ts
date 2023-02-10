@@ -119,9 +119,13 @@ export class UniformPack {
 				break;
 			case UniformType.MAT4:
 				if (el.descriptor.arrayLength > 1) {
-					gl.uniformMatrix4fv(glLocation, false, (el.values as Matrix[]).map((m) => m.m).flat()); // TODO https://www.gamedev.net/forums/topic/658191-webgl-how-to-send-an-array-of-matrices-to-the-vertex-shader/
+					gl.uniformMatrix4fv(
+						glLocation,
+						false,
+						(el.values as Matrix[]).map((m) => m.getColumnMajorValues()).flat(),
+					); // TODO https://www.gamedev.net/forums/topic/658191-webgl-how-to-send-an-array-of-matrices-to-the-vertex-shader/
 				} else {
-					gl.uniformMatrix4fv(glLocation, false, (el.values[0] as Matrix).m);
+					gl.uniformMatrix4fv(glLocation, false, (el.values[0] as Matrix).getColumnMajorValues());
 				}
 				break;
 		}

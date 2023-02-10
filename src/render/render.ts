@@ -70,8 +70,8 @@ export function initRender(renderData: RenderData): boolean {
 	renderData.viewport.setBkColor(new Vector(0, 0, 0));
 	renderData.viewport.camera().setFOV(Math.PI / 2.5);
 	renderData.viewport.camera().setZPlanes(0.15, 1000);
-	renderData.viewport.camera().moveTo(new Vector(-5, 5, -5));
-	renderData.viewport.camera().lookAt(new Vector(0, 0, 0));
+	// renderData.viewport.camera().moveTo(new Vector(-5, 5, -5));
+	// renderData.viewport.camera().lookAt(new Vector(0, 0, 0));
 
 	// done
 	return true;

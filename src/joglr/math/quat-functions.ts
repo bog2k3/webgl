@@ -14,38 +14,41 @@ export function quatRotation(axis: Vector, angle: number): Quat {
 
 export function quatToMatrix(q: Quat): Matrix {
 	// https://automaticaddison.com/how-to-convert-a-quaternion-to-a-rotation-matrix/
-	const q00 = q.x * q.x;
-	const q01 = q.x * q.y;
-	const q02 = q.x * q.z;
-	const q03 = q.x * q.w;
-	const q11 = q.y * q.y;
-	const q12 = q.y * q.z;
-	const q13 = q.y * q.w;
-	const q22 = q.z * q.z;
-	const q23 = q.z * q.w;
-	const q33 = q.w * q.w;
+	const q0q0 = q.x * q.x;
+	const q0q1 = q.x * q.y;
+	const q0q2 = q.x * q.z;
+	const q0q3 = q.x * q.w;
+	const q1q1 = q.y * q.y;
+	const q1q2 = q.y * q.z;
+	const q1q3 = q.y * q.w;
+	const q2q2 = q.z * q.z;
+	const q2q3 = q.z * q.w;
+	const q3q3 = q.w * q.w;
 	// prettier-ignore
 	return new Matrix(
-		2 * (q00 + q11) -1,		2 * (q12 - q03),		2 * (q13 + q02), 		0,
-		2 * (q12 + q03),		2 * (q00 + q22) - 1,	2 * (q23 - q01), 		0,
-		2 * (q13 - q02),		2 * (q23 + q01),		2 * (q00 + q33) - 1, 	0,
+		2 * (q0q0 + q1q1) -1,	2 * (q1q2 - q0q3),		2 * (q1q3 + q0q2), 		0, // TODO this matrix may be transposed
+		2 * (q1q2 + q0q3),		2 * (q0q0 + q2q2) - 1,	2 * (q2q3 - q0q1), 		0,
+		2 * (q1q3 - q0q2),		2 * (q2q3 + q0q1),		2 * (q0q0 + q3q3) - 1, 	0,
 		0, 						0, 						0, 						1
 	);
 }
 
-export function matrixToQuat(m: Matrix): Quat {
-	const m00 = m.m[0];
-	const m01 = m.m[1];
-	const m02 = m.m[2];
-	const m10 = m.m[4];
-	const m11 = m.m[5];
+export function matrixToQuat(mat: Matrix): Quat {
+	// https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+	const m: number[] = mat.getColumnMajorValues();
+	const m00 = m[0]; // TODO the indexes may be wrong - check orientation
+	const m01 = m[1];
+	const m02 = m[2];
+	const m10 = m[4];
+	const m11 = m[5];
 	const m12 = m[6];
-	const m20 = m.m[8];
-	const m21 = m.m[9];
-	const m22 = m.m[10];
+	const m20 = m[8];
+	const m21 = m[9];
+	const m22 = m[10];
 	const w = Math.sqrt(1 + m00 + m11 + m22) / 2;
-	const x = (m21 - m12) / (4 * w);
-	const y = (m02 - m20) / (4 * w);
-	const z = (m10 - m01) / (4 * w);
+	const w4 = w * 4;
+	const x = (m21 - m12) / w4; // TODO the order of subtraction may be wrong
+	const y = (m02 - m20) / w4;
+	const z = (m10 - m01) / w4;
 	return new Quat(x, y, z, w);
 }

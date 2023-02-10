@@ -35,11 +35,11 @@ export class MeshRenderer implements IGLResource {
 			return;
 		}
 		gl.useProgram(this.meshShaderProgram_);
-		const matPV = context.viewport.camera().matProjView();
+		const matVP = context.viewport.camera().matViewProj();
 
-		const matPVW = matPV.mul(worldTransform);
-		gl.uniformMatrix4fv(this.indexMatPVW_, false, matPVW.m);
-		checkGLError("mPVW uniform setup");
+		const matWVP = worldTransform.mul(matVP);
+		gl.uniformMatrix4fv(this.indexMatWVP_, false, matWVP.getColumnMajorValues());
+		checkGLError("mWVP uniform setup");
 
 		const vao: VertexArrayObject = mesh.getVAO();
 		vao.bind();
@@ -92,7 +92,7 @@ export class MeshRenderer implements IGLResource {
 	private indexNorm_ = 0;
 	private indexUV1_ = 0;
 	private indexColor_ = 0;
-	private indexMatPVW_: WebGLUniformLocation;
+	private indexMatWVP_: WebGLUniformLocation;
 
 	private async initialize(): Promise<void> {
 		await Shaders.createProgram(
@@ -104,7 +104,7 @@ export class MeshRenderer implements IGLResource {
 				this.indexNorm_ = gl.getAttribLocation(this.meshShaderProgram_, "vNormal");
 				this.indexUV1_ = gl.getAttribLocation(this.meshShaderProgram_, "vUV1");
 				this.indexColor_ = gl.getAttribLocation(this.meshShaderProgram_, "vColor");
-				this.indexMatPVW_ = gl.getUniformLocation(this.meshShaderProgram_, "mPVW");
+				this.indexMatWVP_ = gl.getUniformLocation(this.meshShaderProgram_, "mWVP");
 				checkGLError("getAttribs");
 			},
 		);

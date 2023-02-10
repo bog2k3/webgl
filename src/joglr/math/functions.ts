@@ -96,9 +96,9 @@ export function buildMatrixFromOrientation(position: Vector, direction: Vector, 
 export function buildMatrix(right: Vector, up: Vector, front: Vector, translation: Vector): Matrix {
 	// prettier-ignore
 	return new Matrix(
-		right.x,	right.y,	right.z,	translation.x,
-		up.x,		up.y,		up.z,		translation.y,
-		front.x,	front.y,	front.z,	translation.z,
-		0, 			0, 			0, 			1
+		right.x,		up.x,			front.x,		0,
+		right.y,		up.y,			front.y,		0,
+		right.z,		up.z,			front.z,		0,
+		translation.x, 	translation.y,	translation.z, 	1
 	);
 }

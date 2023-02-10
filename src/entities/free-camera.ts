@@ -1,5 +1,6 @@
-import { buildMatrixFromOrientation } from "../joglr/math/functions";
+import { buildMatrixFromOrientation, clamp } from "../joglr/math/functions";
 import { Matrix } from "../joglr/math/matrix";
+import { Quat } from "../joglr/math/quat";
 import { matrixToQuat } from "../joglr/math/quat-functions";
 import { Vector } from "../joglr/math/vector";
 import { Entity } from "../joglr/world/entity";
@@ -29,21 +30,20 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 		const fmv_len = this.frameMoveValues_.length();
 		if (fmv_len > 0) this.frameMoveValues_ = this.frameMoveValues_.scale(1.0 / fmv_len); // normalize direction vector
 		this.frameMoveValues_ = this.frameMoveValues_.scale(maxMoveSpeed); // this vector now represents our target speed in camera space
-		// TODO implement
 		// transform it into world space:
-		// this.frameMoveValues_ = transform_.orientation() * this.frameMoveValues_;
-		// // how much ground we have to cover to reach that speed
-		// const delta: Vector = this.frameMoveValues_.sub(this.speed_);
-		// const factor: number = clamp(linearAcceleration * dt, 0, 1);
-		// this.speed_ = this.speed_.add(delta.scale(factor));
-		// this.transform_.moveWorld(this.speed_.scale(dt));
+		this.frameMoveValues_ = this.frameMoveValues_.mulQ(this.transform_.orientation());
+		// how much ground we have to cover to reach that speed
+		const delta: Vector = this.frameMoveValues_.sub(this.speed_);
+		const factor: number = clamp(linearAcceleration * dt, 0, 1);
+		this.speed_ = this.speed_.add(delta.scale(factor));
+		this.transform_.moveWorld(this.speed_.scale(dt));
 		this.frameMoveValues_ = new Vector(0);
 
 		// compute rotation alteration based on inputs
 		const deltaRot: Vector = this.frameRotateValues_;
 		// TODO implement
-		// this.transform_.rotateWorld(new Quat(0, 1, 0, deltaRot.x));
-		// this.transform_.rotateLocal(new Quat(1, 0, 0, deltaRot.y));
+		this.transform_.rotateWorld(new Quat(0, 1, 0, deltaRot.x));
+		this.transform_.rotateLocal(new Quat(1, 0, 0, deltaRot.y));
 		this.frameRotateValues_ = new Vector(0);
 	}
 
