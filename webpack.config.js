@@ -1,11 +1,17 @@
-const path = require('path');
+const path = require("path");
 
 module.exports = {
-  entry: './build/main.js',
-  output: {
-    filename: 'index.js',
-    path: path.resolve(__dirname, 'dist'),
-  },
-  devtool: "inline-source-map",
-  mode: "development"
+	entry: "./build/main.js",
+	output: {
+		filename: "index.js",
+		path: path.resolve(__dirname, "dist"),
+	},
+	resolve: {
+		fallback: {
+			fs: false,
+			path: false, // ammo.js seems to also use path
+		},
+	},
+	devtool: "inline-source-map",
+	mode: "development",
 };

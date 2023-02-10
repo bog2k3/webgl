@@ -13,6 +13,7 @@
 		"baseUrl": "./node_modules",
 		"moduleResolution": "node",
 		"incremental": true,
+		"typeRoots": ["node_modules/ammojs-typed/ammo/ambient"]
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules"]

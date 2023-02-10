@@ -6,6 +6,7 @@ import { Mesh } from "./joglfw/mesh";
 import { MeshRenderer } from "./joglfw/render/mesh-renderer";
 import { Shaders } from "./joglfw/render/shaders";
 import { World, WorldConfig } from "./joglfw/world/world";
+import { initializePhysics, physics } from "./physics/physics";
 import { PlayerInputHandler } from "./player-input-handler";
 import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
 import { initRender, render } from "./render/render";
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	await initGraphics(canvas);
 	initInput(canvas);
+	await initializePhysics();
 
 	initializeWorld();
 
