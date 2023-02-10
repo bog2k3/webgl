@@ -13,9 +13,11 @@ export class ShaderTerrain extends ShaderProgram {
 		this.defineVertexAttrib("pos", gl.FLOAT, 3);
 		this.defineVertexAttrib("normal", gl.FLOAT, 3);
 		this.defineVertexAttrib("color", gl.FLOAT, 4);
-		this.defineVertexAttrib("uv1", gl.FLOAT, 4);
-		this.defineVertexAttrib("uv2", gl.FLOAT, 4);
+		this.defineVertexAttrib("uv1", gl.FLOAT, 2);
+		this.defineVertexAttrib("uv2", gl.FLOAT, 2);
 		this.defineVertexAttrib("uv3", gl.FLOAT, 2);
+		this.defineVertexAttrib("uv4", gl.FLOAT, 2);
+		this.defineVertexAttrib("uv5", gl.FLOAT, 2);
 		this.defineVertexAttrib("texBlendFactor", gl.FLOAT, 4);
 	}
 

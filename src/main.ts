@@ -60,7 +60,7 @@ function step(): void {
 	lastTime = now;
 	update(dt);
 	// schedule next frame
-	// requestAnimationFrame(step);
+	requestAnimationFrame(step);
 }
 
 function update(dt: number): void {

@@ -11,7 +11,11 @@ in FragData {
 	vec4 texBlendFactor;
 } frag;
 
-uniform sampler2D tex[5];
+uniform sampler2D tex1;
+uniform sampler2D tex2;
+uniform sampler2D tex3;
+uniform sampler2D tex4;
+uniform sampler2D tex5;
 
 void main() {
 	float lowFreqFactor = 0.05;
@@ -35,7 +39,7 @@ void main() {
 	t4 = t4 * t4low * 2.5;
 
 	// blend the textures:
-	vec3 texColor = mixTerrainTextures(t0, t1, t2, t3, t4, frag.texBlendFactor).xyz;
+	vec3 texColor = vec3(0.5); //mixTerrainTextures(t0, t1, t2, t3, t4, frag.texBlendFactor).xyz;
 
 	float eyeDist = length(eyePos - frag.wPos);
 
@@ -53,7 +57,7 @@ void main() {
 	vec4 final = vec4(color, 1);
 	if (bRefraction > 0 || bReflection > 0)
 		final.a = (frag.wPos.y / 200) + 0.5;
-		//final.a = computeZValue(gl_FragCoord);
+		// final.a = computeZValue(gl_FragCoord);
 
 	gl_FragColor = final;
 }

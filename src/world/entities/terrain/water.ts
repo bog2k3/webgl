@@ -107,7 +107,7 @@ export class Water implements IRenderable, IGLResource {
 		this.renderData_.shaderProgram_.begin();
 		this.renderData_.VAO_.bind();
 		// do the drawing
-		gl.drawElements(gl.TRIANGLES, this.triangles_.length * 3, gl.UNSIGNED_INT, 0);
+		gl.drawElements(gl.TRIANGLES, this.triangles_.length * 3, gl.UNSIGNED_SHORT, 0);
 		// unbind stuff
 		this.renderData_.VAO_.unbind();
 		this.renderData_.shaderProgram_.end();

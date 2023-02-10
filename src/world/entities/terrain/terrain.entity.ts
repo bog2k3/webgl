@@ -282,8 +282,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texture);
 			gl.activeTexture(gl.TEXTURE4);
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texture);
-			for (let i=0; i<TerrainVertex.nTextures; i++)
+			for (let i=0; i<TerrainVertex.nTextures; i++) {
 				this.renderData_.shaderProgram_.uniforms().setTextureSampler(i, i);
+			}
 			if (this.water_) {
 				gl.activeTexture(gl.TEXTURE5);
 				gl.bindTexture(gl.TEXTURE_2D, this.water_.getNormalTexture());
@@ -296,14 +297,14 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			if (rctx.enableClipPlane) {
 				if (rctx.subspace < 0) {
 					// draw below-water subspace:
-					gl.drawElements(gl.TRIANGLES, this.renderData_.trisBelowWater_ * 3, gl.UNSIGNED_INT, 0);
+					gl.drawElements(gl.TRIANGLES, this.renderData_.trisBelowWater_ * 3, gl.UNSIGNED_SHORT, 0);
 				} else {
 					// draw above-water subspace:
-					gl.drawElements(gl.TRIANGLES, this.renderData_.trisAboveWater_ * 3, gl.UNSIGNED_INT, this.renderData_.trisBelowWater_*3*4);
+					gl.drawElements(gl.TRIANGLES, this.renderData_.trisAboveWater_ * 3, gl.UNSIGNED_SHORT, this.renderData_.trisBelowWater_*3*4);
 				}
 			} else {
 				// render all in one call
-				gl.drawElements(gl.TRIANGLES, (this.renderData_.trisBelowWater_ + this.renderData_.trisAboveWater_) * 3, gl.UNSIGNED_INT, 0);
+				gl.drawElements(gl.TRIANGLES, this.renderData_.trisBelowWater_ + this.renderData_.trisAboveWater_ * 3, gl.UNSIGNED_SHORT, 0);
 			}
 
 			// unbind stuff
