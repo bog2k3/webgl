@@ -1,3 +1,7 @@
+import { checkGLError, gl } from "./glcontext";
+import { Matrix } from "./math/matrix";
+import { Vector } from "./math/vector";
+
 enum UniformType {
 	INT = "INT",
 	FLOAT = "FLOAT",
@@ -7,7 +11,7 @@ enum UniformType {
 	iVEC3 = "iVEC3",
 	VEC4 = "VEC4",
 	iVEC4 = "iVEC4",
-	MAT3 = "MAT3",
+	// MAT3 = "MAT3",
 	MAT4 = "MAT4"
 };
 
@@ -25,7 +29,10 @@ export class UniformPack {
 	// adds a uniform description to the pack;
 	// returns the index of the new uniform within this pack.
 	addUniform(desc: UniformDescriptor): number {
-		// TODO: implement
+		if (desc.arrayLength == 0)
+			desc.arrayLength = 1;
+		this.elements_.push(new UniformElement(desc));
+		return this.elements_.length - 1;
 	}
 
 	// returns the number of uniforms held by this pack
@@ -50,36 +57,61 @@ export class UniformPack {
 	// returned by addUniform()
 	// [locationIndex] represents the array index to set the value for
 	setUniformIndexed<T>(indexInPack: number, locationIndex: number, value: T): void {
-		// TODO: implement
+		if (indexInPack >= this.elements_.length) {
+			throw new Error("Requested index is not present in uniform pack");
+		}
+		const el: UniformElement = this.elements_[indexInPack];
+		if (locationIndex >= el.descriptor.arrayLength) {
+			throw new Error("Requested array index not present in selected uniform");
+		}
+		el.values[locationIndex] = value;
 	}
 
 	// pushes a uniform value from this pack into OpenGL's pipeline at the specified location.
 	// for array uniforms, all array elements are pushed at locations starting from [glLocation] incrementally.
-	pushValue(indexInPack: number, glLocation: number): void {
-		// TODO: implement
+	pushValue(indexInPack: number, glLocation: WebGLUniformLocation): void {
+		if (indexInPack >= this.elements_.length) {
+			throw new Error("Requested index is not present in uniform pack");
+		}
+		const el: UniformElement = this.elements_[indexInPack];
+
+		for (let i=0; i < el.descriptor.arrayLength; i++) {
+		switch (el.descriptor.type) {
+			case UniformType.INT:
+				gl.uniform1i(glLocation + i, el.values[i]);
+			break;
+			case UniformType.FLOAT:
+				gl.uniform1f(glLocation + i, el.values[i]);
+			break;
+			case UniformType.VEC2:
+			case UniformType.iVEC2:
+				gl.uniform2fv(glLocation + i, (el.values[i] as Vector).values(2));
+			break;
+			case UniformType.VEC3:
+			case UniformType.iVEC3:
+				gl.uniform3fv(glLocation + i, (el.values[i] as Vector).values(3));
+			break;
+			case UniformType.VEC4:
+			case UniformType.iVEC4:
+				gl.uniform4fv(glLocation + i, (el.values[i] as Vector).values(4));
+			break;
+			case UniformType.MAT4:
+				gl.uniformMatrix4fv(glLocation + 4*i, false, (el.values[i] as Matrix).m); // TODO https://www.gamedev.net/forums/topic/658191-webgl-how-to-send-an-array-of-matrices-to-the-vertex-shader/
+			break;
+			}
+		}
+		checkGLError("UniformPack::pushValue");
 	}
 
 	// ------------ PRIVATE AREA ---------------- //
-	
-	private elements_: Element[] = [];
+
+	private elements_: UniformElement[] = [];
 };
 
 class UniformElement {
 	values: any[];
 
 	constructor(public descriptor: UniformDescriptor) {
-		values = new UniformValue[desc.arrayLength];
-	}
-
-	Element(Element && el)
-		: descriptor(el.descriptor), transposed(el.transposed)
-		, values(el.values) {
-		el.values = nullptr;
-		el.descriptor.arrayLength = 0;
-	}
-
-	~Element() {
-		if (values)
-			delete [] values;
+		this.values = new Array(descriptor.arrayLength);
 	}
 };

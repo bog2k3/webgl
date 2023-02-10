@@ -82,15 +82,15 @@ export class MeshRenderer implements IGLResource {
 	private indexMatPVW_: WebGLUniformLocation;
 
 	private async initialize() {
-		const meshVertexShaderCode: string = await (await fetch("/data/shaders/mesh.vert")).text();
-		const meshFragmentShaderCode: string = await (await fetch("/data/shaders/mesh-texture.frag")).text();
-		this.meshShaderProgram_ =  Shaders.createProgram(meshVertexShaderCode, meshFragmentShaderCode);
-		this.indexPos_ = gl.getAttribLocation(this.meshShaderProgram_, "vPos");
-		this.indexNorm_ = gl.getAttribLocation(this.meshShaderProgram_, "vNormal");
-		this.indexUV1_ = gl.getAttribLocation(this.meshShaderProgram_, "vUV1");
-		this.indexColor_ = gl.getAttribLocation(this.meshShaderProgram_, "vColor");
-		this.indexMatPVW_ = gl.getUniformLocation(this.meshShaderProgram_, "mPVW");
-		checkGLError("getAttribs");
+		await Shaders.createProgram("/data/shaders/mesh.vert", "/data/shaders/mesh-texture.frag", (prog: WebGLProgram) => {
+			this.meshShaderProgram_ = prog;
+			this.indexPos_ = gl.getAttribLocation(this.meshShaderProgram_, "vPos");
+			this.indexNorm_ = gl.getAttribLocation(this.meshShaderProgram_, "vNormal");
+			this.indexUV1_ = gl.getAttribLocation(this.meshShaderProgram_, "vUV1");
+			this.indexColor_ = gl.getAttribLocation(this.meshShaderProgram_, "vColor");
+			this.indexMatPVW_ = gl.getUniformLocation(this.meshShaderProgram_, "mPVW");
+			checkGLError("getAttribs");
+		});
 		if (!this.meshShaderProgram_) {
 			throw new Error("Failed to load mesh shader program");
 		}
