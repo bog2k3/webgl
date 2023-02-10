@@ -21,57 +21,67 @@ import { Water, WaterConfig } from './water';
 import { assert } from "../../../joglr/utils/assert";
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
-	static loadTextures(step: number): Progress {
+	static async loadTextures(step: number): Promise<Progress> {
 		switch (step) {
 		case 0:
 			console.log("Loading terrain textures . . .");
-			TerrainRenderData.textures_[0].texture = TextureLoader.loadFromPNG("data/textures/terrain/dirt3.png", true).texture;
+			TerrainRenderData.textures_[0] = new TerrainTextureInfo({
+				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/dirt3.png", true)).texture,
+				wWidth: 2,
+				wHeight: 2
+			});
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[0].texture);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			TerrainRenderData.textures_[0].wWidth = 2;
-			TerrainRenderData.textures_[0].wHeight = 2;
 		break;
 		case 1:
-			TerrainRenderData.textures_[1].texture = TextureLoader.loadFromPNG("data/textures/terrain/grass1.png", true).texture;
+			TerrainRenderData.textures_[1] = new TerrainTextureInfo({
+				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/grass1.png", true)).texture,
+				wWidth: 3,
+				wHeight: 3
+			});
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[1].texture);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			TerrainRenderData.textures_[1].wWidth = 3;
-			TerrainRenderData.textures_[1].wHeight = 3;
 		break;
 		case 2:
-			TerrainRenderData.textures_[2].texture = TextureLoader.loadFromPNG("data/textures/terrain/rock1.png", true).texture;
+			TerrainRenderData.textures_[2] = new TerrainTextureInfo({
+				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/rock1.png", true)).texture,
+				wWidth: 3,
+				wHeight: 3
+			});
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[2].texture);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			TerrainRenderData.textures_[2].wWidth = 3;
-			TerrainRenderData.textures_[2].wHeight = 3;
 		break;
 		case 3:
-			TerrainRenderData.textures_[3].texture = TextureLoader.loadFromPNG("data/textures/terrain/rock3.png", true).texture;
+			TerrainRenderData.textures_[3] = new TerrainTextureInfo({
+				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/rock3.png", true)).texture,
+				wWidth: 4,
+				wHeight: 4
+			});
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texture);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			TerrainRenderData.textures_[3].wWidth = 4;
-			TerrainRenderData.textures_[3].wHeight = 4;
 		break;
 		case 4:
-			TerrainRenderData.textures_[4].texture = TextureLoader.loadFromPNG("data/textures/terrain/sand1.png", true).texture;
+			TerrainRenderData.textures_[4] = new TerrainTextureInfo({
+				texture: (await TextureLoader.loadFromPNG("data/textures/terrain/sand1.png", true)).texture,
+				wWidth: 4,
+				wHeight: 4
+			});
 			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texture);
 			gl.generateMipmap(gl.TEXTURE_2D);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			TerrainRenderData.textures_[4].wWidth = 4;
-			TerrainRenderData.textures_[4].wHeight = 4;
 			console.log("Terrain textures loaded.");
 		break;
 		}
-		gl.bindTexture(gl.TEXTURE_2D, 0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 		return {completed: step+1, total: 5};
 	}
 	// static unloadAllResources(): void;
@@ -188,9 +198,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 					texBlendFactor: new Vector(0.0, 0.0, 0.0, 0.0)
 				};
 				// compute UVs
-				for (let t=0; t<TerrainVertex.nTextures; t++) {
-					this.vertices_[i*this.cols_ + j][`uv${t}`].x = (this.vertices_[i*this.cols_ + j].pos.x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
-					this.vertices_[i*this.cols_ + j][`uv${t}`].y = (this.vertices_[i*this.cols_ + j].pos.z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+				for (let t = 0; t < TerrainVertex.nTextures; t++) {
+					this.vertices_[i*this.cols_ + j][`uv${t + 1}`].x = (this.vertices_[i*this.cols_ + j].pos.x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
+					this.vertices_[i*this.cols_ + j][`uv${t + 1}`].y = (this.vertices_[i*this.cols_ + j].pos.z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
 				}
 			}
 		}
@@ -210,9 +220,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 				texBlendFactor: new Vector(0.0, 0.0, 0.0, 1.0)
 			};
 			// compute UVs
-			for (let t=0; t<TerrainVertex.nTextures; t++) {
-				this.vertices_[this.rows_*this.cols_ + i][`uv${t}`].x = (x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
-				this.vertices_[this.rows_*this.cols_ + i][`uv${t}`].y = (z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+			for (let t = 0; t < TerrainVertex.nTextures; t++) {
+				this.vertices_[this.rows_*this.cols_ + i][`uv${t + 1}`].x = (x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
+				this.vertices_[this.rows_*this.cols_ + i][`uv${t + 1}`].y = (z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
 			}
 		}
 
@@ -269,11 +279,11 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 	// clear all terrain data
 	clear(): void {
-		this.vertices_.splice(0);
+		this.vertices_ = null;
 		this.nVertices_ = 0;
-		this.triangles_.splice(0);
+		this.triangles_ = null;
 		// physicsBodyMeta_.reset();
-		this.heightFieldValues_.splice(0);
+		this.heightFieldValues_ = null;
 		// if (this.pBSP_)
 		// 	delete pBSP_, pBSP_ = nullptr;
 		// TODO complete
@@ -426,6 +436,10 @@ class TerrainTextureInfo implements IGLResource {
 	wWidth = 1.0;			// width of texture in world units (meters)
 	wHeight = 1.0;			// height/length of texture in world units (meters)
 
+	constructor(data: Partial<TerrainTextureInfo>) {
+		Object.assign(this, data);
+	}
+
 	release(): void {
 		if (this.texture)
 			gl.deleteTexture(this.texture);
@@ -514,5 +528,5 @@ class TerrainRenderData implements IGLResource {
 		}
 	}
 
-	static textures_: TerrainTextureInfo[] // TerrainVertex::nTextures;
+	static textures_: TerrainTextureInfo[] = [];
 };

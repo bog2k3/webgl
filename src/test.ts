@@ -1,26 +1,17 @@
-import { Triangle, triangulate } from './world/entities/terrain/triangulation';
+import { Viewport } from './joglr/viewport';
+import { World } from './world/world';
+import { Terrain } from './world/entities/terrain/terrain.entity';
+import { rand } from './joglr/utils/random';
+import { TerrainConfig } from './world/entities/config';
 
-class VT {
-	x: number;
-	y: number;
-}
 
-function nth_elem(v: VT, n: number) {
-	return v[["x", "y"][n]];
-}
+export function DEBUG_ENTRY(world: World, viewport: Viewport) {
+	const tc = new TerrainConfig();
+	tc.seed = rand();
+	tc.vertexDensity = 0.5;
+	const terrain = new Terrain(true);
+	terrain.generate(tc);
+	terrain.finishGenerate();
 
-export function DEBUG_ENTRY() {
-
-	const v: VT[] = [{
-		x: -1, y: -1	// #0 bottom left
-	}, {
-		x: -1, y: +1	// #1 top left
-	}, {
-		x: +1, y: +1	// #2 top right
-	}, {
-		x: +1, y: -1	// #3 bottom right
-	}];
-
-	const tris: Triangle[] = triangulate(v, nth_elem);
-	console.log(tris);
+	world.addEntity(terrain);
 }

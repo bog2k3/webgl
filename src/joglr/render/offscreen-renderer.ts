@@ -3,6 +3,7 @@ import { Viewport } from './../viewport';
 import { IRenderable } from './../../world/renderable';
 import { IGLResource } from './../glresource';
 import { FrameBuffer, FrameBufferDescriptor } from "./frame-buffer";
+import { assert } from "../utils/assert";
 /*
 	Use this convenience class to render to off-screen buffers/textures.
 	Do all the rendering as usual, between begin() and end() methods.
@@ -22,31 +23,38 @@ export class OffscreenRenderer implements IGLResource {
 	}
 
 	release() {
-		throw new Error("not implemented"); // TODO implement
+		this.data_.release();
 	}
 
 	// set everything up for off-screen rendering
 	begin(): void {
-		throw new Error("not implemented"); // TODO implement
-	}
-
-	// clear the render target (call this only between begin() and end())
-	clear(): void {
-		throw new Error("not implemented"); // TODO implement
-	}
-
-	// render some stuff into the offscreen buffer (call this only between begin() and end())
-	renderList(list: IRenderable[]): void {
-		throw new Error("not implemented"); // TODO implement
-	}
-
-	renderElement(element: IRenderable): void {
-		throw new Error("not implemented"); // TODO implement
+		assert(!this.data_.offscreenActive, "OffscreenRenderer already active (calling begin() twice?)");
+		this.data_.framebuffer.bind();
+		this.data_.offscreenActive = true;
 	}
 
 	// restore the previous framebuffer configuration
 	end(): void {
-		throw new Error("not implemented"); // TODO implement
+		assert(this.data_.offscreenActive, "OffscreenRenderer not active (calling end() twice?)");
+		this.data_.framebuffer.unbind();
+		this.data_.offscreenActive = false;
+	}
+
+	// clear the render target (call this only between begin() and end())
+	clear(): void {
+		assert(this.data_.offscreenActive, "OffscreenRenderer not active (forgot to call begin()?)");
+		this.data_.viewport.clear();
+	}
+
+	// render some stuff into the offscreen buffer (call this only between begin() and end())
+	renderList(list: IRenderable[]): void {
+		assert(this.data_.offscreenActive, "OffscreenRenderer not active (forgot to call begin()?)");
+		this.data_.viewport.renderList(list, this.data_.renderContext);
+	}
+
+	renderElement(element: IRenderable): void {
+		assert(this.data_.offscreenActive, "OffscreenRenderer not active (forgot to call begin()?)");
+		this.data_.viewport.renderList([element], this.data_.renderContext);
 	}
 
 	viewport(): Viewport {
@@ -66,7 +74,7 @@ export class OffscreenRenderer implements IGLResource {
 	data_: OffscreenRendererData = null;
 };
 
-class OffscreenRendererData {
+class OffscreenRendererData implements IGLResource {
 	renderContext: RenderContext;
 	viewport: Viewport;
 
@@ -78,5 +86,10 @@ class OffscreenRendererData {
 		this.renderContext = renderContext;
 		this.viewport = new Viewport(0, 0, bufW, bufH);
 		this.renderContext.activeViewport = this.viewport;
+	}
+
+	release(): void {
+		this.framebuffer.release();
+		this.framebuffer = null;
 	}
 }

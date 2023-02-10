@@ -1,3 +1,4 @@
+import { Terrain } from './world/entities/terrain/terrain.entity';
 import { ShaderWater } from './render/programs/shader-water';
 import { ShaderTerrainPreview } from './render/programs/shader-terrain-preview';
 import { ShaderProgramManager } from './render/shader-program-manager';
@@ -29,12 +30,12 @@ window.onload = main;
 async function main(): Promise<void> {
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	await initGraphics(canvas);
-	initializeScene();
+	initializeWorld();
 	initInput(canvas);
 	requestAnimationFrame(step);
 
-	if (false) {
-		DEBUG_ENTRY();
+	if (true) {
+		DEBUG_ENTRY(world, vp1);
 	}
 }
 
@@ -58,6 +59,8 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	await ShaderProgramManager.loadProgram(ShaderTerrainPreview);
 	// await ShaderProgramManager.loadProgram(ShaderTerrain);
 	// await ShaderProgramManager.loadProgram(ShaderWater);
+
+	await loadTextures();
 }
 
 function step(): void {
@@ -111,7 +114,7 @@ function initInput(canvas: HTMLCanvasElement) {
 	);
 }
 
-function initializeScene(): void {
+function initializeWorld(): void {
 	vp1 = new Viewport(0, 0, 1280, 720);
 	world = new World();
 	const m = Mesh.makeBox(new Vector(), new Vector(0.4, 0.4, 0.4));
@@ -121,4 +124,11 @@ function initializeScene(): void {
 	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(-0.5, -0.5))));
 
 	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(0, -1, 0)).mul(Matrix.scale(10, 0.1, 10))));
+}
+
+async function loadTextures() {
+	let progress = await Terrain.loadTextures(0);
+	while (progress.completed < progress.total) {
+		progress = await Terrain.loadTextures(progress.completed);
+	}
 }
