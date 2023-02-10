@@ -20,10 +20,13 @@ import { RenderContext } from "../../joglr/render/render-context";
 import { AbstractVertex } from "../../joglr/render/abstract-vertex";
 import { VertexAttribSource } from "../../joglr/render/shader-program";
 import { VertexArrayObject } from "../../joglr/render/vao";
+import { logprefix } from "../../joglr/log";
+
+const console = logprefix("Terrain");
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
 	static async loadTextures(step: number): Promise<Progress> {
-		console.log("Loading terrain textures...");
+		console.log("Loading textures...");
 		const textureInfo = [
 			{
 				url: "data/textures/terrain/dirt3.png",
@@ -67,7 +70,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			),
 		);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		console.log("Terrain textures loaded.");
+		console.log("Textures loaded.");
 		return { completed: step + 1, total: 1 };
 	}
 
@@ -135,7 +138,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// to the terrain geometry before that.
 	// Call finishGenerate() to generate these objects after you're done.
 	generate(config: TerrainConfig): void {
-		console.log("[TERRAIN] Generating . . .");
+		console.log("Generating . . .");
 		this.validateSettings(config);
 		this.clear();
 		this.config_ = config;
@@ -213,22 +216,22 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			}
 		}
 
-		console.log("[TERRAIN] Triangulating . . .");
+		console.log("Triangulating . . .");
 		this.triangles_ = triangulate(this.vertices_, (v: TerrainVertex, n: number) => {
 			return n == 0 ? v.pos.x : n == 1 ? v.pos.z : 0;
 		});
 		// TODO this might not be necessary any more
-		this.fixTriangleWinding(); // after triangulation some triangles are ccw, we need to fix them
+		// this.fixTriangleWinding(); // after triangulation some triangles are ccw, we need to fix them
 
-		console.log("[TERRAIN] Computing displacements . . .");
+		console.log("Computing displacements . . .");
 		this.computeDisplacements(config.seed);
-		console.log("[TERRAIN] Computing normals . . .");
+		console.log("Computing normals . . .");
 		this.computeNormals();
-		console.log("[TERRAIN] Computing texture weights . . .");
+		console.log("Computing texture weights . . .");
 		this.computeTextureWeights();
 
 		// TODO BSP
-		// console.log("[TERRAIN] Creating Binary Space Partitioning tree . . .");
+		// console.log("Creating Binary Space Partitioning tree . . .");
 		// const triIndices: number[] = new Array(this.triangles_.length);
 		// for (let i = 0; i < this.triangles_.length; i++) {
 		// 	triIndices.push(i);
@@ -242,7 +245,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// bspConfig.dynamic = false;
 		// this.pBSP_ = new BSPTree<unsigned>(bspConfig, triangleAABBGenerator_, std::move(triIndices));
 
-		console.log("[TERRAIN] Generating water . . .");
+		console.log("Generating water . . .");
 		// if (this.water_) {
 		// 	this.water_.generate(<WaterConfig>{
 		// 		innerRadius: terrainRadius, // inner radius
@@ -251,15 +254,16 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// 		constrainToCircle: false, // constrain to circle
 		// 	});
 		// }
-		console.log("[TERRAIN] Done generating.");
+		console.log("Done generating.");
 		randSeed(nextSeed);
 	}
 
 	// Generate the render buffers and physics data structures
 	finishGenerate(): void {
-		console.log("[TERRAIN] Updating render and physics objects . . .");
+		console.log("Updating render and physics objects . . .");
 		this.updateRenderBuffers();
 		if (!this.previewMode_) this.updatePhysics();
+		console.log("Complete.");
 	}
 
 	// clear all terrain data

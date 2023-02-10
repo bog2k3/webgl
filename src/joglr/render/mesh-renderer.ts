@@ -5,6 +5,9 @@ import { Matrix } from "../math/matrix";
 import { Mesh, MeshRenderModes, MeshVertex } from "../mesh";
 import { RenderContext } from "./render-context";
 import { Shaders } from "./shaders";
+import { logprefix } from "../log";
+
+const console = logprefix("MeshRenderer");
 
 export class MeshRenderer implements IGLResource {
 	private static instance_: MeshRenderer;
@@ -12,10 +15,11 @@ export class MeshRenderer implements IGLResource {
 		return MeshRenderer.instance_;
 	}
 
-	static initialize(): Promise<void> {
-		console.log("Initializing MeshRenderer...");
+	static async initialize(): Promise<void> {
+		console.log("Initializing...");
 		MeshRenderer.instance_ = new MeshRenderer();
-		return MeshRenderer.instance_.initialize();
+		await MeshRenderer.instance_.initialize();
+		console.log("Ready.");
 	}
 
 	release(): void {
@@ -27,7 +31,7 @@ export class MeshRenderer implements IGLResource {
 
 	render(mesh: Mesh, worldTransform: Matrix, context: RenderContext): void {
 		if (!this.meshShaderProgram_) {
-			console.error("MeshRenderer.render(): Mesh shader is not loaded");
+			console.error("render(): Mesh shader is not loaded");
 			return;
 		}
 		gl.useProgram(this.meshShaderProgram_);

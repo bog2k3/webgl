@@ -8,12 +8,16 @@ import { Event } from "./joglr/utils/event";
 import { rand } from "./joglr/utils/random";
 import { CameraController } from "./joglr/world/camera-controller";
 import { World } from "./joglr/world/world";
+import { logprefix } from "./joglr/log";
+
+const console = logprefix("Game");
 
 export class Game {
 	onStart = new Event<() => void>();
 	onStop = new Event<() => void>();
 
 	initialize(): void {
+		console.log("Initializing");
 		const tc = new TerrainConfig();
 		tc.seed = rand();
 		tc.vertexDensity = 0.5;
@@ -41,18 +45,24 @@ export class Game {
 
 		this.skyBox_ = new SkyBox();
 		World.getInstance().addEntity(this.skyBox_);
+
+		console.log("Ready");
 	}
 
 	start(): void {
+		console.log("Starting game...");
 		assert(!this.started_, "Game already started");
 		this.started_ = true;
 		this.onStart.trigger();
+		console.log("Game started.");
 	}
 
 	stop(): void {
+		console.log("Stopping game...");
 		assert(this.started_, "Game is not started");
 		this.started_ = false;
 		this.onStop.trigger();
+		console.log("Game stopped.");
 	}
 
 	terrain(): Terrain {

@@ -1,4 +1,7 @@
 import { checkGLError, gl } from "../glcontext";
+import { logprefix } from "../log";
+
+const console = logprefix("Shaders");
 
 export namespace Shaders {
 	export enum Type {
@@ -93,7 +96,7 @@ export namespace Shaders {
 		}
 
 		if (!vertexShader || !fragmentShader) {
-			console.warn(`Some shaders failed ["${vertexShaderPath}", "${fragmentShaderPath}"]. Aborting...`);
+			console.warn(`Some shaders failed ["${vertexShaderPath}", "${fragmentShaderPath}"]. Skipping link step.`);
 			callback(null);
 			return;
 		}
@@ -103,6 +106,8 @@ export namespace Shaders {
 		loadedShaders_[vertexDescIdx].shader = null;
 		gl.deleteShader(fragmentShader);
 		loadedShaders_[fragmentDescIdx].shader = null;
+
+		console.log("Shader program OK.");
 
 		loadedPrograms_.push(<ProgramDesc>{
 			program: prog,
