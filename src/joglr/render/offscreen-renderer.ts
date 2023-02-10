@@ -1,7 +1,7 @@
-import { RenderContext } from './../render-context';
-import { Viewport } from './../viewport';
-import { IRenderable } from '../renderable';
-import { IGLResource } from './../glresource';
+import { RenderContext } from "./render-context";
+import { Viewport } from "./viewport";
+import { IRenderable } from "./renderable";
+import { IGLResource } from "./../glresource";
 import { FrameBuffer, FrameBufferDescriptor } from "./frame-buffer";
 import { assert } from "../utils/assert";
 /*
@@ -12,11 +12,7 @@ import { assert } from "../utils/assert";
 */
 export class OffscreenRenderer implements IGLResource {
 	constructor(descriptor: FrameBufferDescriptor, renderContext: RenderContext) {
-		this.data_ = new OffscreenRendererData(
-			descriptor.width,
-			descriptor.height,
-			renderContext
-		);
+		this.data_ = new OffscreenRendererData(descriptor.width, descriptor.height, renderContext);
 		if (!this.data_.framebuffer.create(descriptor)) {
 			throw new Error("Unable to create off-screen framebuffer!");
 		}
@@ -72,7 +68,7 @@ export class OffscreenRenderer implements IGLResource {
 	// ------------------------ PRIVATE AREA ------------------------------- //
 
 	data_: OffscreenRendererData = null;
-};
+}
 
 class OffscreenRendererData implements IGLResource {
 	renderContext: RenderContext;

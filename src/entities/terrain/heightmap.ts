@@ -1,6 +1,6 @@
-import { rand } from "./../../../joglr/utils/random";
-import { clamp, nextPowerOfTwo } from "../../../joglr/math/functions";
-import { srand } from "../../../joglr/utils/random";
+import { rand } from "../../joglr/utils/random";
+import { clamp, nextPowerOfTwo } from "../../joglr/math/functions";
+import { srand } from "../../joglr/utils/random";
 
 export class HeightmapParams {
 	/** minimum width on X axis (actual may be greater) */

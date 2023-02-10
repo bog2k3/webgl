@@ -1,5 +1,5 @@
-import { gl } from "./glcontext";
-import { IGLResource } from "./glresource";
+import { gl } from "../glcontext";
+import { IGLResource } from "../glresource";
 /**
  * This class abstracts a GL VAO.
  * For WebGL 2 contexts, it's implemented with native VAOs,

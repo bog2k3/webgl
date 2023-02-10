@@ -1,7 +1,7 @@
-import { gl } from './../../joglr/glcontext';
-import { SharedUniformPacks } from './shared-uniform-packs';
-import { UPackTerrain } from './uniform-pack-terrain';
-import { ShaderProgram } from '../../joglr/shader-program';
+import { ShaderProgram } from "../../joglr/render/shader-program";
+import { gl } from "./../../joglr/glcontext";
+import { SharedUniformPacks } from "./shared-uniform-packs";
+import { UPackTerrain } from "./uniform-pack-terrain";
 
 export class ShaderTerrain extends ShaderProgram {
 	constructor() {
@@ -22,10 +22,9 @@ export class ShaderTerrain extends ShaderProgram {
 	}
 
 	async load(): Promise<boolean> {
-		if (this.isValid())
-			return; // already loaded
+		if (this.isValid()) return; // already loaded
 
-		if (!await super.load("data/shaders/terrain.vert", "data/shaders/terrain.frag")) {
+		if (!(await super.load("data/shaders/terrain.vert", "data/shaders/terrain.frag"))) {
 			throw new Error("Failed to load terrain shaders!");
 		}
 		return true;

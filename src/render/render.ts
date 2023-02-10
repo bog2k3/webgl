@@ -1,15 +1,15 @@
 import { checkGLError } from "../joglr/glcontext";
 import { Vector } from "../joglr/math/vector";
 import { assert } from "../joglr/utils/assert";
-import { Terrain } from "../world/entities/terrain/terrain.entity";
-import { IRenderable } from "../joglr/renderable";
-import { World } from "../world/world";
+import { World } from "../joglr/world/world";
 import { gl } from "./../joglr/glcontext";
-import { Water } from "./../world/entities/terrain/water";
-import { Entity } from "./../world/entity";
+import { Entity } from "../joglr/world/entity";
 import { RenderPass } from "./custom-render-context";
 import { SharedUniformPacks } from "./programs/shared-uniform-packs";
 import { PostProcessData, RenderData } from "./render-data";
+import { Terrain } from "../entities/terrain/terrain.entity";
+import { Water } from "../entities/terrain/water";
+import { IRenderable } from "../joglr/render/renderable";
 
 export function initRender(renderData: RenderData): boolean {
 	SharedUniformPacks.initialize();

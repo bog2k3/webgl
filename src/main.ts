@@ -1,14 +1,14 @@
 import { initGL } from "./joglr/glcontext";
 import { Mesh } from "./joglr/mesh";
 import { MeshRenderer } from "./joglr/render/mesh-renderer";
-import { Shaders } from "./joglr/shaders";
 import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
 import { initRender, render } from "./render/render";
 import { RenderData } from "./render/render-data";
 import { ShaderProgramManager } from "./render/shader-program-manager";
 import { DEBUG_ENTRY } from "./test";
-import { Terrain } from "./world/entities/terrain/terrain.entity";
-import { World, WorldConfig } from "./world/world";
+import { World, WorldConfig } from "./joglr/world/world";
+import { Shaders } from "./joglr/render/shaders";
+import { Terrain } from "./entities/terrain/terrain.entity";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -106,21 +106,49 @@ function update(dt: number): void {
 function initInput(canvas: HTMLCanvasElement) {
 	document.onkeydown = (ev) => {
 		keys[ev.key] = true;
-		handleKeyDown(ev);
+		handleKey(ev);
 	};
 	document.onkeyup = (ev) => {
 		keys[ev.key] = false;
+		handleKey(ev);
 	};
 	canvas.addEventListener("click", () => canvas.requestPointerLock());
 }
 
-function handleKeyDown(ev: KeyboardEvent): void {
+function handleKey(ev: KeyboardEvent): void {
+	// propagate input events in order of priority:
+	let consumed = false;
+	if (!consumed && ev.type === "keydown") {
+		consumed = handleSystemKeys(ev);
+	}
+	if (!consumed && !ev["isConsumed"]) {
+		consumed = handleGUIInputs(ev);
+	}
+	if (!consumed && !ev["isConsumed"]) {
+		consumed = handlePlayerInputs(ev);
+	}
+}
+
+function handleSystemKeys(ev: KeyboardEvent): boolean {
+	return handleDebugKeys(ev);
+}
+
+function handleDebugKeys(ev: KeyboardEvent): boolean {
 	switch (ev.key) {
 		case "R":
 		case "r":
 			Shaders.reloadAllShaders();
-			break;
+			return true;
 	}
+	return false;
+}
+
+function handleGUIInputs(ev: KeyboardEvent): boolean {
+	return false;
+}
+
+function handlePlayerInputs(ev: KeyboardEvent): boolean {
+	return false;
 }
 
 function initializeWorld(): void {

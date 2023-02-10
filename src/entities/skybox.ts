@@ -1,6 +1,6 @@
-import { RenderContext } from "../../joglr/render-context";
-import { IRenderable } from "../../joglr/renderable";
-import { Entity } from './../entity';
+import { RenderContext } from "../joglr/render/render-context";
+import { IRenderable } from "../joglr/render/renderable";
+import { Entity } from "../joglr/world/entity";
 import { EntityType } from "./entity-types";
 
 export class SkyBox extends Entity implements IRenderable {

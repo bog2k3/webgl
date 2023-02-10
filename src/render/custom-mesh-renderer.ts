@@ -1,8 +1,8 @@
-import { ShaderProgram } from './../joglr/shader-program';
-import { RenderContext } from './../joglr/render-context';
-import { Matrix } from './../joglr/math/matrix';
-import { Mesh } from './../joglr/mesh';
-import { MeshRenderer } from './../joglr/render/mesh-renderer';
+import { RenderContext } from "../joglr/render/render-context";
+import { ShaderProgram } from "../joglr/render/shader-program";
+import { Matrix } from "./../joglr/math/matrix";
+import { Mesh } from "./../joglr/mesh";
+import { MeshRenderer } from "./../joglr/render/mesh-renderer";
 
 export class CustomMeshRenderer extends MeshRenderer {
 	constructor() {
@@ -41,18 +41,13 @@ export class CustomMeshRenderer extends MeshRenderer {
 	override render(mesh: Mesh, worldTransform: Matrix, ctx: RenderContext): void {
 		// TODO implement
 		// LOGPREFIX("CustomMeshRenderer::renderMesh");
-
 		// if (!pRenderData_->shaderProgram_)
 		// 	return;
-
 		// auto const& rctx = CustomRenderContext::fromCtx(ctx);
-
 		// glUseProgram(pRenderData_->shaderProgram_);
-
 		// auto matPV = rctx.viewport().camera().matProjView();
 		// glUniformMatrix4fv(pRenderData_->imPV, 1, GL_FALSE, glm::value_ptr(matPV));
 		// glUniformMatrix4fv(pRenderData_->imW, 1, GL_FALSE, glm::value_ptr(matW));
-
 		// if (pRenderData_->iEyePos >= 0)
 		// 	glUniform3fv(pRenderData_->iEyePos, 1, &ctx.viewport().camera().position().x);
 		// if (pRenderData_->iSubspace >= 0)
@@ -63,15 +58,12 @@ export class CustomMeshRenderer extends MeshRenderer {
 		// 	glUniform1i(pRenderData_->ibReflection, rctx.renderPass == RenderPass::WaterReflection ? 1 : 0);
 		// if (pRenderData_->iTime >= 0)
 		// 	glUniform1f(pRenderData_->iTime, rctx.time);
-
 		// if (pRenderData_->waterNormalTex) {
 		// 	glActiveTexture(GL_TEXTURE1);
 		// 	glBindTexture(GL_TEXTURE_2D, pRenderData_->waterNormalTex);
 		// 	glUniform1i(pRenderData_->iTexWaterNorm, 1);
 		// }
-
 		// checkGLError("uniforms setup");
-
 		// glBindVertexArray(mesh.getVAO());
 		// if (mesh.vertexAttribsProgramBinding_ != pRenderData_->shaderProgram_) {
 		// 	glBindBuffer(GL_ARRAY_BUFFER, mesh.getVBO());
@@ -122,7 +114,7 @@ export class CustomMeshRenderer extends MeshRenderer {
 	}
 
 	private renderData_: CustomMeshRenderData;
-};
+}
 
 class CustomMeshRenderData {
 	shaderProgram_: ShaderProgram;
@@ -141,4 +133,4 @@ class CustomMeshRenderData {
 	iTexWaterNorm: WebGLUniformLocation;
 
 	waterNormalTex: WebGLTexture;
-};
+}

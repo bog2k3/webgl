@@ -1,4 +1,4 @@
-import { checkGLError, gl } from "./glcontext";
+import { checkGLError, gl } from "../glcontext";
 
 export namespace Shaders {
 	export enum Type {

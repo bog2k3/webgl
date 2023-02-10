@@ -1,5 +1,5 @@
-import { VertexArrayObject } from './vao';
-import { AbstractVertex } from "./abstract-vertex";
+import { VertexArrayObject } from "./render/vao";
+import { AbstractVertex } from "./render/abstract-vertex";
 import { gl } from "./glcontext";
 import { IGLResource } from "./glresource";
 import { Vector } from "./math/vector";
@@ -7,8 +7,8 @@ import { Vector } from "./math/vector";
 export enum MeshRenderModes {
 	Points = "points",
 	Lines = "lines",
-	Triangles = "triangles"
-};
+	Triangles = "triangles",
+}
 
 export class MeshVertex extends AbstractVertex {
 	position = new Vector(); // 3
@@ -23,11 +23,16 @@ export class MeshVertex extends AbstractVertex {
 
 	static getOffset(field: keyof MeshVertex): number {
 		switch (field) {
-			case "position": return 4 * 0;
-			case "normal": return 4 * 3;
-			case "UV1": return 4 * 6;
-			case "color": return 4 * 8;
-			default: throw new Error(`Invalid field specified in MeshVertex.getOffset(): "${field}`);
+			case "position":
+				return 4 * 0;
+			case "normal":
+				return 4 * 3;
+			case "UV1":
+				return 4 * 6;
+			case "color":
+				return 4 * 8;
+			default:
+				throw new Error(`Invalid field specified in MeshVertex.getOffset(): "${field}`);
 		}
 	}
 
@@ -45,11 +50,11 @@ export class MeshVertex extends AbstractVertex {
 			...this.position.values(3),
 			...this.normal.values(3),
 			...this.UV1.values(2),
-			...this.color.values(4)
+			...this.color.values(4),
 		];
 		target.set(values, offset);
 	}
-};
+}
 
 export class Mesh implements IGLResource {
 	static RenderModes = MeshRenderModes;
@@ -95,16 +100,20 @@ export class Mesh implements IGLResource {
 
 	static makeScreenQuad(): Mesh {
 		const vertices: MeshVertex[] = [
-			new MeshVertex({ // #0 top-left
+			new MeshVertex({
+				// #0 top-left
 				position: new Vector(-1, +1, 0),
 			}),
-			new MeshVertex({ // #1 top-right
+			new MeshVertex({
+				// #1 top-right
 				position: new Vector(+1, +1, 0),
 			}),
-			new MeshVertex({ // #2 bottom-left
+			new MeshVertex({
+				// #2 bottom-left
 				position: new Vector(-1, -1, 0),
 			}),
-			new MeshVertex({ // #3 bottom right
+			new MeshVertex({
+				// #3 bottom right
 				position: new Vector(+1, -1, 0),
 			}),
 		];
@@ -127,185 +136,191 @@ export class Mesh implements IGLResource {
 		const nBottom = new Vector(0, -1, 0);
 		const white = new Vector(1, 1, 1, 1);
 		const vertices: MeshVertex[] = [
-		// back face
+			// back face
 			// #0 back bottom left
 			new MeshVertex({
 				position: new Vector(left, bottom, back),
 				normal: nBack,
 				UV1: new Vector(0, 0),
-				color: white
+				color: white,
 			}),
 			// #1 back top left
 			new MeshVertex({
 				position: new Vector(left, top, back),
 				normal: nBack,
 				UV1: new Vector(0, 1),
-				color: white
+				color: white,
 			}),
 			// #2 back top right
 			new MeshVertex({
 				position: new Vector(right, top, back),
 				normal: nBack,
 				UV1: new Vector(1, 1),
-				color: white
+				color: white,
 			}),
 			// #3 back bottom right
 			new MeshVertex({
 				position: new Vector(right, bottom, back),
 				normal: nBack,
 				UV1: new Vector(1, 0),
-				color: white
+				color: white,
 			}),
-		// top face
+			// top face
 			// #4 back top left
 			new MeshVertex({
 				position: new Vector(left, top, back),
 				normal: nTop,
 				UV1: new Vector(0, 0),
-				color: white
+				color: white,
 			}),
 			// #5 front top left
 			new MeshVertex({
 				position: new Vector(left, top, front),
 				normal: nTop,
 				UV1: new Vector(0, 1),
-				color: white
+				color: white,
 			}),
 			// #6 front top right
 			new MeshVertex({
 				position: new Vector(right, top, front),
 				normal: nTop,
 				UV1: new Vector(1, 1),
-				color: white
+				color: white,
 			}),
 			// #7 back top right
 			new MeshVertex({
 				position: new Vector(right, top, back),
 				normal: nTop,
 				UV1: new Vector(1, 0),
-				color: white
+				color: white,
 			}),
-		// front face
+			// front face
 			// #8 front top right
 			new MeshVertex({
 				position: new Vector(right, top, front),
 				normal: nFront,
 				UV1: new Vector(0, 0),
-				color: white
+				color: white,
 			}),
 			// #9 front top left
 			new MeshVertex({
 				position: new Vector(left, top, front),
 				normal: nFront,
 				UV1: new Vector(0, 1),
-				color: white
+				color: white,
 			}),
 			// #10 front bottom left
 			new MeshVertex({
 				position: new Vector(left, bottom, front),
 				normal: nFront,
 				UV1: new Vector(1, 1),
-				color: white
+				color: white,
 			}),
 			// #11 front bottom right
 			new MeshVertex({
 				position: new Vector(right, bottom, front),
 				normal: nFront,
 				UV1: new Vector(1, 0),
-				color: white
+				color: white,
 			}),
-		// bottom face
+			// bottom face
 			// #12 front bottom left
 			new MeshVertex({
 				position: new Vector(left, bottom, front),
 				normal: nBottom,
 				UV1: new Vector(0, 0),
-				color: white
+				color: white,
 			}),
 			// #13 back bottom left
 			new MeshVertex({
 				position: new Vector(left, bottom, back),
 				normal: nBottom,
 				UV1: new Vector(0, 1),
-				color: white
+				color: white,
 			}),
 			// #14 back bottom right
 			new MeshVertex({
 				position: new Vector(right, bottom, back),
 				normal: nBottom,
 				UV1: new Vector(1, 1),
-				color: white
+				color: white,
 			}),
 			// #15 front bottom right
 			new MeshVertex({
 				position: new Vector(right, bottom, front),
 				normal: nBottom,
 				UV1: new Vector(1, 0),
-				color: white
+				color: white,
 			}),
-		// left face
+			// left face
 			// #16 front bottom left
 			new MeshVertex({
 				position: new Vector(left, bottom, front),
 				normal: nLeft,
 				UV1: new Vector(0, 0),
-				color: white
+				color: white,
 			}),
 			// #17 front top left
 			new MeshVertex({
 				position: new Vector(left, top, front),
 				normal: nLeft,
 				UV1: new Vector(0, 1),
-				color: white
+				color: white,
 			}),
 			// #18 back top left
 			new MeshVertex({
 				position: new Vector(left, top, back),
 				normal: nLeft,
 				UV1: new Vector(1, 1),
-				color: white
+				color: white,
 			}),
 			// #19 back bottom left
 			new MeshVertex({
 				position: new Vector(left, bottom, back),
 				normal: nLeft,
 				UV1: new Vector(1, 0),
-				color: white
+				color: white,
 			}),
-		// right face
+			// right face
 			// #20 back bottom right
 			new MeshVertex({
 				position: new Vector(right, bottom, front),
 				normal: nRight,
 				UV1: new Vector(0, 0),
-				color: white
+				color: white,
 			}),
 			// #21 back top right
 			new MeshVertex({
 				position: new Vector(right, top, front),
 				normal: nRight,
 				UV1: new Vector(0, 1),
-				color: white
+				color: white,
 			}),
 			// #22 front top right
 			new MeshVertex({
 				position: new Vector(right, top, back),
 				normal: nRight,
 				UV1: new Vector(1, 1),
-				color: white
+				color: white,
 			}),
 			// #23 front bottom right
 			new MeshVertex({
 				position: new Vector(right, bottom, back),
 				normal: nRight,
 				UV1: new Vector(1, 0),
-				color: white
-			})
+				color: white,
+			}),
 		];
 
-		if (Mesh.ENABLE_COLOR_DEBUG) { // enable debugging vertices with colors
-			const c: Vector[] = [ new Vector(1, 0, 0, 1), new Vector(0, 1, 0, 1), new Vector(0, 0, 1, 1), new Vector(1, 1, 0, 1) ];
-			for (let i=0; i<vertices.length; i++) {
+		if (Mesh.ENABLE_COLOR_DEBUG) {
+			// enable debugging vertices with colors
+			const c: Vector[] = [
+				new Vector(1, 0, 0, 1),
+				new Vector(0, 1, 0, 1),
+				new Vector(0, 0, 1, 1),
+				new Vector(1, 1, 0, 1),
+			];
+			for (let i = 0; i < vertices.length; i++) {
 				vertices[i].color = c[i % c.length];
 			}
 		}
@@ -322,7 +337,7 @@ export class Mesh implements IGLResource {
 			// left face
 			16, 17, 18, 16, 18, 19,
 			// right face
-			20, 22, 21, 20, 23, 22
+			20, 22, 21, 20, 23, 22,
 		]);
 
 		return Mesh.makeMesh(vertices, indices);

@@ -1,15 +1,15 @@
-import { SharedUniformPacks } from './programs/shared-uniform-packs';
-import { CustomMeshRenderer } from './custom-mesh-renderer';
-import { RenderContext } from "../joglr/render-context"
+import { SharedUniformPacks } from "./programs/shared-uniform-packs";
+import { CustomMeshRenderer } from "./custom-mesh-renderer";
+import { RenderContext } from "../joglr/render/render-context";
 
 export enum RenderPass {
 	None = "None",
-	WaterReflection = "WaterReflection",	// off-screen rendering for water reflection texture
-	WaterRefraction = "WaterRefraction",	// off-screen rendering for water refraction texture
-	Standard = "Standard",					// standard default rendering of scene
-	WaterSurface = "WaterSurface",			// draw water surface using the reflection and refraction textures
-	UI = "UI",								// 2D user interface
-};
+	WaterReflection = "WaterReflection", // off-screen rendering for water reflection texture
+	WaterRefraction = "WaterRefraction", // off-screen rendering for water refraction texture
+	Standard = "Standard", // standard default rendering of scene
+	WaterSurface = "WaterSurface", // draw water surface using the reflection and refraction textures
+	UI = "UI", // 2D user interface
+}
 
 export class CustomRenderContext extends RenderContext {
 	static fromCtx(r: RenderContext): CustomRenderContext {
@@ -45,4 +45,4 @@ export class CustomRenderContext extends RenderContext {
 		unifCommon.setSubspace(this.subspace);
 		unifCommon.setTime(this.time);
 	}
-};
+}

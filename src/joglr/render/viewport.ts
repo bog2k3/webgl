@@ -1,15 +1,12 @@
 import { IRenderable } from "./renderable";
-import { Camera } from "./camera";
-import { checkGLError, gl } from "./glcontext";
-import { Matrix } from "./math/matrix";
-import { Vector } from "./math/vector";
+import { Camera } from "../camera";
+import { checkGLError, gl } from "../glcontext";
+import { Matrix } from "../math/matrix";
+import { Vector } from "../math/vector";
 import { RenderContext } from "./render-context";
-import { assert } from "./utils/assert";
 
 export class Viewport {
-	constructor(
-		x: number, y: number, w: number, h: number
-	) {
+	constructor(x: number, y: number, w: number, h: number) {
 		this.viewportArea_ = new Vector(x, y, w, h);
 		this.camera_ = new Camera(this);
 		this.updateVP2UMat();
@@ -48,9 +45,12 @@ export class Viewport {
 	}
 
 	containsPoint(p: Vector): boolean {
-		return p.x >= this.viewportArea_.x && p.y >= this.viewportArea_.y &&
+		return (
+			p.x >= this.viewportArea_.x &&
+			p.y >= this.viewportArea_.y &&
 			p.x <= this.viewportArea_.x + this.viewportArea_.z &&
-			p.y <= this.viewportArea_.y + this.viewportArea_.w;
+			p.y <= this.viewportArea_.y + this.viewportArea_.w
+		);
 	}
 
 	screenRect(): Vector {
@@ -125,8 +125,7 @@ export class Viewport {
 	}
 
 	renderList(list: IRenderable[], ctx: RenderContext): void {
-		if (!this.isEnabled())
-			return;
+		if (!this.isEnabled()) return;
 
 		checkGLError("Viewport.render before prepare");
 		this.prepareForRender(ctx);
@@ -180,12 +179,13 @@ export class Viewport {
 	private mPV_inv_cache_ = Matrix.identity();
 
 	private updateVP2UMat() {
-		const vpw = this.width(), vph = this.height();
-		const sx = 2.0 / (vpw-1);
-		const sy = -2.0 / (vph-1);
-		const sz = -1.e-2;
+		const vpw = this.width(),
+			vph = this.height();
+		const sx = 2.0 / (vpw - 1);
+		const sy = -2.0 / (vph - 1);
+		const sz = -1e-2;
 		const matVP_to_UniformScale = Matrix.scale(sx, sy, sz);
-		this.mViewport2Uniform_ = matVP_to_UniformScale.mul(Matrix.translate(new Vector(-vpw/2, -vph/2)));
-			// TODO order of multiplication may be wrong
+		this.mViewport2Uniform_ = matVP_to_UniformScale.mul(Matrix.translate(new Vector(-vpw / 2, -vph / 2)));
+		// TODO order of multiplication may be wrong
 	}
-};
+}

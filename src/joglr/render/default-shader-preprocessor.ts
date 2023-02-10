@@ -6,7 +6,7 @@ function computePath(relativePath: string, fullReferrerPath: string): string {
 }
 
 function isWhiteSpace(c: string): boolean {
-	return c == ' ' || c == '\t';
+	return c == " " || c == "\t";
 }
 
 function nextNewLine(code: string, start: number): number {
@@ -39,14 +39,14 @@ export async function defaultShaderPreprocessor(code: string, originalPath: stri
 			break;
 		}
 		// take out the whitespace before the directive:
-		while (linePointer > 0 && isWhiteSpace(code[linePointer-1])) {
+		while (linePointer > 0 && isWhiteSpace(code[linePointer - 1])) {
 			linePointer--;
 		}
 		// write everything up to the directive
 		buffer += code.substring(lastWrittenPos, linePointer);
 		lastWrittenPos = linePointer;
 
-		if (linePointer > 1 && code[linePointer-1] == '/' && code[linePointer-2] == '/') {
+		if (linePointer > 1 && code[linePointer - 1] == "/" && code[linePointer - 2] == "/") {
 			// this #include is commented out, ignore it
 			lastWrittenPos = nextNewLine(code, linePointer);
 			continue;

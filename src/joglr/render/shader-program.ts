@@ -1,13 +1,12 @@
-import { VertexArrayObject } from './vao';
-import { gl } from "./glcontext";
-import { IGLResource } from "./glresource";
+import { VertexArrayObject } from "./vao";
+import { gl } from "../glcontext";
+import { IGLResource } from "../glresource";
 import { Shaders } from "./shaders";
 import { UniformPack } from "./uniform-pack";
 import { UniformPackProxy } from "./uniform-pack.proxy";
-import { Event } from "./utils/event";
+import { Event } from "../utils/event";
 
 export class ShaderProgram implements IGLResource {
-
 	release(): void {
 		if (this.program_) {
 			Shaders.deleteProgram(this.program_);
@@ -24,7 +23,7 @@ export class ShaderProgram implements IGLResource {
 		this.uniformPackProxies_.push(new UniformPackProxy(pack));
 		if (this.program_ != null) {
 			// program has already been linked, let's update the uniforms mapping
-			this.uniformPackProxies_[this.uniformPackProxies_.length-1].updateMappings(this.program_);
+			this.uniformPackProxies_[this.uniformPackProxies_.length - 1].updateMappings(this.program_);
 		}
 	}
 
@@ -41,7 +40,7 @@ export class ShaderProgram implements IGLResource {
 		this.vertexAttribs_.push(<VertexAttribDescriptor>{
 			name,
 			componentType,
-			componentCount
+			componentCount,
 		});
 	}
 
@@ -66,7 +65,14 @@ export class ShaderProgram implements IGLResource {
 					gl.bindBuffer(gl.ARRAY_BUFFER, attrSrc.VBO);
 					boundVBO = attrSrc.VBO;
 				}
-				vao.vertexAttribPointer(location, vAttrDesc.componentCount, vAttrDesc.componentType, false, attrSrc.stride, attrSrc.offset);
+				vao.vertexAttribPointer(
+					location,
+					vAttrDesc.componentCount,
+					vAttrDesc.componentType,
+					false,
+					attrSrc.stride,
+					attrSrc.offset,
+				);
 			}
 		}
 		vao.unbind();
@@ -118,7 +124,7 @@ export class ShaderProgram implements IGLResource {
 
 	// this event is triggered whith a reference to this object every time the shader program has been successfully linked.
 	// This happens the first time the program is loaded and on subsequent Shader::reloadAllShaders() calls.
-	onProgramReloaded = new Event<(prog: ShaderProgram) => void>;
+	onProgramReloaded = new Event<(prog: ShaderProgram) => void>();
 
 	// --------------------- PRIVATE AREA ------------------------ //
 
@@ -142,10 +148,10 @@ export class ShaderProgram implements IGLResource {
 }
 
 export class VertexAttribSource {
-	VBO: WebGLBuffer;	// VBO to stream a vertex attribute from
-	stride: number;		// stride of the vertex attribute within the VBO
-	offset: number;		// offset of the first vertex attribute from the start of the buffer
-};
+	VBO: WebGLBuffer; // VBO to stream a vertex attribute from
+	stride: number; // stride of the vertex attribute within the VBO
+	offset: number; // offset of the first vertex attribute from the start of the buffer
+}
 
 class VertexAttribDescriptor {
 	name: string;
@@ -166,4 +172,4 @@ class VertexAttribDescriptor {
 				return false;
 		}
 	}
-};
+}

@@ -1,15 +1,15 @@
-import { SkyBox } from './../world/entities/skybox';
-import { Terrain } from './../world/entities/terrain/terrain.entity';
-import { RenderContext } from './../joglr/render-context';
-import { CustomRenderContext } from './custom-render-context';
-import { Viewport } from './../joglr/viewport';
-import { FrameBuffer, FrameBufferDescriptor } from './../joglr/render/frame-buffer';
-import { Vector } from './../joglr/math/vector';
-import { defaultShaderPreprocessor } from "../joglr/default-shader-preprocessor";
-import { Shaders } from "../joglr/shaders";
+import { RenderContext } from "../joglr/render/render-context";
+import { CustomRenderContext } from "./custom-render-context";
+import { Viewport } from "../joglr/render/viewport";
+import { FrameBuffer, FrameBufferDescriptor } from "./../joglr/render/frame-buffer";
+import { Vector } from "./../joglr/math/vector";
+import { defaultShaderPreprocessor } from "../joglr/render/default-shader-preprocessor";
 import { CustomMeshRenderer } from "./custom-mesh-renderer";
-import { VertexArrayObject } from "../joglr/vao";
+import { VertexArrayObject } from "../joglr/render/vao";
 import { IGLResource } from "../joglr/glresource";
+import { SkyBox } from "../entities/skybox";
+import { Terrain } from "../entities/terrain/terrain.entity";
+import { Shaders } from "../joglr/render/shaders";
 
 export class PostProcessData {
 	VAO = new VertexArrayObject();
@@ -22,7 +22,7 @@ export class PostProcessData {
 	iTime = 0;
 
 	textureSize: Vector;
-};
+}
 
 export class WaterRenderData {
 	refractionFBDesc = new FrameBufferDescriptor();
@@ -31,12 +31,12 @@ export class WaterRenderData {
 	reflectionFramebuffer = new FrameBuffer();
 
 	waterColor = new Vector(0.06, 0.16, 0.2);
-};
+}
 
 export class RenderConfig {
 	renderWireFrame = false;
 	renderPhysicsDebug = false;
-};
+}
 
 export class RenderData implements IGLResource {
 	config = new RenderConfig();
@@ -62,7 +62,7 @@ export class RenderData implements IGLResource {
 		this.windowW = winW;
 		this.windowH = winH;
 		this.renderCtx.viewport = this.viewport;
-		}
+	}
 
 	release() {
 		Shaders.useShaderPreprocessor(null);
@@ -75,5 +75,4 @@ export class RenderData implements IGLResource {
 		this.renderCtx.meshRenderer = new CustomMeshRenderer();
 		// this.renderCtx.physDebugDraw = new physics::DebugDrawer(); // TODO
 	}
-};
-
+}

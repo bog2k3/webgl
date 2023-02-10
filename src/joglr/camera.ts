@@ -2,7 +2,7 @@ import { buildProjectionMatrix, buildViewMatrix } from "./math/functions";
 import { Matrix } from "./math/matrix";
 import { Quat } from "./math/quat";
 import { Vector } from "./math/vector";
-import { Viewport } from "./viewport";
+import { Viewport } from "./render/viewport";
 
 export class Camera {
 	constructor(vp: Viewport) {
@@ -29,10 +29,14 @@ export class Camera {
 	}
 
 	// returns the camera position in world space
-	position(): Vector { return this.position_; }
+	position(): Vector {
+		return this.position_;
+	}
 
 	// returns the camera look direction in world space
-	direction(): Vector { return this.direction_; }
+	direction(): Vector {
+		return this.direction_;
+	}
 
 	// returns the local X axis (right) vector of the camera, expressed in world space
 	localX(): Vector {
@@ -43,7 +47,6 @@ export class Camera {
 	localY(): Vector {
 		return this.matView_.row(1).xyz();
 	}
-
 
 	move(delta: Vector): void {
 		this.position_ = this.position_.add(delta);
@@ -110,10 +113,10 @@ export class Camera {
 	 */
 	getOrthoRect(): Vector {
 		return new Vector(
-			this.position_.x - this.orthoSize_.x * 0.5,	// left
-			this.position_.y - this.orthoSize_.y * 0.5,	// bottom
-			this.position_.x + this.orthoSize_.x * 0.5,	// right
-			this.position_.y + this.orthoSize_.y * 0.5,  // top
+			this.position_.x - this.orthoSize_.x * 0.5, // left
+			this.position_.y - this.orthoSize_.y * 0.5, // bottom
+			this.position_.x + this.orthoSize_.x * 0.5, // right
+			this.position_.y + this.orthoSize_.y * 0.5, // top
 		);
 	}
 

@@ -1,11 +1,10 @@
-import { Entity } from './entity';
-import { RenderContext } from './../joglr/render-context';
-import { IRenderable, isRenderable } from "../joglr/renderable";
+import { Entity } from "./entity";
+import { RenderContext } from "../render/render-context";
+import { IRenderable, isRenderable } from "../render/renderable";
 import { isUpdatable, IUpdatable } from "./updateable";
-import { checkGLError } from "../joglr/glcontext";
-import { Event } from "../joglr/utils/event";
-import { assert } from "../joglr/utils/assert";
-import { EntityType } from "./entities/entity-types";
+import { checkGLError } from "../glcontext";
+import { Event } from "../utils/event";
+import { assert } from "../utils/assert";
 
 export class WorldConfig {
 	/** set to true to disable propagation of user events */
@@ -18,7 +17,7 @@ export class WorldConfig {
 	extent_Yp = 10;
 	extent_Zn = -10;
 	extent_Zp = 10;
-};
+}
 
 export class World implements IRenderable, IUpdatable {
 	constructor(config: WorldConfig) {
@@ -109,10 +108,10 @@ export class World implements IRenderable, IUpdatable {
 		}
 	}
 
-	getEntities(filterTypes: EntityType[], options?: {renderable?: boolean, updatable?: boolean}): Entity[] {
-		return this.entities_.filter(e => {
+	getEntities(filterTypes: string[], options?: { renderable?: boolean; updatable?: boolean }): Entity[] {
+		return this.entities_.filter((e) => {
 			if (filterTypes.length && !filterTypes.includes(e.getType())) {
-					return false;
+				return false;
 			}
 			if (options?.renderable !== !isRenderable(e)) {
 				return false;
@@ -134,8 +133,7 @@ export class World implements IRenderable, IUpdatable {
 	}
 
 	triggerEvent(eventName: string, param: number): void {
-		if (!this.config_.disableUserEvents)
-			this.mapUserEvents_[eventName].trigger(param);
+		if (!this.config_.disableUserEvents) this.mapUserEvents_[eventName].trigger(param);
 	}
 
 	// --------------------- PRIVATE AREA --------------------- //

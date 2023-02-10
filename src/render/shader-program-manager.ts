@@ -1,7 +1,6 @@
-import { ShaderProgram } from './../joglr/shader-program';
+import { ShaderProgram } from "../joglr/render/shader-program";
 
 export class ShaderProgramManager {
-
 	static async loadProgram(shaderClass: new () => ShaderProgram): Promise<void> {
 		const className = shaderClass.name;
 		if (!ShaderProgramManager.shaderPrograms_[className]) {
@@ -26,4 +25,4 @@ export class ShaderProgramManager {
 	}
 
 	private static shaderPrograms_: Record<string, ShaderProgram> = {};
-};
+}

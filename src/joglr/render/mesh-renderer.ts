@@ -1,10 +1,10 @@
-import { VertexArrayObject } from "./../vao";
+import { VertexArrayObject } from "./vao";
 import { checkGLError, gl } from "../glcontext";
 import { IGLResource } from "../glresource";
 import { Matrix } from "../math/matrix";
 import { Mesh, MeshRenderModes, MeshVertex } from "../mesh";
-import { RenderContext } from "../render-context";
-import { Shaders } from "../shaders";
+import { RenderContext } from "./render-context";
+import { Shaders } from "./shaders";
 
 export class MeshRenderer implements IGLResource {
 	private static instance_: MeshRenderer;

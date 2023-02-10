@@ -1,5 +1,4 @@
-import { EntityType } from "./entities/entity-types";
-import { World } from './world';
+import { World } from "./world";
 export abstract class Entity {
 	destroy(): void {
 		this.isDestroyed_ = true;
@@ -10,7 +9,7 @@ export abstract class Entity {
 		return this.isDestroyed_;
 	}
 
-	abstract getType(): EntityType;
+	abstract getType(): string;
 
 	private isDestroyed_ = false;
 }

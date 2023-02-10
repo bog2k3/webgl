@@ -1,11 +1,11 @@
+import { StaticMesh } from "./entities/static-mesh.entity";
+import { TerrainConfig } from "./entities/terrain/config";
+import { Terrain } from "./entities/terrain/terrain.entity";
 import { Matrix } from "./joglr/math/matrix";
 import { Vector } from "./joglr/math/vector";
 import { Mesh } from "./joglr/mesh";
 import { rand, randSeed } from "./joglr/utils/random";
-import { TerrainConfig } from "./world/entities/terrain/config";
-import { StaticMesh } from "./world/entities/static-mesh.entity";
-import { Terrain } from "./world/entities/terrain/terrain.entity";
-import { World } from "./world/world";
+import { World } from "./joglr/world/world";
 
 export function DEBUG_ENTRY() {
 	const tc = new TerrainConfig();

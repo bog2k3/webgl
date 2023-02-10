@@ -1,26 +1,25 @@
 import { Heightmap, HeightmapParams } from "./heightmap";
-import { ShaderTerrainPreview } from "./../../../render/programs/shader-terrain-preview";
-import { ShaderProgramManager } from "./../../../render/shader-program-manager";
-import { VertexAttribSource } from "./../../../joglr/shader-program";
-import { VertexArrayObject } from "./../../../joglr/vao";
-import { AbstractVertex } from "../../../joglr/abstract-vertex";
-import { checkGLError, gl } from "../../../joglr/glcontext";
-import { IGLResource } from "../../../joglr/glresource";
-import { Vector } from "../../../joglr/math/vector";
-import { RenderContext } from "../../../joglr/render-context";
-import { rand, randSeed } from "../../../joglr/utils/random";
-import { Progress } from "../../../progress";
-import { CustomRenderContext } from "../../../render/custom-render-context";
-import { ShaderTerrain } from "../../../render/programs/shader-terrain";
-import { Entity } from "../../entity";
-import { IRenderable } from "../../../joglr/renderable";
+import { ShaderTerrainPreview } from "../../render/programs/shader-terrain-preview";
+import { ShaderProgramManager } from "../../render/shader-program-manager";
 import { TerrainConfig } from "./config";
-import { TextureInfo, TextureLoader } from "./../../../joglr/texture-loader";
-import { RenderPass } from "./../../../render/custom-render-context";
+import { TextureInfo, TextureLoader } from "../../joglr/texture-loader";
+import { CustomRenderContext, RenderPass } from "../../render/custom-render-context";
 import { Triangle, triangulate } from "./triangulation";
 import { Water, WaterConfig } from "./water";
-import { assert } from "../../../joglr/utils/assert";
 import { EntityType } from "../entity-types";
+import { Entity } from "../../joglr/world/entity";
+import { IRenderable } from "../../joglr/render/renderable";
+import { IGLResource } from "../../joglr/glresource";
+import { Progress } from "../../progress";
+import { checkGLError, gl } from "../../joglr/glcontext";
+import { ShaderTerrain } from "../../render/programs/shader-terrain";
+import { assert } from "../../joglr/utils/assert";
+import { rand, randSeed } from "../../joglr/utils/random";
+import { Vector } from "../../joglr/math/vector";
+import { RenderContext } from "../../joglr/render/render-context";
+import { AbstractVertex } from "../../joglr/render/abstract-vertex";
+import { VertexAttribSource } from "../../joglr/render/shader-program";
+import { VertexArrayObject } from "../../joglr/render/vao";
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
 	static async loadTextures(step: number): Promise<Progress> {

@@ -1,18 +1,18 @@
-import { ShaderProgramManager } from "./../../../render/shader-program-manager";
-import { VertexAttribSource } from "./../../../joglr/shader-program";
-import { VertexArrayObject } from "./../../../joglr/vao";
-import { TextureLoader } from "./../../../joglr/texture-loader";
-import { checkGLError, gl } from "./../../../joglr/glcontext";
-import { ShaderWater } from "../../../render/programs/shader-water";
-import { Vector } from "./../../../joglr/math/vector";
+import { checkGLError, gl } from "../../joglr/glcontext";
+import { IGLResource } from "../../joglr/glresource";
+import { Vector } from "../../joglr/math/vector";
+import { AbstractVertex } from "../../joglr/render/abstract-vertex";
+import { RenderContext } from "../../joglr/render/render-context";
+import { IRenderable } from "../../joglr/render/renderable";
+import { VertexAttribSource } from "../../joglr/render/shader-program";
+import { VertexArrayObject } from "../../joglr/render/vao";
+import { TextureLoader } from "../../joglr/texture-loader";
+import { assert } from "../../joglr/utils/assert";
+import { srand } from "../../joglr/utils/random";
+import { Progress } from "../../progress";
+import { ShaderWater } from "../../render/programs/shader-water";
+import { ShaderProgramManager } from "../../render/shader-program-manager";
 import { Triangle, triangulate } from "./triangulation";
-import { IGLResource } from "../../../joglr/glresource";
-import { RenderContext } from "../../../joglr/render-context";
-import { Progress } from "../../../progress";
-import { IRenderable } from "../../../joglr/renderable";
-import { AbstractVertex } from "../../../joglr/abstract-vertex";
-import { assert } from "../../../joglr/utils/assert";
-import { srand } from "../../../joglr/utils/random";
 
 export class WaterConfig {
 	innerRadius = 50.0; // radius of 'detailed' water mesh -> should cover the playable area
