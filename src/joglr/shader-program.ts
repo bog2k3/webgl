@@ -120,11 +120,11 @@ export class ShaderProgram implements IGLResource {
 
 	// --------------------- PRIVATE AREA ------------------------ //
 
-	program_: WebGLProgram = null;
-	uniformPackProxies_: UniformPackProxy[] = [];
-	vertexAttribs_: VertexAttribDescriptor[] = [];
+	private program_: WebGLProgram = null;
+	private uniformPackProxies_: UniformPackProxy[] = [];
+	private vertexAttribs_: VertexAttribDescriptor[] = [];
 
-	onProgramLinked(program: WebGLProgram): void {
+	private onProgramLinked(program: WebGLProgram): void {
 		this.program_ = program;
 		if (program !== null) {
 			for (let pack of this.uniformPackProxies_) {
@@ -135,8 +135,8 @@ export class ShaderProgram implements IGLResource {
 		}
 	}
 
-	vertPath_: string;
-	fragPath_: string;
+	private vertPath_: string;
+	private fragPath_: string;
 }
 
 class VertexAttribSource {

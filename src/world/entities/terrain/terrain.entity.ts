@@ -1,21 +1,24 @@
+import { RenderPass } from './../../../render/custom-render-context';
 import { Water, WaterParams } from './water';
-import { TerrainConfig } from './../config';
+import { TerrainConfig } from '../config';
 import { IRenderable } from '../../renderable';
-import { Entity } from './../../entity';
+import { Entity } from '../../entity';
 import { RenderContext } from '../../../joglr/render-context';
 import { Vector } from '../../../joglr/math/vector';
 import { IGLResource } from '../../../joglr/glresource';
 import { gl } from '../../../joglr/glcontext';
 import { AbstractVertex } from '../../../joglr/abstract-vertex';
-import { ShaderTerrain } from './terrain-shader';
+import { ShaderTerrain } from '../../../render/programs/terrain-shader';
 import { rand, randSeed } from "../../../joglr/utils/random";
 import { Triangle, triangulate } from "./triangulation";
+import { CustomRenderContext } from "../../../render/custom-render-context";
 
 type Progress = {completed: number; total: number};
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
 	static loadTextures(step: number): Progress {
 		return {completed: 0, total: 0};
+		// TODO implement
 	}
 	// static unloadAllResources(): void;
 
@@ -63,7 +66,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// to the terrain geometry before that.
 	// Call finishGenerate() to generate these objects after you're done.
 	generate(config: TerrainConfig) : void {
-		console.log("Generating terrain . . .");
+		console.log("[TERRAIN] Generating . . .");
 		this.validateSettings(config);
 		this.clear();
 		this.config_ = config;
@@ -132,7 +135,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			}
 		}
 
-		console.log("Triangulating . . .");
+		console.log("[TERRAIN] Triangulating . . .");
 		this.triangles_ = triangulate(this.vertices_, (v: TerrainVertex, n: number) => {
 			return n == 0 ? v.pos.x :
 				   n == 1 ? v.pos.z :
@@ -141,14 +144,14 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// TODO this might not be necessary any more
 		this.fixTriangleWinding();	// after triangulation some triangles are ccw, we need to fix them
 
-		console.log("Computing displacements . . .");
+		console.log("[TERRAIN] Computing displacements . . .");
 		this.computeDisplacements(config.seed);
-		console.log("Computing normals . . .");
+		console.log("[TERRAIN] Computing normals . . .");
 		this.computeNormals();
-		console.log("Computing texture weights . . .");
+		console.log("[TERRAIN] Computing texture weights . . .");
 		this.computeTextureWeights();
 
-		console.log("Creating Binary Space Partitioning tree . . .")
+		console.log("[TERRAIN] Creating Binary Space Partitioning tree . . .")
 		const triIndices: number[] = new Array(this.triangles_.length);
 		for (let i=0; i<this.triangles_.length; i++) {
 			triIndices.push(i);
@@ -162,7 +165,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// bspConfig.dynamic = false;
 		// this.pBSP_ = new BSPTree<unsigned>(bspConfig, triangleAABBGenerator_, std::move(triIndices));
 
-		console.log("Generating water . . .");
+		console.log("[TERRAIN] Generating water . . .");
 		if (this.water_) {
 			this.water_.generate(<WaterParams>{
 				innerRadius: terrainRadius,					// inner radius
@@ -171,22 +174,90 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 				constrainToCircle: false							// constrain to circle
 			});
 		}
-		console.log("Done generating.");
+		console.log("[TERRAIN] Done generating.");
 		randSeed(nextSeed);
 	}
 
 	// Generate the render buffers and physics data structures
 	finishGenerate(): void {
-		// TODO: implement
+		console.log("[TERRAIN] Updating render and physics objects . . .");
+		this.updateRenderBuffers();
+		if (!this.previewMode_)
+			this.updatePhysics();
 	}
 
 	// clear all terrain data
 	clear(): void {
-		// TODO: implement
+		this.vertices_.splice(0);
+		this.nVertices_ = 0;
+		this.triangles_.splice(0);
+		// physicsBodyMeta_.reset();
+		this.heightFieldValues_.splice(0);
+		// if (this.pBSP_)
+		// 	delete pBSP_, pBSP_ = nullptr;
+		// TODO complete
 	}
 
 	render(context: RenderContext): void {
-		// TODO: implement
+		if (!this.renderData_.shaderProgram_.isValid()) {
+			return;
+		}
+
+		const rctx = CustomRenderContext.fromCtx(context);
+
+		if (rctx.renderPass == RenderPass.Standard || rctx.renderPass == RenderPass.WaterReflection || rctx.renderPass == RenderPass.WaterRefraction) {
+			// set-up textures
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[0].texID);
+			gl.activeTexture(gl.TEXTURE1);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[1].texID);
+			gl.activeTexture(gl.TEXTURE2);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[2].texID);
+			gl.activeTexture(gl.TEXTURE3);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[3].texID);
+			gl.activeTexture(gl.TEXTURE4);
+			gl.bindTexture(gl.TEXTURE_2D, TerrainRenderData.textures_[4].texID);
+			for (let i=0; i<TerrainVertex.nTextures; i++)
+				this.renderData_.shaderProgram_.uniforms().setTextureSampler(i, i);
+			if (this.water_) {
+				gl.activeTexture(gl.TEXTURE5);
+				gl.bindTexture(gl.TEXTURE_2D, this.water_.getNormalTexture());
+				this.renderData_.shaderProgram_.uniforms().setWaterNormalTexSampler(5);
+			}
+			// set-up shader & vertex buffer
+			this.renderData_.shaderProgram_.begin();
+			//glBindVertexArray(this.renderData_.VAO_);
+			// TODO bind buffers and set pointers
+			if (rctx.enableClipPlane) {
+				if (rctx.subspace < 0) {
+					// draw below-water subspace:
+					gl.drawElements(gl.TRIANGLES, this.renderData_.trisBelowWater_ * 3, gl.UNSIGNED_INT, 0);
+				} else {
+					// draw above-water subspace:
+					gl.drawElements(gl.TRIANGLES, this.renderData_.trisAboveWater_ * 3, gl.UNSIGNED_INT, this.renderData_.trisBelowWater_*3*4);
+				}
+			} else {
+				// render all in one call
+				gl.drawElements(gl.TRIANGLES, (this.renderData_.trisBelowWater_ + this.renderData_.trisAboveWater_) * 3, gl.UNSIGNED_INT, 0);
+			}
+
+			// unbind stuff
+			// gl.bindVertexArray(0); // TODO
+			this.renderData_.shaderProgram_.end();
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, 0);
+
+			// draw vertex normals
+			/*for (unsigned i=0; i<nVertices_; i++) {
+				Shape3D::get()->drawLine(pVertices_[i].pos, pVertices_[i].pos+pVertices_[i].normal, {1.f, 0, 1.f});
+			}*/
+			//BSPDebugDraw::draw(*pBSP_);
+			//for (unsigned i=0; i<triangles_.size() / 10; i++)
+			//	Shape3D::get()->drawAABB(triangleAABBGenerator_->getAABB(i), glm::vec3{0.f, 1.f, 0.f});
+		} else if (rctx.renderPass === RenderPass.WaterSurface) {
+			if (this.water_)
+				this.water_.render(context);
+		}
 	}
 
 	update(dt: number): void {

@@ -7,7 +7,7 @@ import { World } from "./world/world";
 import { Viewport } from "./joglr/viewport";
 import { renderViewport } from "./world/render";
 import { Vector } from "./joglr/math/vector";
-import { StaticMeshObject } from "./objects/static-mesh.object";
+import { StaticMesh } from "./world/entities/static-mesh.entity";
 import { Matrix } from "./joglr/math/matrix";
 import { DEBUG_ENTRY } from "./test";
 
@@ -104,10 +104,10 @@ function initializeScene(): void {
 	vp1 = new Viewport(0, 0, 1280, 720);
 	world = new World();
 	const m = Mesh.makeBox(new Vector(), new Vector(0.4, 0.4, 0.4));
-	world.addEntity(new StaticMeshObject(m, Matrix.translate(new Vector(-0.5, +0.5))));
-	world.addEntity(new StaticMeshObject(m, Matrix.translate(new Vector(+0.5, +0.5))));
-	world.addEntity(new StaticMeshObject(m, Matrix.translate(new Vector(+0.5, -0.5))));
-	world.addEntity(new StaticMeshObject(m, Matrix.translate(new Vector(-0.5, -0.5))));
+	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(-0.5, +0.5))));
+	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(+0.5, +0.5))));
+	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(+0.5, -0.5))));
+	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(-0.5, -0.5))));
 
-	world.addEntity(new StaticMeshObject(m, Matrix.translate(new Vector(0, -1, 0)).mul(Matrix.scale(10, 0.1, 10))));
+	world.addEntity(new StaticMesh(m, Matrix.translate(new Vector(0, -1, 0)).mul(Matrix.scale(10, 0.1, 10))));
 }

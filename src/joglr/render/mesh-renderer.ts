@@ -72,7 +72,7 @@ export class MeshRenderer implements IGLResource {
 	}
 
 	// ------------- PRIVATE AREA ------------------- //
-	private constructor() {}
+	protected constructor() {}
 
 	private meshShaderProgram_: WebGLProgram;
 	private indexPos_ = 0;

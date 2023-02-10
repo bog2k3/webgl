@@ -2,7 +2,7 @@ import { checkGLError, gl } from "./glcontext";
 import { Matrix } from "./math/matrix";
 import { Vector } from "./math/vector";
 
-enum UniformType {
+export enum UniformType {
 	INT = "INT",
 	FLOAT = "FLOAT",
 	VEC2 = "VEC2",
