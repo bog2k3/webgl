@@ -60,7 +60,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	// await ShaderProgramManager.loadProgram(ShaderTerrain);
 	// await ShaderProgramManager.loadProgram(ShaderWater);
 
-	await loadTextures();
+	// await loadTextures();
 }
 
 function step(): void {

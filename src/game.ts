@@ -60,8 +60,10 @@ export class Game {
 		// 	sm.getTransform().glMatrix().getColumnMajorValues(),
 		// 	Matrix.roll(Math.PI / 6).getColumnMajorValues(),
 		// );
-		// console.log(new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 0, 1), 0.1)).values(3));
-		// console.log(new Vector(1, 1, 1).mulQ(Quat.identity()).values(3));
+		console.log("i", new Vector(1, 1, 1).mulQ(Quat.identity()).values(3));
+		console.log("z", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 0, 1), 0.2)).values(3));
+		console.log("y", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 1, 0), 0.2)).values(3));
+		console.log("x", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(1, 0, 0), 0.2)).values(3));
 		World.getInstance().addEntity(sm);
 		//---DEBUG
 
