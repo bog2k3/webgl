@@ -3,10 +3,15 @@ import { Mesh } from "./mesh";
 
 export class SceneGraph {
 
-	testMesh: Mesh;
+	testMeshes: Mesh[];
 
 	constructor() {
-		this.testMesh = Mesh.makeBox(new Vector(0, 0, 0), new Vector(1,1,1));
+		this.testMeshes = [
+			Mesh.makeBox(new Vector(-0.5, +0.5, 0), new Vector(0.25, 0.25, 0.25)),
+			Mesh.makeBox(new Vector(+0.5, +0.5, 0), new Vector(0.25, 0.25, 0.25)),
+			Mesh.makeBox(new Vector(+0.5, -0.5, 0), new Vector(0.25, 0.25, 0.25)),
+			Mesh.makeBox(new Vector(-0.5, -0.5, 0), new Vector(0.25, 0.25, 0.25)),
+		];
 	}
 
 	update(dt: number): void {

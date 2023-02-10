@@ -35,16 +35,17 @@ export class MeshRenderer {
 		gl.uniformMatrix4fv(this.indexMatPVW_, false, matPVW.m);
 		checkGLError("mPVW uniform setup");
 
+		const stride = MeshVertex.getSize() * 4;
 		gl.bindBuffer(gl.ARRAY_BUFFER, mesh.VBO_);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.IBO_);
+		gl.vertexAttribPointer(this.indexPos_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
+		gl.vertexAttribPointer(this.indexNorm_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
+		gl.vertexAttribPointer(this.indexUV1_, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
+		gl.vertexAttribPointer(this.indexColor_, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
 		gl.enableVertexAttribArray(this.indexPos_);
 		gl.enableVertexAttribArray(this.indexNorm_);
 		gl.enableVertexAttribArray(this.indexUV1_);
 		gl.enableVertexAttribArray(this.indexColor_);
-		gl.vertexAttribPointer(this.indexPos_, 3, gl.FLOAT, false, MeshVertex.getSize(), MeshVertex.getOffset("position"));
-		gl.vertexAttribPointer(this.indexNorm_, 3, gl.FLOAT, false, MeshVertex.getSize(), MeshVertex.getOffset("normal"));
-		gl.vertexAttribPointer(this.indexUV1_, 2, gl.FLOAT, false, MeshVertex.getSize(), MeshVertex.getOffset("UV1"));
-		gl.vertexAttribPointer(this.indexColor_, 4, gl.FLOAT, false, MeshVertex.getSize(), MeshVertex.getOffset("color"));
 		checkGLError("attrib arrays setup");
 
 		// decide what to draw:

@@ -1,5 +1,8 @@
 import { Vector } from "./vector";
 
+/**
+ * Matrixes are COLUMN-MAJOR
+ */
 export class Matrix {
 
 	public m: number[];
@@ -86,13 +89,6 @@ export class Matrix {
 	/** returns the i-th row, as a Vector */
 	row(i: number): Vector {
 		return new Vector(
-			this.m[i * 4 + 0], this.m[i * 4 + 1], this.m[i * 4 + 2], this.m[i * 4 + 3]
-		);
-	}
-
-	/** returns the i-th col as a Vector */
-	col(i: number): Vector {
-		return new Vector(
 			this.m[0 * 4 + i],
 			this.m[1 * 4 + i],
 			this.m[2 * 4 + i],
@@ -100,13 +96,29 @@ export class Matrix {
 		);
 	}
 
+	/** returns the i-th col as a Vector */
+	col(i: number): Vector {
+		return new Vector(
+			this.m[i * 4 + 0], this.m[i * 4 + 1], this.m[i * 4 + 2], this.m[i * 4 + 3]
+		);
+	}
+
 	/** performs matrix multiplication */
 	mul(m: Matrix): Matrix {
 		return new Matrix(
-			this.row(0).dot(m.col(0)), this.row(0).dot(m.col(1)), this.row(0).dot(m.col(2)), this.row(0).dot(m.col(3)),
-			this.row(1).dot(m.col(0)), this.row(1).dot(m.col(1)), this.row(1).dot(m.col(2)), this.row(1).dot(m.col(3)),
-			this.row(2).dot(m.col(0)), this.row(2).dot(m.col(1)), this.row(2).dot(m.col(2)), this.row(2).dot(m.col(3)),
-			this.row(3).dot(m.col(0)), this.row(3).dot(m.col(1)), this.row(3).dot(m.col(2)), this.row(3).dot(m.col(3)),
+			this.row(0).dot(m.col(0)), this.row(1).dot(m.col(0)), this.row(2).dot(m.col(0)), this.row(3).dot(m.col(0)),
+			this.row(0).dot(m.col(1)), this.row(1).dot(m.col(1)), this.row(2).dot(m.col(1)), this.row(3).dot(m.col(1)),
+			this.row(0).dot(m.col(2)), this.row(1).dot(m.col(2)), this.row(2).dot(m.col(2)), this.row(3).dot(m.col(2)),
+			this.row(0).dot(m.col(3)), this.row(1).dot(m.col(3)), this.row(2).dot(m.col(3)), this.row(3).dot(m.col(3)),
+		);
+	}
+
+	transpose(): Matrix {
+		return new Matrix(
+			...this.row(0).values(4),
+			...this.row(1).values(4),
+			...this.row(2).values(4),
+			...this.row(3).values(4),
 		);
 	}
 }

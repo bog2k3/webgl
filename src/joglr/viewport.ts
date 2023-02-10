@@ -9,7 +9,6 @@ export class Viewport {
 		this.viewportArea_ = new Vector(x, y, w, h);
 		this.camera_ = new Camera(this);
 		this.updateVP2UMat();
-		this.camera_.moveTo(new Vector(0, 0, -3));
 	}
 
 	bkColor(): Vector {

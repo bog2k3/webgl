@@ -10,10 +10,10 @@ export enum MeshRenderModes {
 };
 
 export class MeshVertex extends AbstractVertex {
-	position: Vector; // 3
-	normal: Vector; // 3
-	UV1: Vector; // 2
-	color: Vector; // 4
+	position = new Vector(); // 3
+	normal = new Vector(); // 3
+	UV1 = new Vector(); // 2
+	color = new Vector(1, 0, 1); // 4
 
 	static getSize(): number {
 		return 4 * (3 + 3 + 2 + 4);
@@ -21,10 +21,10 @@ export class MeshVertex extends AbstractVertex {
 
 	static getOffset(field: keyof MeshVertex): number {
 		switch (field) {
-			case "position": return 0;
-			case "normal": return 3 * 4;
-			case "UV1": return 6 * 4;
-			case "color": return 8 * 4;
+			case "position": return 4 * 0;
+			case "normal": return 4 * 3;
+			case "UV1": return 4 * 6;
+			case "color": return 4 * 8;
 			default: throw new Error(`Invalid field specified in MeshVertex.getOffset(): "${field}`);
 		}
 	}
@@ -51,6 +51,7 @@ export class MeshVertex extends AbstractVertex {
 
 export class Mesh implements IGLResource {
 	static RenderModes = MeshRenderModes;
+	static ENABLE_COLOR_DEBUG = false;
 
 	constructor() {
 		this.VBO_ = gl.createBuffer();
@@ -61,6 +62,25 @@ export class Mesh implements IGLResource {
 		gl.deleteBuffer(this.VBO_);
 		gl.deleteBuffer(this.IBO_);
 		this.VBO_ = this.IBO_ = null;
+	}
+
+	static makeScreenQuad(): Mesh {
+		const vertices: MeshVertex[] = [
+			new MeshVertex({ // #0 top-left
+				position: new Vector(-1, +1, 0),
+			}),
+			new MeshVertex({ // #1 top-right
+				position: new Vector(+1, +1, 0),
+			}),
+			new MeshVertex({ // #2 bottom-left
+				position: new Vector(-1, -1, 0),
+			}),
+			new MeshVertex({ // #3 bottom right
+				position: new Vector(+1, -1, 0),
+			}),
+		];
+		const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
+		return Mesh.makeMesh(vertices, indices);
 	}
 
 	static makeBox(center: Vector, size: Vector): Mesh {
@@ -254,18 +274,12 @@ export class Mesh implements IGLResource {
 			})
 		];
 
-		if (true) { // debug vertices with colors
+		if (Mesh.ENABLE_COLOR_DEBUG) { // enable debugging vertices with colors
 			const c: Vector[] = [ new Vector(1, 0, 0, 1), new Vector(0, 1, 0, 1), new Vector(0, 0, 1, 1), new Vector(1, 1, 0, 1) ];
 			for (let i=0; i<vertices.length; i++) {
 				vertices[i].color = c[i % c.length];
 			}
 		}
-
-		const m = new Mesh();
-
-		gl.bindBuffer(gl.ARRAY_BUFFER, m.VBO_);
-		gl.bufferData(gl.ARRAY_BUFFER, AbstractVertex.arrayToBuffer(vertices), gl.STATIC_DRAW);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 		const indices = new Uint16Array([
 			// back face
@@ -279,15 +293,10 @@ export class Mesh implements IGLResource {
 			// left face
 			16, 17, 18, 16, 18, 19,
 			// right face
-			20, 21, 22, 20, 22, 23
+			20, 22, 21, 20, 23, 22
 		]);
-		m.indexCount_ = indices.length;
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.IBO_);
-		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-		m.mode_ = MeshRenderModes.Triangles;
-		return m;
+		return Mesh.makeMesh(vertices, indices);
 	}
 
 	static makeGizmo(): Mesh {
@@ -303,4 +312,19 @@ export class Mesh implements IGLResource {
 	IBO_: WebGLBuffer;
 	indexCount_ = 0;
 	mode_: MeshRenderModes = MeshRenderModes.Triangles;
+
+	private static makeMesh(vertices: MeshVertex[], indices: Uint16Array): Mesh {
+		const m = new Mesh();
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, m.VBO_);
+		gl.bufferData(gl.ARRAY_BUFFER, AbstractVertex.arrayToBuffer(vertices), gl.STATIC_DRAW);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		m.indexCount_ = indices.length;
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.IBO_);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+		m.mode_ = MeshRenderModes.Triangles;
+		return m;
+	}
 }

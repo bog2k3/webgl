@@ -8,6 +8,7 @@ export class Camera {
 	constructor(vp: Viewport) {
 		this.viewport_ = vp;
 		this.updateProj();
+		this.updateView();
 	}
 
 	private viewport_: Viewport;

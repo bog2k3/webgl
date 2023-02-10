@@ -1,3 +1,4 @@
+import { checkGLError } from "./glcontext";
 import { Matrix } from "./math/matrix";
 import { RenderContext } from "./render-context";
 import { MeshRenderer } from "./render/mesh-renderer";
@@ -10,7 +11,10 @@ export function renderViewport(vp: Viewport, scene: SceneGraph): void {
 
 	vp.prepareForRender();
 
-	MeshRenderer.get().renderMesh(scene.testMesh, Matrix.identity(), context);
+	for (let m of scene.testMeshes) {
+		MeshRenderer.get().renderMesh(m, Matrix.identity(), context);
+		checkGLError("renderViewport");
+	}
 
 	vp.resetAfterRender();
 }

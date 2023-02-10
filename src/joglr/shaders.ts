@@ -37,8 +37,12 @@ export namespace Shaders {
 		if (!gl.getProgramParameter(prog, gl.LINK_STATUS) || checkGLError("linking shader program")) {
 			throw new Error("Failed to link shader program: " + gl.getProgramInfoLog(prog));
 		}
-		gl.deleteShader(vertexShader);
-		gl.deleteShader(fragmentShader);
+		gl.validateProgram(prog);
+		if (!gl.getProgramParameter(prog, gl.VALIDATE_STATUS) || checkGLError("validating shader program")) {
+			throw new Error("Failed to validate shader program: " + gl.getProgramInfoLog(prog));
+		}
+		// gl.deleteShader(vertexShader);
+		// gl.deleteShader(fragmentShader);
 		return prog;
 	}
 
