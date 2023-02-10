@@ -1,5 +1,6 @@
-import { clamp } from "../joglr/math/functions";
-import { Quat } from "../joglr/math/quat";
+import { buildMatrixFromOrientation } from "../joglr/math/functions";
+import { Matrix } from "../joglr/math/matrix";
+import { matrixToQuat } from "../joglr/math/quat-functions";
 import { Vector } from "../joglr/math/vector";
 import { Entity } from "../joglr/world/entity";
 import { IUpdatable } from "../joglr/world/updateable";
@@ -10,10 +11,10 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 	constructor(position: Vector, direction: Vector) {
 		super();
 		// TODO implement
-		// this.transform_.setPosition(position);
-		// const up = new Vector(0, 1, 0);
-		// const mRot: Matrix = buildMatrixFromOrientation(new Vector(0), direction, up);
-		// this.transform_.setOrientation(glm::quat(mRot));
+		this.transform_.setPosition(position);
+		const up = new Vector(0, 1, 0);
+		const mRot: Matrix = buildMatrixFromOrientation(new Vector(0), direction, up);
+		this.transform_.setOrientation(matrixToQuat(mRot));
 	}
 
 	override getType(): string {

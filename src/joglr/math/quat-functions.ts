@@ -32,3 +32,20 @@ export function quatToMatrix(q: Quat): Matrix {
 		0, 						0, 						0, 						1
 	);
 }
+
+export function matrixToQuat(m: Matrix): Quat {
+	const m00 = m.m[0];
+	const m01 = m.m[1];
+	const m02 = m.m[2];
+	const m10 = m.m[4];
+	const m11 = m.m[5];
+	const m12 = m[6];
+	const m20 = m.m[8];
+	const m21 = m.m[9];
+	const m22 = m.m[10];
+	const w = Math.sqrt(1 + m00 + m11 + m22) / 2;
+	const x = (m21 - m12) / (4 * w);
+	const y = (m02 - m20) / (4 * w);
+	const z = (m10 - m01) / (4 * w);
+	return new Quat(x, y, z, w);
+}

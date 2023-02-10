@@ -27,7 +27,8 @@ export class Game {
 
 		World.getInstance().addEntity(this.terrain_);
 
-		this.freeCam_ = new FreeCamera(new Vector(140, 50, 180), new Vector(-1, -0.5, -1));
+		// this.freeCam_ = new FreeCamera(new Vector(140, 50, 180), new Vector(-1, -0.5, -1));
+		this.freeCam_ = new FreeCamera(new Vector(0, 50, 0), new Vector(0, -0.9, 0.1));
 		World.getInstance().addEntity(this.freeCam_);
 
 		// camera controller (this one moves the render camera to the position of the target entity)
