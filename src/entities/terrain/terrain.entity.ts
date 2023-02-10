@@ -413,7 +413,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	private renderData_: TerrainRenderData = null;
 	private water_: Water = null;
 	private triangleAABBGenerator_ = null;
-	// private BSPTree<unsigned> *pBSP_ = nullptr;
+	private BSPTree<unsigned> *pBSP_ = nullptr;
 
 	// PhysBodyProxy physicsBodyMeta_;
 	heightFieldValues_: number[] = null;
