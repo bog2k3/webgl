@@ -9,6 +9,7 @@ import { renderViewport } from "./world/render";
 import { Vector } from "./joglr/math/vector";
 import { StaticMeshObject } from "./objects/static-mesh.object";
 import { Matrix } from "./joglr/math/matrix";
+import { DEBUG_ENTRY } from "./test";
 
 const MOVE_SPEED = 0.5; // m/s
 
@@ -25,6 +26,10 @@ async function main(): Promise<void> {
 	initializeScene();
 	initInput(canvas);
 	requestAnimationFrame(step);
+
+	if (false) {
+		DEBUG_ENTRY();
+	}
 }
 
 async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {

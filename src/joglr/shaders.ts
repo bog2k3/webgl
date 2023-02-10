@@ -225,6 +225,7 @@ export namespace Shaders {
 			console.error("Failed to validate shader program: " + gl.getProgramInfoLog(prog));
 			return null;
 		}
+		return prog;
 	}
 
 	function deleteLoadedShader(shaderIndex: number): void {

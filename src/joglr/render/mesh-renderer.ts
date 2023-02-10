@@ -81,7 +81,7 @@ export class MeshRenderer implements IGLResource {
 	private indexColor_ = 0;
 	private indexMatPVW_: WebGLUniformLocation;
 
-	private async initialize() {
+	private async initialize(): Promise<void> {
 		await Shaders.createProgram("/data/shaders/mesh.vert", "/data/shaders/mesh-texture.frag", (prog: WebGLProgram) => {
 			this.meshShaderProgram_ = prog;
 			this.indexPos_ = gl.getAttribLocation(this.meshShaderProgram_, "vPos");
