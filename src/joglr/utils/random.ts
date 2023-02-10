@@ -34,6 +34,17 @@ export function randi2(min: number, max: number) {
 	return min + randi(max - min);
 }
 
+export function randomShuffle<T>(list: T[]): void {
+	const shuffledList: T[] = list
+		.map((x) => ({
+			x,
+			order: rand(),
+		}))
+		.sort((a, b) => a.order - b.order)
+		.map((e) => e.x);
+	Object.assign(list, shuffledList);
+}
+
 function mulberry32(a: number): () => number {
 	return function () {
 		var t = (a += 0x6d2b79f5);

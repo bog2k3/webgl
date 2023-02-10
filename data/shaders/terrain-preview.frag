@@ -11,15 +11,19 @@ varying vec3 fColor;
 varying vec2 fUV[5];
 varying vec4 fTexBlendFactor;
 
-uniform sampler2D tex[5];
+uniform sampler2D tex1;
+uniform sampler2D tex2;
+uniform sampler2D tex3;
+uniform sampler2D tex4;
+uniform sampler2D tex5;
 
 void main() {
 	float lowFreqFactor = 0.05;
-	vec4 t0 = texture2D(tex[0], fUV[0] * lowFreqFactor);
-	vec4 t1 = texture2D(tex[1], fUV[1] * lowFreqFactor);
-	vec4 t2 = texture2D(tex[2], fUV[2] * lowFreqFactor);
-	vec4 t3 = texture2D(tex[3], fUV[3] * lowFreqFactor);
-	vec4 t4 = texture2D(tex[4], fUV[4] * lowFreqFactor);
+	vec4 t0 = texture2D(tex1, fUV[0] * lowFreqFactor);
+	vec4 t1 = texture2D(tex2, fUV[1] * lowFreqFactor);
+	vec4 t2 = texture2D(tex3, fUV[2] * lowFreqFactor);
+	vec4 t3 = texture2D(tex4, fUV[3] * lowFreqFactor);
+	vec4 t4 = texture2D(tex5, fUV[4] * lowFreqFactor);
 
 	// blend the textures:
 	vec4 texColor = mixTerrainTextures(t0, t1, t2, t3, t4, fTexBlendFactor);
@@ -37,5 +41,8 @@ void main() {
 
 	gl_FragColor = final;
 
-	// gl_FragColor = vec4(0, (fWPos.y + 2.0) / 6.0, 0, 1);
+	// debug texture blend factor:
+	// gl_FragColor = vec4(fTexBlendFactor.xyz, 1);
+
+	// gl_FragColor = t4;
 }

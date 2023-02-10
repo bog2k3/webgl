@@ -21,6 +21,8 @@ import { AbstractVertex } from "../../joglr/render/abstract-vertex";
 import { VertexAttribSource } from "../../joglr/render/shader-program";
 import { VertexArrayObject } from "../../joglr/render/vao";
 import { logprefix } from "../../joglr/log";
+import { clamp, lerp } from "../../joglr/math/functions";
+import { PerlinNoise } from "./perlin-noise";
 
 const console = logprefix("Terrain");
 
@@ -220,8 +222,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.triangles_ = triangulate(this.vertices_, (v: TerrainVertex, n: number) => {
 			return n == 0 ? v.pos.x : n == 1 ? v.pos.z : 0;
 		});
-		// TODO this might not be necessary any more
-		// this.fixTriangleWinding(); // after triangulation some triangles are ccw, we need to fix them
 
 		console.log("Computing displacements . . .");
 		this.computeDisplacements(config.seed);
@@ -369,9 +369,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// glm::vec3 rayStart{where.x, config_.maxElevation + 100, where.z};
 		// glm::vec3 rayDir{0.f, -1.f, 0.f};
 		// for (unsigned tIndex : node->objects()) {
-		// 	glm::vec3 &p1 = pVertices_[triangles_[tIndex].iV1].pos;
-		// 	glm::vec3 &p2 = pVertices_[triangles_[tIndex].iV2].pos;
-		// 	glm::vec3 &p3 = pVertices_[triangles_[tIndex].iV3].pos;
+		// 	glm::vec3 &p1 = this.vertices_[triangles_[tIndex].iV1].pos;
+		// 	glm::vec3 &p2 = this.vertices_[triangles_[tIndex].iV2].pos;
+		// 	glm::vec3 &p3 = this.vertices_[triangles_[tIndex].iV3].pos;
 		// 	if (rayIntersectTri(rayStart, rayDir, p1, p2, p3, intersectionPoint))
 		// 		return intersectionPoint.y;
 		// }
@@ -418,26 +418,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// PhysBodyProxy physicsBodyMeta_;
 	heightFieldValues_: number[] = null;
 
-	private fixTriangleWinding(): void {
-		// all triangles must be CW as seen from above
-		for (const t of this.triangles_) {
-			const n: Vector = this.vertices_[t.iV2].pos
-				.sub(this.vertices_[t.iV1].pos)
-				.cross(this.vertices_[t.iV3].pos.sub(this.vertices_[t.iV1].pos));
-			if (n.y < 0) {
-				// triangle is CCW, we need to reverse it
-				// exchange vertices 1 and 3
-				let tmp = t.iV1;
-				t.iV1 = t.iV3;
-				t.iV3 = tmp;
-				// exchange edges 1-2 and 2-3
-				// tmp = t.iN12;
-				// t.iN12 = t.iN23;
-				// t.iN23 = tmp;
-			}
-		}
-	}
-
 	private computeDisplacements(seed: number): void {
 		const hparam = new HeightmapParams();
 		hparam.width = Math.floor(this.config_.width / 2);
@@ -450,8 +430,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		height.blur(2);
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
 		randSeed(seed);
-		// PerlinNoise roughNoise(max(4.f, this.config_.width), max(4.f, this.config_.length));
-		// TODO perlin noise
+		const roughNoise = new PerlinNoise(Math.max(4, this.config_.width), Math.max(4, this.config_.length));
 
 		const bottomLeft = new Vector(-this.config_.width * 0.5, 0, -this.config_.length * 0.5);
 		for (
@@ -464,163 +443,149 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 				const u = (this.vertices_[k].pos.x - bottomLeft.x) / this.config_.width;
 				const v = (this.vertices_[k].pos.z - bottomLeft.z) / this.config_.length;
 
-				// const roughness = (
-				// 	+ roughNoise.getNorm(u/32, v/32, 1.f) * 1.f
-				// 	+ roughNoise.getNorm(u/16, v/16, 1.f) * 0.5f
-				// 	+ roughNoise.getNorm(u/8, v/8, 1.f) * 0.25f
-				// 	+ roughNoise.getNorm(u/4, v/4, 1.f) * 0.125f
-				// 	+ roughNoise.getNorm(u/2, v/2, 1.f) * 0.0625f
-				// 	+ roughNoise.getNorm(u, v, 1.f) * 0.03125f
-				// 	+ roughNoise.getNorm(u*2, v*2, 1.f) * 0.015625f
-				// 	+ roughNoise.getNorm(u*4, v*4, 1.f) * 0.0078125f
-				// 	+ roughNoise.getNorm(u*8, v*8, 1.f) * 0.00390625f
-				// 	) * 20 - 10;
+				// prettier-ignore
+				const roughness = (
+					roughNoise.getNorm(u / 32, v / 32, 1.0) * 1 +
+					roughNoise.getNorm(u / 16, v / 16, 1.0) * 0.5 +
+					roughNoise.getNorm(u / 8, v / 8, 1.0) * 0.25 +
+					roughNoise.getNorm(u / 4, v / 4, 1.0) * 0.125 +
+					roughNoise.getNorm(u / 2, v / 2, 1.0) * 0.0625 +
+					roughNoise.getNorm(u, v, 1.0) * 0.03125 +
+					roughNoise.getNorm(u * 2, v * 2, 1.0) * 0.015625 +
+					roughNoise.getNorm(u * 4, v * 4, 1.0) * 0.0078125 +
+					roughNoise.getNorm(u * 8, v * 8, 1.0) * 0.00390625
+				) * 10 - 10;
 
 				this.vertices_[k].pos.y = height.value(u, v);
-				// this.vertices_[k].pos.y += roughness * this.config_.roughness;
+				this.vertices_[k].pos.y += roughness * this.config_.roughness;
 
 				// TODO : use vertex colors with perlin noise for more variety
 
 				// debug
-				//float hr = (pVertices_[k].pos.y - this.config_.minElevation) / (this.config_.maxElevation - this.config_.minElevation);
-				//pVertices_[k].color = {1.f - hr, hr, 0};
+				//float hr = (this.vertices_[k].pos.y - this.config_.minElevation) / (this.config_.maxElevation - this.config_.minElevation);
+				//this.vertices_[k].color = {1.f - hr, hr, 0};
 			}
-		this.meltEdges(this.cols_ * 0.2, this.rows_ * 0.2);
 		this.normalizeHeights();
+		this.meltEdges(this.cols_ * 0.2, this.rows_ * 0.2);
 	}
 
 	private meltEdges(xRadius: number, zRadius: number): void {
-		// if (xRadius > cols_/2 || zRadius > rows_/2) {
-		// 	ERROR("Terrain::meltEdges() received invalid parameter");
-		// 	return;
-		// }
-		// auto slopeFn = [](float x) {
-		// 	return 0.5f + 0.5f * sinf(x * PI - PI/2);
-		// };
-		// for (unsigned i=0; i<rows_; i++)
-		// 	for (unsigned j=0; j<cols_; j++) {
-		// 		float row_edgeFactor = clamp(1.5f - 3 * abs((int)i - (int)rows_/2) / (float)rows_, 0.f, 1.f);
-		// 		float col_edgeFactor = clamp(1.5f - 3 * abs((int)j - (int)cols_/2) / (float)cols_, 0.f, 1.f);
-		// 		float edgeFactor = sqrt(row_edgeFactor * col_edgeFactor);
-		// 		float edgeScaleFactor = slopeFn(clamp(edgeFactor, 0.f, 1.f));
-		// 		pVertices_[i*cols_+j].pos.y = lerp(config_.minElevation, pVertices_[i*cols_+j].pos.y, edgeScaleFactor);
-		// 	}
-		// return;
-		// // top edge:
-		// for (unsigned i=0; i<zRadius; i++) {
-		// 	float f = (float)i / zRadius;
-		// 	f = slopeFn(f);
-		// 	for (unsigned j=0; j<cols_; j++)
-		// 		pVertices_[i*cols_+j].pos.y = lerp(config_.minElevation, pVertices_[i*cols_+j].pos.y, f);
-		// }
-		// // bottom edge:
-		// for (unsigned i=rows_-zRadius; i<rows_; i++) {
-		// 	float f = (float)(rows_-i) / zRadius;
-		// 	f = slopeFn(f);
-		// 	for (unsigned j=0; j<cols_; j++)
-		// 		pVertices_[i*cols_+j].pos.y = lerp(config_.minElevation, pVertices_[i*cols_+j].pos.y, f);
-		// }
-		// // left edge:
-		// for (unsigned j=0; j<xRadius; j++) {
-		// 	float f = (float)j / xRadius;
-		// 	f = slopeFn(f);
-		// 	for (unsigned i=0; i<rows_; i++)
-		// 		pVertices_[i*cols_+j].pos.y = lerp(config_.minElevation, pVertices_[i*cols_+j].pos.y, f);
-		// }
-		// // right edge:
-		// for (unsigned j=cols_-xRadius; j<cols_; j++) {
-		// 	float f = (float)(cols_-j) / xRadius;
-		// 	f = slopeFn(f);
-		// 	for (unsigned i=0; i<rows_; i++)
-		// 		pVertices_[i*cols_+j].pos.y = lerp(config_.minElevation, pVertices_[i*cols_+j].pos.y, f);
-		// }
+		if (xRadius > this.cols_ / 2 || zRadius > this.rows_ / 2) {
+			throw new Error("Terrain::meltEdges() received invalid parameter");
+		}
+		const slopeFn = (x: number) => 0.5 + 0.5 * Math.sin(x * Math.PI - Math.PI / 2);
+		for (let i = 0; i < this.rows_; i++) {
+			for (let j = 0; j < this.cols_; j++) {
+				const row_edgeFactor = clamp(1.5 - (3 * Math.abs(i - Math.floor(this.rows_ / 2))) / this.rows_, 0, 1);
+				const col_edgeFactor = clamp(1.5 - (3 * Math.abs(j - Math.floor(this.cols_ / 2))) / this.cols_, 0, 1);
+				const edgeFactor = Math.sqrt(row_edgeFactor * col_edgeFactor);
+				const edgeScaleFactor = slopeFn(clamp(edgeFactor, 0, 1));
+				this.vertices_[i * this.cols_ + j].pos.y = lerp(
+					this.config_.minElevation,
+					this.vertices_[i * this.cols_ + j].pos.y,
+					edgeScaleFactor,
+				);
+			}
+		}
 	}
 
 	private normalizeHeights(): void {
-		// // adjust the heights to bring them to fill the entire [minElevation, maxElevation] range
-		// // 1: compute min/max:
-		// float vmin = 1e20f, vmax = -1e20f;
-		// for (unsigned i=0; i<rows_*cols_; i++) {
-		// 	if (pVertices_[i].pos.y < vmin)
-		// 		vmin = pVertices_[i].pos.y;
-		// 	if (pVertices_[i].pos.y > vmax)
-		// 		vmax = pVertices_[i].pos.y;
-		// }
-		// // 2: rescale the values to fill the entire height range
-		// float scale = (config_.maxElevation - config_.minElevation) / (vmax - vmin);
-		// for (unsigned i=0; i<rows_*cols_; i++) {
-		// 	int row = i / cols_;
-		// 	int col = i % cols_;
-		// 	pVertices_[i].pos.y = config_.minElevation + (pVertices_[i].pos.y - vmin) * scale;
-		// }
+		// adjust the heights to bring them to fill the entire [minElevation, maxElevation] range
+		// 1: compute min/max:
+		let vmin = 1e20;
+		let vmax = -1e20;
+		for (let i = 0; i < this.rows_ * this.cols_; i++) {
+			if (this.vertices_[i].pos.y < vmin) vmin = this.vertices_[i].pos.y;
+			if (this.vertices_[i].pos.y > vmax) vmax = this.vertices_[i].pos.y;
+		}
+		// 2: rescale the values to fill the entire height range
+		const scale = (this.config_.maxElevation - this.config_.minElevation) / (vmax - vmin);
+		for (let i = 0; i < this.rows_ * this.cols_; i++) {
+			const row = Math.floor(i / this.cols_);
+			const col = i % this.cols_;
+			this.vertices_[i].pos.y = this.config_.minElevation + (this.vertices_[i].pos.y - vmin) * scale;
+		}
 	}
 
 	private computeNormals(): void {
-		// for (auto &t : triangles_) {
-		// 	glm::vec3 n = glm::cross(pVertices_[t.iV2].pos - pVertices_[t.iV1].pos, pVertices_[t.iV3].pos - pVertices_[t.iV1].pos);
-		// 	n = glm::normalize(n);
-		// 	pVertices_[t.iV1].normal += n;
-		// 	pVertices_[t.iV2].normal += n;
-		// 	pVertices_[t.iV3].normal += n;
-		// }
-		// for (unsigned i=0; i<nVertices_; i++) {
-		// 	if ((i/cols_) == 0 || (i/cols_) == rows_-1 || (i%cols_) == 0 || (i%cols_) == cols_-1)
-		// 		pVertices_[i].normal = glm::vec3{0.f, 1.f, 0.f};  // we leave the edge vertices at zero to avoid artifacts with the skirt
-		// 	else
-		// 		pVertices_[i].normal = glm::normalize(pVertices_[i].normal);
-		// }
+		for (const t of this.triangles_) {
+			const n = this.vertices_[t.iV2].pos
+				.sub(this.vertices_[t.iV1].pos)
+				.cross(this.vertices_[t.iV3].pos.sub(this.vertices_[t.iV1].pos))
+				.normalize();
+			this.vertices_[t.iV1].normal.addInPlace(n);
+			this.vertices_[t.iV2].normal.addInPlace(n);
+			this.vertices_[t.iV3].normal.addInPlace(n);
+		}
+		for (let i = 0; i < this.nVertices_; i++) {
+			if (
+				Math.floor(i / this.cols_) == 0 ||
+				Math.floor(i / this.cols_) == this.rows_ - 1 ||
+				i % this.cols_ == 0 ||
+				i % this.cols_ == this.cols_ - 1
+			) {
+				this.vertices_[i].normal = new Vector(0, 1, 0); // we leave the edge vertices at zero to avoid artifacts with the skirt
+			} else {
+				this.vertices_[i].normal.normalizeInPlace();
+			}
+		}
 	}
 
 	private computeTextureWeights(): void {
-		// PerlinNoise pnoise(config_.width/2, config_.length/2);
-		// glm::vec3 bottomLeft {-config_.width * 0.5f, 0.f, -config_.length * 0.5f};
-		// const float grassBias = 0.2f; // bias to more grass over dirt
-		// for (unsigned i=0; i<rows_*cols_; i++) {
-		// 	// grass/rock factor is determined by slope
-		// 	// each one of grass and rock have two components blended together by a perlin factor for low-freq variance
-		// 	float u = (pVertices_[i].pos.x - bottomLeft.x) / config_.width;
-		// 	float v = (pVertices_[i].pos.z - bottomLeft.z) / config_.length;
-		// 	// #1 Grass vs Dirt factor
-		// 	pVertices_[i].texBlendFactor.x = grassBias
-		// 										+ pnoise.getNorm(u*0.15, v*0.15, 7.f)
-		// 										+ 0.3f * pnoise.get(u*0.3, v*0.3, 7.f)
-		// 										+ 0.1 * pnoise.get(u*0.6, v*0.6, 2.f);	// dirt / grass
-		// 	// #2 Rock1 vs Rock2 factor
-		// 	pVertices_[i].texBlendFactor.y = pnoise.getNorm(v*0.15, u*0.15, 7.f) + 0.5 * pnoise.get(v*0.6, u*0.6, 2.f);	// rock1 / rock2
-		// 	// #3 Rock vs Grass/Sand factor (highest priority)
-		// 	float cutoffY = 0.80f;	// y-component of normal above which grass is used instead of rock
-		// 	if (pVertices_[i].pos.y > 0) {
-		// 		// above water grass-rock coefficient
-		// 		// height factor for grass vs rock: the higher the vertex, the more likely it is to be rock
-		// 		float hFactor = clamp(pVertices_[i].pos.y / config_.maxElevation, 0.f, 1.f); // hFactor is 1.0 at the highest elevation, 0.0 at sea level.
-		// 		hFactor = pow(hFactor, 1.5f);
-		// 		cutoffY += (1.0 - cutoffY) * hFactor;
-		// 		pVertices_[i].texBlendFactor.z = pVertices_[i].normal.y > cutoffY ? 1.f : 0.f; // grass vs rock
-		// 	} else {
-		// 		// this is below water
-		// 		if (u <= 0.01 || v <= 0.01 || u >= 0.99 || v >= 0.99) {
-		// 			// edges are always sand
-		// 			pVertices_[i].texBlendFactor.z = 1.f;
-		// 		} else {
-		// 			if (pVertices_[i].normal.y > cutoffY + 0.1f) {
-		// 				// below water rock coefficient based on perlin noise
-		// 				float noise = pnoise.get(u*0.15, v*0.15, 7.f)
-		// 							+ 0.3 * pnoise.get(u*0.6, v*0.6, 7.f)
-		// 							+ 0.1 * pnoise.get(u*1.0, v*1.0, 7.f);
-		// 				float sandBias = 0.4f * pVertices_[i].normal.y; // flat areas are more likely to be sand rather than rock
-		// 				pVertices_[i].texBlendFactor.z = noise + sandBias > 0 ? 1.f : 0.25f;
-		// 			} else
-		// 				pVertices_[i].texBlendFactor.z = 0.2f; // steep underwater areas are still rock
-		// 		}
-		// 	}
-		// 	// #4 Grass vs Sand factor -> some distance above water level and everything below is sand or rock
-		// 	float beachHeight = 1.f + 1.5f * pnoise.getNorm(u*1.5, v*1.5, 1.f); // meters
-		// 	if (pVertices_[i].pos.y < beachHeight) {
-		// 		float sandFactor = min(1.f, beachHeight - pVertices_[i].pos.y);
-		// 		pVertices_[i].texBlendFactor.w = pow(sandFactor, 1.5f);
-		// 	} else
-		// 		pVertices_[i].texBlendFactor.w = 0;
-		// }
+		const pnoise = new PerlinNoise(this.config_.width / 2, this.config_.length / 2);
+		const bottomLeft = new Vector(-this.config_.width * 0.5, 0, -this.config_.length * 0.5);
+		const grassBias = 0.2; // bias to more grass over dirt
+		for (let i = 0; i < this.rows_ * this.cols_; i++) {
+			// grass/rock factor is determined by slope
+			// each one of grass and rock have two components blended together by a perlin factor for low-freq variance
+			const u: number = (this.vertices_[i].pos.x - bottomLeft.x) / this.config_.width;
+			const v: number = (this.vertices_[i].pos.z - bottomLeft.z) / this.config_.length;
+			// #1 Grass vs Dirt factor
+			this.vertices_[i].texBlendFactor.x =
+				grassBias +
+				pnoise.getNorm(u * 0.15, v * 0.15, 7) +
+				0.3 * pnoise.get(u * 0.3, v * 0.3, 7) +
+				0.1 * pnoise.get(u * 0.6, v * 0.6, 2); // dirt / grass
+			// #2 Rock1 vs Rock2 factor
+			this.vertices_[i].texBlendFactor.y =
+				pnoise.getNorm(v * 0.15, u * 0.15, 7) + 0.5 * pnoise.get(v * 0.6, u * 0.6, 2); // rock1 / rock2
+			// #3 Rock vs Grass/Sand factor (highest priority)
+			let cutoffY = 0.8; // y-component of normal above which grass is used instead of rock
+			if (this.vertices_[i].pos.y > 0) {
+				// above water grass-rock coefficient
+				// height factor for grass vs rock: the higher the vertex, the more likely it is to be rock
+				let hFactor: number = clamp(this.vertices_[i].pos.y / this.config_.maxElevation, 0, 1); // hFactor is 1.0 at the highest elevation, 0.0 at sea level.
+				hFactor = Math.pow(hFactor, 1.5);
+				cutoffY += (1.0 - cutoffY) * hFactor;
+				this.vertices_[i].texBlendFactor.z = this.vertices_[i].normal.y > cutoffY ? 1 : 0; // grass vs rock
+			} else {
+				// this is below water
+				if (u <= 0.01 || v <= 0.01 || u >= 0.99 || v >= 0.99) {
+					// edges are always sand
+					this.vertices_[i].texBlendFactor.z = 1;
+				} else {
+					if (this.vertices_[i].normal.y > cutoffY + 0.1) {
+						// below water rock coefficient based on perlin noise
+						const noise =
+							pnoise.get(u * 0.15, v * 0.15, 7) +
+							0.3 * pnoise.get(u * 0.6, v * 0.6, 7) +
+							0.1 * pnoise.get(u * 1.0, v * 1.0, 7);
+						const sandBias = 0.4 * this.vertices_[i].normal.y; // flat areas are more likely to be sand rather than rock
+						this.vertices_[i].texBlendFactor.z = noise + sandBias > 0 ? 1 : 0.25;
+					} else {
+						this.vertices_[i].texBlendFactor.z = 0.2; // steep underwater areas are still rock
+					}
+				}
+			}
+			// #4 Grass vs Sand factor -> some distance above water level and everything below is sand or rock
+			const beachHeight = 1 + 1.5 * pnoise.getNorm(u * 1.5, v * 1.5, 1); // meters
+			if (this.vertices_[i].pos.y < beachHeight) {
+				const sandFactor = Math.min(1, beachHeight - this.vertices_[i].pos.y);
+				this.vertices_[i].texBlendFactor.w = Math.pow(sandFactor, 1.5);
+			} else {
+				this.vertices_[i].texBlendFactor.w = 0;
+			}
+		}
 	}
 
 	private updateRenderBuffers(): void {
@@ -674,12 +639,12 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// // create array of height values:
 		// if (heightFieldValues_)
 		// 	free(heightFieldValues_), heightFieldValues_ = nullptr;
-		// unsigned hfRows = (unsigned)ceil(config_.length);
-		// unsigned hfCols = (unsigned)ceil(config_.width);
+		// unsigned hfRows = (unsigned)ceil(this.config_.length);
+		// unsigned hfCols = (unsigned)ceil(this.config_.width);
 		// heightFieldValues_ = (float*)malloc(sizeof(float) * hfRows * hfCols);
-		// glm::vec3 bottomLeft {-config_.width * 0.5f, 0.f, -config_.length * 0.5f};
-		// float dx = config_.width / (hfCols - 1);
-		// float dz = config_.length / (hfRows - 1);
+		// glm::vec3 bottomLeft {-this.config_.width * 0.5f, 0.f, -this.config_.length * 0.5f};
+		// float dx = this.config_.width / (hfCols - 1);
+		// float dz = this.config_.length / (hfRows - 1);
 		// const float heightOffset = 0.1f;	// offset physics geometry slightly higher
 		// for (unsigned i=0; i<hfRows; i++)
 		// 	for (unsigned j=0; j<hfCols; j++)
@@ -687,11 +652,11 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// // create ground body
 		// physicsBodyMeta_.reset();
 		// PhysBodyConfig bodyCfg;
-		// bodyCfg.position = glm::vec3{0.f, (config_.maxElevation + config_.minElevation)*0.5f, 0.f};
+		// bodyCfg.position = glm::vec3{0.f, (this.config_.maxElevation + this.config_.minElevation)*0.5f, 0.f};
 		// bodyCfg.mass = 0.f;
 		// bodyCfg.friction = 0.5f;
 		// bodyCfg.shape = std::make_shared<btHeightfieldTerrainShape>(hfCols, hfRows, heightFieldValues_, 1.f,
-		// 						config_.minElevation, config_.maxElevation, 1, PHY_FLOAT, false);
+		// 						this.config_.minElevation, this.config_.maxElevation, 1, PHY_FLOAT, false);
 		// physicsBodyMeta_.createBody(bodyCfg);
 	}
 

@@ -17,12 +17,33 @@ export class Vector {
 		return new Vector(this.x + v.x, this.y + v.y, this.z + v.z, this.w + v.w);
 	}
 
+	addInPlace(v: Vector): void {
+		this.x += v.x;
+		this.y += v.y;
+		this.z += v.z;
+		this.w += v.w;
+	}
+
 	sub(v: Vector): Vector {
 		return new Vector(this.x - v.x, this.y - v.y, this.z - v.z, this.w - v.w);
 	}
 
+	subInPlace(v: Vector): void {
+		this.x -= v.x;
+		this.y -= v.y;
+		this.z -= v.z;
+		this.w -= v.w;
+	}
+
 	scale(f: number): Vector {
 		return new Vector(this.x * f, this.y * f, this.z * f, this.w * f);
+	}
+
+	scaleInPlace(f: number): void {
+		this.x *= f;
+		this.y *= f;
+		this.z *= f;
+		this.w *= f;
 	}
 
 	length(): number {
@@ -40,6 +61,10 @@ export class Vector {
 	normalize(): Vector {
 		const invLen = 1.0 / this.length();
 		return new Vector(this.x * invLen, this.y * invLen, this.z * invLen, this.w * invLen);
+	}
+
+	normalizeInPlace(): void {
+		this.scaleInPlace(1.0 / this.length());
 	}
 
 	/**

@@ -1,6 +1,7 @@
 import { rand } from "../../joglr/utils/random";
 import { clamp, nextPowerOfTwo } from "../../joglr/math/functions";
 import { srand } from "../../joglr/utils/random";
+import { blurImage } from "../../util/image-blur";
 
 export class HeightmapParams {
 	/** minimum width on X axis (actual may be greater) */
@@ -29,11 +30,18 @@ export class Heightmap {
 
 	/** blurs the heightmap over a given radius */
 	blur(radius: number): void {
-		// TODO must implement imgUtil first
-		// const newValues: number[] = new Array(this.width_ * this.length_);
-		// imgUtil.blur(this.values_, this.length_, this.width_, radius, newValues);
-		// this.values_ = newValues;
-		// this.normalizeValues();
+		this.values_ = blurImage({
+			pixels: this.values_,
+			rows: this.length_,
+			cols: this.width_,
+			radius,
+			ops: {
+				add: (p1: number, p2: number) => p1 + p2,
+				new: () => 0,
+				scale: (p: number, s: number) => p * s,
+			},
+		});
+		this.normalizeValues();
 	}
 
 	/** return the interpolated height value at position with normalized coordinates (u, v) <- [0.0, 1.0] */

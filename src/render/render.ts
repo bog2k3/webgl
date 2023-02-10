@@ -16,10 +16,9 @@ export function initRender(renderData: RenderData): boolean {
 	renderData["setupDependencies"]();
 
 	// configure backface culling
+	gl.enable(gl.CULL_FACE);
 	gl.frontFace(gl.CW);
 	gl.cullFace(gl.BACK);
-	// gl.enable(gl.CULL_FACE);
-	gl.disable(gl.CULL_FACE);
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LESS);
