@@ -52,14 +52,17 @@ export class AABB {
 			new Vector(this.vMax.x, this.vMin.y, this.vMax.z),
 			new Vector(this.vMax.x, this.vMax.y, this.vMin.z),
 		];
-		let nNeg = 0,
-			nPos = 0;
+		let allPositive = true;
+		let allNegative = true;
 		for (let i = 0; i < 8; i++) {
-			const q = verts[i].x * plane.a + verts[i].y * plane.b + verts[i].z * plane.c + plane.d;
-			if (q > 0) nPos++;
-			else if (q < 0) nNeg++;
+			const q = plane.pointDistance(verts[i]);
+			if (q > 0) {
+				allNegative = false;
+			} else if (q < 0) {
+				allPositive = false;
+			}
 		}
-		return Math.sign(nPos - nNeg);
+		return allPositive ? +1 : allNegative ? -1 : 0;
 	}
 
 	intersectsSphere(center: Vector, radius: number): boolean {
@@ -114,6 +117,10 @@ export class AABB {
 	/** creates a new AABB that is the reunion of these two (includes all the points within both) */
 	union(other: AABB): AABB {
 		return this.expand(other.vMin, other.vMax);
+	}
+
+	unionInPlace(other: AABB): void {
+		this.expandInPlace(other.vMin, other.vMax);
 	}
 
 	/** creates a new AABB from the intersection of this and another AABB (will contain only points that are contained in both) */
