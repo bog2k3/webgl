@@ -3,15 +3,14 @@ import { Matrix } from "./matrix";
 import { Quat } from "./quat";
 
 export class Vector {
-	constructor(
-		public x = 0,
-		public y = 0,
-		public z = 0,
-		public w = 0
-	) {}
+	constructor(public x = 0, public y = 0, public z = 0, public w = 0) {}
 
 	copy(): Vector {
 		return new Vector(this.x, this.y, this.z, this.w);
+	}
+
+	equals(v: Vector): boolean {
+		return this.x === v.x && this.y === v.y && this.z === v.z && this.w === v.w;
 	}
 
 	add(v: Vector): Vector {
@@ -31,7 +30,7 @@ export class Vector {
 	}
 
 	lengthSq(): number {
-		return sqr(this.x) + sqr(this.y) + sqr(this.z);
+		return sqr(this.x) + sqr(this.y) + sqr(this.z) + sqr(this.w);
 	}
 
 	dot(v: Vector): number {
@@ -40,16 +39,11 @@ export class Vector {
 
 	normalize(): Vector {
 		const invLen = 1.0 / this.length();
-		return new Vector(this.x * invLen, this.y * invLen, this.z * invLen, this.w);
+		return new Vector(this.x * invLen, this.y * invLen, this.z * invLen, this.w * invLen);
 	}
 
 	cross(v: Vector): Vector {
-		return new Vector(
-			this.z * v.y - this.y * v.z,
-			this.x * v.z - this.z * v.x,
-			this.y * v.x - this.x * v.y,
-			0
-		);
+		return new Vector(this.z * v.y - this.y * v.z, this.x * v.z - this.z * v.x, this.y * v.x - this.x * v.y, 0);
 	}
 
 	lerp(v: Vector, f: number): Vector {
@@ -65,16 +59,15 @@ export class Vector {
 	rotate(q: Quat): Vector {
 		const u: Vector = q.xyz();
 		const s: number = q.w;
-		return u.scale(2 * u.dot(this))
-			.add(this.scale(s*s - u.dot(u)))
-			.add(u.cross(this).scale(2*s));
+		return u
+			.scale(2 * u.dot(this))
+			.add(this.scale(s * s - u.dot(u)))
+			.add(u.cross(this).scale(2 * s));
 	}
 
 	/** returns the multiplication of the vector by a matrix, as a new vector */
 	mul(m: Matrix): Vector {
-		return new Vector(
-			this.dot(m.col(0)), this.dot(m.col(1)), this.dot(m.col(2)), this.dot(m.col(3)),
-		);
+		return new Vector(this.dot(m.col(0)), this.dot(m.col(1)), this.dot(m.col(2)), this.dot(m.col(3)));
 	}
 
 	/** returns a new vector with the z and w components stripped */

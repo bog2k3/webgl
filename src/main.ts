@@ -5,10 +5,12 @@ import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
 import { initRender, render } from "./render/render";
 import { RenderData } from "./render/render-data";
 import { ShaderProgramManager } from "./render/shader-program-manager";
-import { DEBUG_ENTRY } from "./test";
 import { World, WorldConfig } from "./joglr/world/world";
 import { Shaders } from "./joglr/render/shaders";
 import { Terrain } from "./entities/terrain/terrain.entity";
+import { InputEvent, InputEventType, HtmlInputHandler } from "./input";
+import { PlayerInputHandler } from "./player-input-handler";
+import { Game } from "./game";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -18,19 +20,25 @@ let lastTime = new Date();
 
 let renderData: RenderData;
 let world: World;
-const keys = {};
+let game: Game;
+let inputHandler: HtmlInputHandler;
+let playerInputHandler: PlayerInputHandler;
 
 window.onload = main;
 async function main(): Promise<void> {
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	await initGraphics(canvas);
-	initializeWorld();
 	initInput(canvas);
-	requestAnimationFrame(step);
 
-	if (true) {
-		DEBUG_ENTRY();
-	}
+	initializeWorld();
+
+	game = new Game();
+	game.initialize();
+	game.onStart.add(onGameStarted);
+	game.onStop.add(onGameEnded);
+	game.start();
+
+	requestAnimationFrame(step);
 }
 
 async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
@@ -65,90 +73,70 @@ function step(): void {
 }
 
 function update(dt: number): void {
-	if (keys["ArrowLeft"]) {
-		renderData.viewport.camera().move(
-			renderData.viewport
-				.camera()
-				.localX()
-				.scale(-MOVE_SPEED * dt),
-		);
+	for (let event of inputHandler.getEvents()) {
+		handleInputEvent(event);
 	}
-
-	if (keys["ArrowRight"]) {
-		renderData.viewport.camera().move(
-			renderData.viewport
-				.camera()
-				.localX()
-				.scale(+MOVE_SPEED * dt),
-		);
-	}
-
-	if (keys["ArrowUp"]) {
-		renderData.viewport.camera().move(
-			renderData.viewport
-				.camera()
-				.direction()
-				.scale(+MOVE_SPEED * dt),
-		);
-	}
-	if (keys["ArrowDown"]) {
-		renderData.viewport.camera().move(
-			renderData.viewport
-				.camera()
-				.direction()
-				.scale(-MOVE_SPEED * dt),
-		);
-	}
-
+	playerInputHandler.update(dt);
 	world.update(dt);
 }
 
+function onGameStarted(): void {
+	playerInputHandler.setTargetObject(game.freeCam());
+	game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
+	game.terrain().setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
+	// TODO activate these
+	// game.terrain().setWaterRefractionTex(renderData.waterRenderData.refractionFramebuffer.fbTexture(), game.skyBox().getCubeMapTexture());
+	// renderData.renderCtx.meshRenderer.setWaterNormalTexture(game.terrain().getWaterNormalTexture());
+	// renderData.renderCtx.enableWaterRender = true;
+	renderData.skyBox = game.skyBox();
+	renderData.terrain = game.terrain();
+}
+
+function onGameEnded(): void {
+	playerInputHandler.setTargetObject(null);
+	renderData.renderCtx.meshRenderer.setWaterNormalTexture(null);
+	renderData.renderCtx.enableWaterRender = false;
+	renderData.skyBox = null;
+	renderData.terrain = null;
+}
+
 function initInput(canvas: HTMLCanvasElement) {
-	document.onkeydown = (ev) => {
-		keys[ev.key] = true;
-		handleKey(ev);
-	};
-	document.onkeyup = (ev) => {
-		keys[ev.key] = false;
-		handleKey(ev);
-	};
 	canvas.addEventListener("click", () => canvas.requestPointerLock());
+	inputHandler = new HtmlInputHandler(canvas);
+	playerInputHandler = new PlayerInputHandler();
 }
 
-function handleKey(ev: KeyboardEvent): void {
+function handleInputEvent(ev: InputEvent): void {
 	// propagate input events in order of priority:
-	let consumed = false;
-	if (!consumed && ev.type === "keydown") {
-		consumed = handleSystemKeys(ev);
+	if (!ev.isConsumed() && ev.type === InputEventType.KeyDown) {
+		handleSystemKeys(ev);
 	}
-	if (!consumed && !ev["isConsumed"]) {
-		consumed = handleGUIInputs(ev);
+	if (!ev.isConsumed()) {
+		handleGUIInputs(ev);
 	}
-	if (!consumed && !ev["isConsumed"]) {
-		consumed = handlePlayerInputs(ev);
+	if (!ev.isConsumed()) {
+		handlePlayerInputs(ev);
 	}
 }
 
-function handleSystemKeys(ev: KeyboardEvent): boolean {
-	return handleDebugKeys(ev);
+function handleSystemKeys(ev: InputEvent): void {
+	handleDebugKeys(ev);
 }
 
-function handleDebugKeys(ev: KeyboardEvent): boolean {
-	switch (ev.key) {
-		case "R":
-		case "r":
+function handleDebugKeys(ev: InputEvent) {
+	switch (ev.keyCode) {
+		case "KeyR":
 			Shaders.reloadAllShaders();
-			return true;
+		default:
+			return; // return without consuming the event if it's not handled
 	}
-	return false;
+	ev.consume();
 }
 
-function handleGUIInputs(ev: KeyboardEvent): boolean {
-	return false;
-}
+function handleGUIInputs(ev: InputEvent): void {}
 
-function handlePlayerInputs(ev: KeyboardEvent): boolean {
-	return false;
+function handlePlayerInputs(ev: InputEvent): void {
+	playerInputHandler.handleInputEvent(ev);
 }
 
 function initializeWorld(): void {

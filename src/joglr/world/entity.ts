@@ -1,3 +1,4 @@
+import { Transform } from "../math/transform";
 import { World } from "./world";
 export abstract class Entity {
 	destroy(): void {
@@ -10,6 +11,12 @@ export abstract class Entity {
 	}
 
 	abstract getType(): string;
+
+	getTransform(): Transform {
+		return this.transform_;
+	}
+
+	protected transform_ = new Transform();
 
 	private isDestroyed_ = false;
 }
