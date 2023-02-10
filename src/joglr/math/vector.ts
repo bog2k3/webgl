@@ -98,7 +98,6 @@ export class Vector {
 		const u: Vector = q.xyz();
 		const uv: Vector = u.cross(this);
 		const uuv: Vector = u.cross(uv);
-		const s: number = q.w;
 		return this.add(uv.scale(q.w).add(uuv).scale(2));
 	}
 }

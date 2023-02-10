@@ -2,7 +2,6 @@ import { Terrain } from "./entities/terrain/terrain.entity";
 import { Game } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglr/glcontext";
-import { Vector } from "./joglr/math/vector";
 import { Mesh } from "./joglr/mesh";
 import { MeshRenderer } from "./joglr/render/mesh-renderer";
 import { Shaders } from "./joglr/render/shaders";
@@ -14,8 +13,6 @@ import { RenderData } from "./render/render-data";
 import { ShaderProgramManager } from "./render/shader-program-manager";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
-
-const MOVE_SPEED = 0.5; // m/s
 
 let lastTime = new Date();
 
@@ -60,7 +57,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	// await ShaderProgramManager.loadProgram(ShaderTerrain);
 	// await ShaderProgramManager.loadProgram(ShaderWater);
 
-	// await loadTextures();
+	await loadTextures();
 }
 
 function step(): void {
@@ -82,10 +79,8 @@ function update(dt: number): void {
 }
 
 function onGameStarted(): void {
-	renderData.viewport.camera().moveTo(new Vector(0, 0, -1));
-	renderData.viewport.camera().lookAt(new Vector(0, +0.5, 0));
 	playerInputHandler.setTargetObject(game.freeCam());
-	// game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
+	game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
 	game.terrain()?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	// TODO activate these
 	// game.terrain().setWaterRefractionTex(renderData.waterRenderData.refractionFramebuffer.fbTexture(), game.skyBox().getCubeMapTexture());
@@ -141,26 +136,6 @@ function handleGUIInputs(ev: InputEvent): void {}
 
 function handlePlayerInputs(ev: InputEvent): void {
 	playerInputHandler.handleInputEvent(ev);
-
-	// if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowLeft") {
-	// 	renderData.viewport.camera().move(new Vector(-0.2, 0, 0));
-	// }
-	// if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowRight") {
-	// 	renderData.viewport.camera().move(new Vector(+0.2, 0, 0));
-	// }
-	// if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowUp") {
-	// 	renderData.viewport.camera().move(new Vector(0, +0.2, 0));
-	// }
-	// if (ev.type === InputEventType.KeyDown && ev.keyCode === "ArrowDown") {
-	// 	renderData.viewport.camera().move(new Vector(0, -0.2, 0));
-	// }
-
-	// if (ev.type === InputEventType.KeyDown && ev.keyCode === "Home") {
-	// 	renderData.viewport.camera().move(new Vector(0, 0, +0.2));
-	// }
-	// if (ev.type === InputEventType.KeyDown && ev.keyCode === "End") {
-	// 	renderData.viewport.camera().move(new Vector(0, 0, -0.2));
-	// }
 }
 
 function initializeWorld(): void {

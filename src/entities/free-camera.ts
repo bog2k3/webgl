@@ -1,4 +1,4 @@
-import { buildMatrixFromOrientation, clamp } from "../joglr/math/functions";
+import { matrixFromPositionDirection, clamp } from "../joglr/math/functions";
 import { Matrix } from "../joglr/math/matrix";
 import { matrixToQuat, quatRotation } from "../joglr/math/quat-functions";
 import { Vector } from "../joglr/math/vector";
@@ -12,7 +12,7 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 		super();
 		this.transform_.setPosition(position);
 		const up = new Vector(0, 1, 0);
-		const mRot: Matrix = buildMatrixFromOrientation(new Vector(0), direction, up);
+		const mRot: Matrix = matrixFromPositionDirection(new Vector(0), direction, up);
 		this.transform_.setOrientation(matrixToQuat(mRot));
 	}
 

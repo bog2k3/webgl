@@ -1,19 +1,16 @@
 import { FreeCamera } from "./entities/free-camera";
 import { SkyBox } from "./entities/skybox";
+import { StaticMesh } from "./entities/static-mesh.entity";
 import { TerrainConfig } from "./entities/terrain/config";
 import { Terrain } from "./entities/terrain/terrain.entity";
+import { logprefix } from "./joglr/log";
 import { Vector } from "./joglr/math/vector";
+import { Mesh } from "./joglr/mesh";
 import { assert } from "./joglr/utils/assert";
 import { Event } from "./joglr/utils/event";
 import { rand } from "./joglr/utils/random";
 import { CameraController } from "./joglr/world/camera-controller";
 import { World } from "./joglr/world/world";
-import { logprefix } from "./joglr/log";
-import { Mesh } from "./joglr/mesh";
-import { StaticMesh } from "./entities/static-mesh.entity";
-import { quatRotation } from "./joglr/math/quat-functions";
-import { Matrix } from "./joglr/math/matrix";
-import { Quat } from "./joglr/math/quat";
 
 const console = logprefix("Game");
 
@@ -30,15 +27,13 @@ export class Game {
 		tc.width = 200;
 		tc.minElevation = -2;
 		tc.maxElevation = 4;
-		// this.terrain_ = new Terrain(true);
-		// this.terrain_.generate(tc);
-		// this.terrain_.finishGenerate();
+		this.terrain_ = new Terrain(true);
+		this.terrain_.generate(tc);
+		this.terrain_.finishGenerate();
 
-		// World.getInstance().addEntity(this.terrain_);
+		World.getInstance().addEntity(this.terrain_);
 
-		// this.freeCam_ = new FreeCamera(new Vector(140, 50, 180), new Vector(-1, -0.5, -1));
-		// this.freeCam_ = new FreeCamera(new Vector(0, 50, 0), new Vector(0, -0.9, 0.1));
-		this.freeCam_ = new FreeCamera(new Vector(0.5, 1, -1), new Vector(0, -1, 1));
+		this.freeCam_ = new FreeCamera(new Vector(10, 5, 10), new Vector(-1, -0.5, -1));
 		World.getInstance().addEntity(this.freeCam_);
 
 		// camera controller (this one moves the render camera to the position of the target entity)
@@ -60,10 +55,10 @@ export class Game {
 		// 	sm.getTransform().glMatrix().getColumnMajorValues(),
 		// 	Matrix.roll(Math.PI / 6).getColumnMajorValues(),
 		// );
-		console.log("i", new Vector(1, 1, 1).mulQ(Quat.identity()).values(3));
-		console.log("z", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 0, 1), 0.2)).values(3));
-		console.log("y", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 1, 0), 0.2)).values(3));
-		console.log("x", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(1, 0, 0), 0.2)).values(3));
+		// console.log("i", new Vector(1, 1, 1).mulQ(Quat.identity()).values(3));
+		// console.log("z", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 0, 1), 0.2)).values(3));
+		// console.log("y", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(0, 1, 0), 0.2)).values(3));
+		// console.log("x", new Vector(1, 1, 1).mulQ(Quat.axisAngle(new Vector(1, 0, 0), 0.2)).values(3));
 		World.getInstance().addEntity(sm);
 		//---DEBUG
 

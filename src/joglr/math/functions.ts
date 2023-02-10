@@ -61,12 +61,6 @@ export function buildProjectionMatrix(vFOV: number, aspectRatio: number, zNear: 
 		0, 0, (zNear + zFar) / (zFar - zNear), 1,
 		0, 0, -2 * zNear * zFar / (zFar - zNear), 0
 	);
-	// return new Matrix(
-	// 	cotHalfFov / aspectRatio, 0, 0, 0,
-	// 	0, cotHalfFov, 0, 0,
-	// 	0, 0, -(zNear + zFar) / (zFar - zNear), -1,
-	// 	0, 0, -2 * zNear * zFar / (zFar - zNear), 0
-	// );
 }
 
 /**
@@ -80,36 +74,26 @@ export function buildViewMatrix(cameraPosition: Vector, cameraDirection: Vector,
 	const cXAxis = upVector.cross(cZAxis).normalize();
 	const cYAxis = cZAxis.cross(cXAxis).normalize();
 	const cTransInv = new Vector(-cameraPosition.dot(cXAxis), -cameraPosition.dot(cYAxis), -cameraPosition.dot(cZAxis));
+	cXAxis.w = cTransInv.x;
+	cYAxis.w = cTransInv.y;
+	cZAxis.w = cTransInv.z;
 	// prettier-ignore
-	return new Matrix(
-		cXAxis.x, cYAxis.x, cZAxis.x, 0,
-		cXAxis.y, cYAxis.y, cZAxis.y, 0,
-		cXAxis.z, cYAxis.z, cZAxis.z, 0,
-		cTransInv.x, cTransInv.y, cTransInv.z, 1
+	return Matrix.fromColumns(
+		cXAxis,
+		cYAxis,
+		cZAxis,
+		new Vector(0, 0, 0, 1)
 	);
 }
 
 /**
- * Builds an object transformation matrix from a position, a direction (towards which the object is facing) and the up-vector
+ * Builds a transformation matrix from object-space into world-space given an origin
+ * and forward direction of the object space, expressed in world space
  * The function normalizes vectors automatically.
  */
-export function buildMatrixFromOrientation(position: Vector, direction: Vector, up = new Vector(0, 1, 0)): Matrix {
+export function matrixFromPositionDirection(position: Vector, direction: Vector, up = new Vector(0, 1, 0)): Matrix {
 	direction = direction.normalize();
 	const right: Vector = up.cross(direction).normalize();
 	up = direction.cross(right);
-	return buildMatrix(right, up, direction, position);
-}
-
-/**
- * Builds a matrix given 3 axis and a translation.
- * The axes are assumed to be normalized
- */
-export function buildMatrix(right: Vector, up: Vector, front: Vector, translation: Vector): Matrix {
-	// prettier-ignore
-	return new Matrix(
-		right.x,		up.x,			front.x,		0,
-		right.y,		up.y,			front.y,		0,
-		right.z,		up.z,			front.z,		0,
-		translation.x, 	translation.y,	translation.z, 	1
-	);
+	return Matrix.fromRows(right, up, direction, position);
 }

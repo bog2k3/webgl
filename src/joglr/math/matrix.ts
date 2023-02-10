@@ -28,6 +28,32 @@ export class Matrix {
 		return this.m;
 	}
 
+	/**
+	 * Builds a matrix from 4 column vectors
+	 */
+	static fromColumns(...columns: Vector[]): Matrix {
+		// prettier-ignore
+		return new Matrix(
+			columns[0].x, columns[1].x, columns[2].x, columns[3].x,
+			columns[0].y, columns[1].y, columns[2].y, columns[3].y,
+			columns[0].z, columns[1].z, columns[2].z, columns[3].z,
+			columns[0].w, columns[1].w, columns[2].w, columns[3].w,
+		);
+	}
+
+	/**
+	 * Builds a matrix from 4 row vectors
+	 */
+	static fromRows(...rows: Vector[]): Matrix {
+		// prettier-ignore
+		return new Matrix(
+			...rows[0].values(4),
+			...rows[1].values(4),
+			...rows[2].values(4),
+			...rows[3].values(4),
+		);
+	}
+
 	/** builds an identity matrix */
 	static identity(): Matrix {
 		// prettier-ignore

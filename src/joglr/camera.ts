@@ -132,7 +132,6 @@ export class Camera {
 			throw new Error("Ortho not implemented");
 		} else {
 			// set perspective
-			// TODO we should probably include viewport transform into the proj matrix as well
 			this.matProj_ = buildProjectionMatrix(this.fov_, this.viewport_.aspectRatio(), this.zNear_, this.zFar_);
 		}
 		this.updateViewProj();
