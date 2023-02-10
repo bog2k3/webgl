@@ -26,6 +26,8 @@ import { PerlinNoise } from "./perlin-noise";
 import { BSPConfig, BSPNode, BSPTree, AABBGeneratorInterface } from "../../bsp/bsp-tree";
 import { AABB } from "../../joglfw/math/aabb";
 import { rayIntersectTri } from "../../joglfw/math/intersect";
+import { PhysBodyProxy, PhysBodyConfig } from "../../physics/phys-body-proxy";
+import Ammo from "ammojs-typed";
 
 const console = logprefix("Terrain");
 
@@ -348,7 +350,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			}*/
 			//BSPDebugDraw::draw(*bspTree);
 			//for (unsigned i=0; i<triangles_.length / 10; i++)
-			//	Shape3D::get()->drawAABB(triangleAABBGenerator_->getAABB(i), glm::vec3{0.f, 1.f, 0.f});
+			//	Shape3D::get()->drawAABB(triangleAABBGenerator_->getAABB(i), glm::vec3{0, 1.f, 0});
 
 			checkGLError("Terrain.render()");
 		} else if (rctx.renderPass === RenderPass.WaterSurface) {
@@ -415,7 +417,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	private triangleAABBGenerator = new TriangleAABBGenerator(this);
 	private bspTree: BSPTree<number> = null;
 
-	// PhysBodyProxy physicsBodyMeta_;
+	private physicsBodyMeta: PhysBodyProxy;
 	heightFieldValues: number[] = null;
 
 	private computeDisplacements(seed: number): void {
@@ -636,28 +638,45 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	}
 
 	private updatePhysics(): void {
-		// // create array of height values:
-		// if (heightFieldValues_)
-		// 	free(heightFieldValues_), heightFieldValues_ = nullptr;
-		// unsigned hfRows = (unsigned)ceil(this.config_.length);
-		// unsigned hfCols = (unsigned)ceil(this.config_.width);
-		// heightFieldValues_ = (float*)malloc(sizeof(float) * hfRows * hfCols);
-		// glm::vec3 bottomLeft {-this.config_.width * 0.5f, 0.f, -this.config_.length * 0.5f};
-		// float dx = this.config_.width / (hfCols - 1);
-		// float dz = this.config_.length / (hfRows - 1);
-		// const float heightOffset = 0.1f;	// offset physics geometry slightly higher
-		// for (unsigned i=0; i<hfRows; i++)
-		// 	for (unsigned j=0; j<hfCols; j++)
-		// 		heightFieldValues_[i*hfCols+j] = getHeightValue(bottomLeft + glm::vec3{j*dx, 0, i*dz}) + heightOffset;
-		// // create ground body
-		// physicsBodyMeta_.reset();
-		// PhysBodyConfig bodyCfg;
-		// bodyCfg.position = glm::vec3{0.f, (this.config_.maxElevation + this.config_.minElevation)*0.5f, 0.f};
-		// bodyCfg.mass = 0.f;
-		// bodyCfg.friction = 0.5f;
-		// bodyCfg.shape = std::make_shared<btHeightfieldTerrainShape>(hfCols, hfRows, heightFieldValues_, 1.f,
-		// 						this.config_.minElevation, this.config_.maxElevation, 1, PHY_FLOAT, false);
-		// physicsBodyMeta_.createBody(bodyCfg);
+		// create array of height values:
+		if (this.heightFieldValues) {
+			this.heightFieldValues = null;
+		}
+		const hfRows: number = Math.ceil(this.config.length);
+		const hfCols: number = Math.ceil(this.config.width);
+		this.heightFieldValues = new Array(hfRows * hfCols);
+		const bottomLeft = new Vector(-this.config.width * 0.5, 0, -this.config.length * 0.5);
+		const dx: number = this.config.width / (hfCols - 1);
+		const dz: number = this.config.length / (hfRows - 1);
+		const heightOffset = 0.1; // offset physics geometry slightly higher
+		for (let i = 0; i < hfRows; i++) {
+			for (let j = 0; j < hfCols; j++) {
+				this.heightFieldValues[i * hfCols + j] =
+					this.getHeightValue(bottomLeft.add(new Vector(j * dx, 0, i * dz))) + heightOffset;
+			}
+		}
+		// create ground body
+		if (this.physicsBodyMeta) {
+			this.physicsBodyMeta.destroy();
+		} else {
+			this.physicsBodyMeta = new PhysBodyProxy(this);
+		}
+		const bodyCfg = new PhysBodyConfig();
+		bodyCfg.position = new Vector(0, (this.config.maxElevation + this.config.minElevation) * 0.5, 0);
+		bodyCfg.mass = 0;
+		bodyCfg.friction = 0.5;
+		bodyCfg.shape = new Ammo.btHeightfieldTerrainShape(
+			hfCols,
+			hfRows,
+			this.heightFieldValues,
+			1,
+			this.config.minElevation,
+			this.config.maxElevation,
+			1,
+			"PHY_FLOAT",
+			false,
+		);
+		this.physicsBodyMeta.createBody(bodyCfg);
 	}
 
 	private setupVAO(): void {

@@ -30,4 +30,29 @@ export class Quat extends Vector {
 		const normVec: Vector = super.normalize();
 		return new Quat(normVec.x, normVec.y, normVec.z, normVec.w);
 	}
+
+	/** Returns the Euler angles (around each of X,Y,Z axes) equivalent to this quaternion */
+	toEulerAngles(): Vector {
+		// https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+		const q = this;
+		let yaw = 0,
+			pitch = 0,
+			roll = 0;
+		// pitch (x-axis rotation)
+		const sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
+		const cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
+		pitch = Math.atan2(sinr_cosp, cosr_cosp);
+
+		// yaw (y-axis rotation)
+		const sinp = Math.sqrt(1 + 2 * (q.w * q.y - q.x * q.z));
+		const cosp = Math.sqrt(1 - 2 * (q.w * q.y - q.x * q.z));
+		yaw = 2 * Math.atan2(sinp, cosp) - Math.PI / 2;
+
+		// roll (z-axis rotation)
+		const siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+		const cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+		roll = Math.atan2(siny_cosp, cosy_cosp);
+
+		return new Vector(pitch, yaw, roll);
+	}
 }

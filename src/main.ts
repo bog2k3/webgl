@@ -6,7 +6,7 @@ import { Mesh } from "./joglfw/mesh";
 import { MeshRenderer } from "./joglfw/render/mesh-renderer";
 import { Shaders } from "./joglfw/render/shaders";
 import { World, WorldConfig } from "./joglfw/world/world";
-import { initializePhysics, physics } from "./physics/physics";
+import { initPhysics } from "./physics/physics";
 import { PlayerInputHandler } from "./player-input-handler";
 import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
 import { initRender, render } from "./render/render";
@@ -28,9 +28,9 @@ async function main(): Promise<void> {
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	await initGraphics(canvas);
 	initInput(canvas);
-	await initializePhysics();
+	await initPhysics();
 
-	initializeWorld();
+	initWorld();
 
 	game = new Game();
 	game.initialize();
@@ -140,10 +140,19 @@ function handlePlayerInputs(ev: InputEvent): void {
 	playerInputHandler.handleInputEvent(ev);
 }
 
-function initializeWorld(): void {
+function initWorld(): void {
 	const worldConfig = new WorldConfig();
 	worldConfig.drawBoundaries = false;
 	world = new World(worldConfig);
+
+	// auto pImgDebugDraw = new ImgDebugDraw();
+	// World::setGlobal<ImgDebugDraw>(pImgDebugDraw);
+
+	// const int margin = 20; // pixels
+	// World::setGlobal<GuiSystem>(new GuiSystem(&renderData.viewport, {margin, margin}, {renderData.windowW - 2*margin, renderData.windowH - 2*margin}));
+	// World::getGlobal<GuiSystem>()->onMousePointerDisplayRequest.add([](bool show) {
+	// 	setMouseCapture(!show);
+	// });
 }
 
 async function loadTextures() {
