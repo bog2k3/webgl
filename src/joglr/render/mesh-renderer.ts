@@ -1,3 +1,4 @@
+import { VertexArrayObject } from './../vao';
 import { checkGLError, gl } from "../glcontext";
 import { IGLResource } from "../glresource";
 import { Matrix } from "../math/matrix";
@@ -36,22 +37,27 @@ export class MeshRenderer implements IGLResource {
 		gl.uniformMatrix4fv(this.indexMatPVW_, false, matPVW.m);
 		checkGLError("mPVW uniform setup");
 
-		const stride = MeshVertex.getStride() * 4;
-		gl.bindBuffer(gl.ARRAY_BUFFER, mesh.VBO_);
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.IBO_);
-		gl.vertexAttribPointer(this.indexPos_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
-		gl.vertexAttribPointer(this.indexNorm_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
-		gl.vertexAttribPointer(this.indexUV1_, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
-		gl.vertexAttribPointer(this.indexColor_, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
-		gl.enableVertexAttribArray(this.indexPos_);
-		gl.enableVertexAttribArray(this.indexNorm_);
-		gl.enableVertexAttribArray(this.indexUV1_);
-		gl.enableVertexAttribArray(this.indexColor_);
-		checkGLError("attrib arrays setup");
+		const vao: VertexArrayObject = mesh.getVAO();
+		vao.bind();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.getIBO());
+		if (mesh.vertexAttribsProgramBinding_ != this.meshShaderProgram_) {
+			const stride = MeshVertex.getStride() * 4;
+			gl.bindBuffer(gl.ARRAY_BUFFER, mesh.getVBO());
+			vao.vertexAttribPointer(this.indexPos_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
+			vao.vertexAttribPointer(this.indexNorm_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
+			vao.vertexAttribPointer(this.indexUV1_, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
+			vao.vertexAttribPointer(this.indexColor_, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
+			gl.enableVertexAttribArray(this.indexPos_);
+			gl.enableVertexAttribArray(this.indexNorm_);
+			gl.enableVertexAttribArray(this.indexUV1_);
+			gl.enableVertexAttribArray(this.indexColor_);
+			mesh.vertexAttribsProgramBinding_ = this.meshShaderProgram_;
+			checkGLError("attrib arrays setup");
+		}
 
 		// decide what to draw:
 		let drawMode = 0;
-		switch (mesh.mode_) {
+		switch (mesh.getRenderMode()) {
 			case MeshRenderModes.Points:
 				drawMode = gl.POINTS; break;
 			case MeshRenderModes.Lines:
@@ -59,14 +65,14 @@ export class MeshRenderer implements IGLResource {
 			case MeshRenderModes.Triangles:
 				drawMode = gl.TRIANGLES; break;
 			default:
-				throw new Error(`Unknown mesh draw mode ${mesh.mode_}`);
+				throw new Error(`Unknown mesh draw mode ${mesh.getRenderMode()}`);
 		}
-		if (mesh.mode_ == MeshRenderModes.Lines) {
+		if (mesh.getRenderMode() == MeshRenderModes.Lines) {
 			gl.lineWidth(2.0);
 		}
-		gl.drawElements(drawMode, mesh.indexCount_, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(drawMode, mesh.getElementsCount(), gl.UNSIGNED_SHORT, 0);
 		checkGLError("mesh draw");
-		if (mesh.mode_ == MeshRenderModes.Lines) {
+		if (mesh.getRenderMode() == MeshRenderModes.Lines) {
 			gl.lineWidth(1.0);
 		}
 	}

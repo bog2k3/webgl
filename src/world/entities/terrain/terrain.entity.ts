@@ -1,3 +1,5 @@
+import { ShaderTerrainPreview } from './../../../render/programs/shader-terrain-preview';
+import { ShaderProgramManager } from './../../../render/shader-program-manager';
 import { VertexAttribSource } from './../../../joglr/shader-program';
 import { VertexArrayObject } from './../../../joglr/vao';
 import { AbstractVertex } from '../../../joglr/abstract-vertex';
@@ -16,6 +18,7 @@ import { TextureLoader } from './../../../joglr/texture-loader';
 import { RenderPass } from './../../../render/custom-render-context';
 import { Triangle, triangulate } from "./triangulation";
 import { Water, WaterConfig } from './water';
+import { assert } from "../../../joglr/utils/assert";
 
 export class Terrain extends Entity implements IRenderable, IGLResource {
 	static loadTextures(step: number): Progress {
@@ -78,9 +81,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		super();
 		this.renderData_ = new TerrainRenderData();
 		if (previewMode_) {
-			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram(ShaderTerrainPreview);
+			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderTerrainPreview>(ShaderTerrainPreview);
 		} else {
-			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram(ShaderTerrain);
+			this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderTerrain>(ShaderTerrain);
 		}
 
 		this.renderData_.reloadHandler = this.renderData_.shaderProgram_.onProgramReloaded.add(() => {
@@ -95,18 +98,18 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	}
 
 	setupVAO(): void {
-		this.renderData_.VAO_.bind();
 		const mapVertexSources: Record<string, VertexAttribSource> = {
 			"pos": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("pos") },
 			"normal": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("normal") },
 			"color": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("color") },
-			"uv1": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv[0]") },
-			"uv2": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv[2]") },
-			"uv3": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv[4]") },
+			"uv1": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv1") },
+			"uv2": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv2") },
+			"uv3": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv3") },
+			"uv4": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv4") },
+			"uv5": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("uv5") },
 			"texBlendFactor": { VBO: this.renderData_.VBO_, stride: TerrainVertex.getStride(), offset: TerrainVertex.getOffset("texBlendFactor") }
 		};
-		this.renderData_.shaderProgram_.setupVertexStreams(mapVertexSources);
-		this.renderData_.VAO_.unbind();
+		this.renderData_.shaderProgram_.setupVertexStreams(this.renderData_.VAO_, mapVertexSources);
 	}
 
 	override destroy(): void {
@@ -131,10 +134,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// unsigned getEntityType() const override { return EntityTypes::TERRAIN; }
 
 	validateSettings(c: TerrainConfig): void {
-		const assert = (cond) => {
-			if (!cond)
-				throw new Error("Assertion failed");
-		};
 		assert(c.width > 0);
 		assert(c.length > 0);
 		assert(c.maxElevation > c.minElevation);
@@ -176,21 +175,22 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// compute terrain vertices
 		for (let i=0; i<this.rows_; i++) {
 			for (let j=0; j<this.cols_; j++) {
-				const jitter = new Vector(Math.random() * config.relativeRandomJitter * dx, Math.random() * config.relativeRandomJitter * dz );
+				const jitter = new Vector(rand() * config.relativeRandomJitter * dx, rand() * config.relativeRandomJitter * dz );
 				this.vertices_[i*this.cols_ + j] = <TerrainVertex>{
-					pos: bottomLeft.add(new Vector(dx * j + jitter.x, config.minElevation, dz * i + jitter.y)),	// position
-					normal: new Vector(0.0, 1.0, 0.0),											// normal
-					color: new Vector(1.0, 1.0, 1.0),											// color
-					uv: [																		// uvs
-						new Vector(0.0, 0.0), new Vector(0.0, 0.0),
-						new Vector(0.0, 0.0), new Vector(0.0, 0.0), new Vector(0.0, 0.0)
-					],
-					texBlendFactor: new Vector(0.0, 0.0, 0.0, 0.0)								// tex blend factor
+					pos: bottomLeft.add(new Vector(dx * j + jitter.x, config.minElevation, dz * i + jitter.y)),
+					normal: new Vector(0.0, 1.0, 0.0),
+					color: new Vector(1.0, 1.0, 1.0),
+					uv1: new Vector(0.0, 0.0),
+					uv2: new Vector(0.0, 0.0),
+					uv3: new Vector(0.0, 0.0),
+					uv4: new Vector(0.0, 0.0),
+					uv5: new Vector(0.0, 0.0),
+					texBlendFactor: new Vector(0.0, 0.0, 0.0, 0.0)
 				};
 				// compute UVs
 				for (let t=0; t<TerrainVertex.nTextures; t++) {
-					this.vertices_[i*this.cols_ + j].uv[t].x = (this.vertices_[i*this.cols_ + j].pos.x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
-					this.vertices_[i*this.cols_ + j].uv[t].y = (this.vertices_[i*this.cols_ + j].pos.z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+					this.vertices_[i*this.cols_ + j][`uv${t}`].x = (this.vertices_[i*this.cols_ + j].pos.x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
+					this.vertices_[i*this.cols_ + j][`uv${t}`].y = (this.vertices_[i*this.cols_ + j].pos.z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
 				}
 			}
 		}
@@ -199,19 +199,20 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			const x = seaBedRadius * Math.cos(i*skirtVertSector);
 			const z = seaBedRadius * Math.sin(i*skirtVertSector);
 			this.vertices_[this.rows_*this.cols_+i] = <TerrainVertex>{
-				pos: new Vector(x, -30, z),										// position
-				normal: new Vector(0.0, 1.0, 0.0),								// normal
-				color: new Vector(1.0, 1.0, 1.0),								// color
-				uv: [															// uvs
-					new Vector(0.0, 0.0), new Vector(0.0, 0.0),
-					new Vector(0.0, 0.0), new Vector(0.0, 0.0), new Vector(0.0, 0.0)
-				],
-				texBlendFactor: new Vector(0.0, 0.0, 0.0, 1.0)					// tex blend factor
+				pos: new Vector(x, -30, z),
+				normal: new Vector(0.0, 1.0, 0.0),
+				color: new Vector(1.0, 1.0, 1.0),
+				uv1: new Vector(0.0, 0.0),
+				uv2: new Vector(0.0, 0.0),
+				uv3: new Vector(0.0, 0.0),
+				uv4: new Vector(0.0, 0.0),
+				uv5: new Vector(0.0, 0.0),
+				texBlendFactor: new Vector(0.0, 0.0, 0.0, 1.0)
 			};
 			// compute UVs
 			for (let t=0; t<TerrainVertex.nTextures; t++) {
-				this.vertices_[this.rows_*this.cols_ + i].uv[t].x = (x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
-				this.vertices_[this.rows_*this.cols_ + i].uv[t].y = (z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
+				this.vertices_[this.rows_*this.cols_ + i][`uv${t}`].x = (x - bottomLeft.x) / TerrainRenderData.textures_[t].wWidth;
+				this.vertices_[this.rows_*this.cols_ + i][`uv${t}`].y = (z - bottomLeft.z) / TerrainRenderData.textures_[t].wHeight;
 			}
 		}
 
@@ -437,7 +438,11 @@ class TerrainVertex extends AbstractVertex {
 	pos: Vector;	// 3
 	normal: Vector;	// 3
 	color: Vector;	// 3
-	uv: Vector[];	// 5*2 uvs for each texture layer
+	uv1: Vector;	// 2 uvs for each texture layer
+	uv2: Vector;	// 2
+	uv3: Vector;	// 2
+	uv4: Vector;	// 2
+	uv5: Vector;	// 2
 	texBlendFactor: Vector; // 4 texture blend factors: x is between grass1 & grass2,
 								//						y between rock1 & rock2
 								//						z between grass/sand and rock (highest priority)
@@ -447,12 +452,17 @@ class TerrainVertex extends AbstractVertex {
 		return 4 * (3 + 3 + 3 + 5*2 + 4);
 	}
 
+	/** returns the offset of a component, in number of floats */
 	static getOffset(field: keyof TerrainVertex): number {
 		switch (field) {
 			case 'pos': return 4 * 0;
 			case 'normal': return 4 * 3;
 			case 'color': return 4 * 6;
-			case 'uv': return 4 * 9;
+			case 'uv1': return 4 * 9;
+			case 'uv2': return 4 * 11;
+			case 'uv3': return 4 * 13;
+			case 'uv4': return 4 * 15;
+			case 'uv5': return 4 * 17;
 			case 'texBlendFactor': return 4 * 19;
 			default: throw new Error(`Invalid field specified in TerrainVertex.getOffset(): "${field}`);
 		}
@@ -467,7 +477,11 @@ class TerrainVertex extends AbstractVertex {
 			...this.pos.values(3),
 			...this.normal.values(3),
 			...this.color.values(3),
-			...this.uv.map(component => component.values(2)).flat(),
+			...this.uv1.values(2),
+			...this.uv2.values(2),
+			...this.uv3.values(2),
+			...this.uv4.values(2),
+			...this.uv5.values(2),
 			...this.texBlendFactor.values(4)
 		];
 		target.set(values, offset);

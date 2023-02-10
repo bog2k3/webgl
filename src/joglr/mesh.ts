@@ -56,6 +56,7 @@ export class Mesh implements IGLResource {
 	static ENABLE_COLOR_DEBUG = false;
 
 	constructor() {
+		this.VAO_ = new VertexArrayObject();
 		this.VBO_ = gl.createBuffer();
 		this.IBO_ = gl.createBuffer();
 	}
@@ -65,6 +66,8 @@ export class Mesh implements IGLResource {
 		gl.deleteBuffer(this.IBO_);
 		this.VBO_ = this.IBO_ = null;
 		this.indexCount_ = 0;
+		this.VAO_.release();
+		this.VAO_ = null;
 	}
 
 	getRenderMode(): MeshRenderModes {
@@ -88,7 +91,7 @@ export class Mesh implements IGLResource {
 	}
 
 	// the following are used only by Mesh renderers
-	vertexAttribsProgramBinding_: VertexArrayObject = null;
+	vertexAttribsProgramBinding_: WebGLProgram = null;
 
 	static makeScreenQuad(): Mesh {
 		const vertices: MeshVertex[] = [

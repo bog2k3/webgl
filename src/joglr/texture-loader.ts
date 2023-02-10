@@ -9,6 +9,7 @@ export class TextureLoader {
 	// [outWidth] and [outHeight] will be filled with the texture size, if provided.
 	static loadFromPNG(path: string, linearizeValues: boolean): TextureInfo {
 		// TODO implement
+		throw new Error("not implemented");
 	}
 
 	// loads a cube texture from 6 files.
@@ -17,5 +18,6 @@ export class TextureLoader {
 	// if one or more of the cube faces are not required, specify empty strings for their respective filenames
 	static loadCubeFromPNG(paths: string[], linearizeValues: boolean): TextureInfo[] {
 		// TODO implement
+		throw new Error("not implemented");
 	}
 };

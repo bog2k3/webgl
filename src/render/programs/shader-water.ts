@@ -6,14 +6,15 @@ export class ShaderWater extends ShaderProgram {
 		super();
 	}
 
-	load(): void {
+	async load(): Promise<boolean> {
 		if (this.isValid()) {
 			return; // already loaded
 		}
 
-		if (!super.load("data/shaders/water.vert", "data/shaders/water.frag")) {
-			console.error("Failed to load water shader!");
+		if (!await super.load("data/shaders/water.vert", "data/shaders/water.frag")) {
+			throw new Error("Failed to load water shader!");
 		}
+		return true;
 	}
 
 	uniforms(): UPackWater {

@@ -1,3 +1,4 @@
+import { VertexArrayObject } from './vao';
 import { gl } from "./glcontext";
 import { IGLResource } from "./glresource";
 import { Shaders } from "./shaders";
@@ -47,10 +48,11 @@ export class ShaderProgram implements IGLResource {
 	// sets up the vertex attribute pointers (each attribute name must match one of the attributes defined by [defineVertexAttrib()])
 	// call this while you have bound your VAO in order to store this state within it.
 	// this needs to be called only once per VAO, after the program is loaded and each time after the program is reloaded ( [onProgramReloaded] event is triggered ).
-	setupVertexStreams(mapAttribSource: Record<string, VertexAttribSource>): void {
+	setupVertexStreams(vao: VertexArrayObject, mapAttribSource: Record<string, VertexAttribSource>): void {
 		if (!this.isValid()) {
 			throw new Error("This ShaderProgram has not been loaded (or there was a compile/link error)!");
 		}
+		vao.bind();
 		let boundVBO: WebGLBuffer = null;
 		for (let vAttrDesc of this.vertexAttribs_) {
 			const attrSrc: VertexAttribSource = mapAttribSource[vAttrDesc.name];
@@ -64,10 +66,10 @@ export class ShaderProgram implements IGLResource {
 					gl.bindBuffer(gl.ARRAY_BUFFER, attrSrc.VBO);
 					boundVBO = attrSrc.VBO;
 				}
-				gl.enableVertexAttribArray(location);
-				gl.vertexAttribPointer(location, vAttrDesc.componentCount, vAttrDesc.componentType, false, attrSrc.stride, attrSrc.offset);
+				vao.vertexAttribPointer(location, vAttrDesc.componentCount, vAttrDesc.componentType, false, attrSrc.stride, attrSrc.offset);
 			}
 		}
+		vao.unbind();
 	}
 
 	// loads and compiles the shaders, then links the program and fetches all uniform locations that have been mapped;

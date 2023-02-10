@@ -3,13 +3,14 @@ import { ShaderProgram } from '../../joglr/shader-program';
 
 export class ShaderTerrain extends ShaderProgram {
 
-	load(): Promise<boolean> {
+	async load(): Promise<boolean> {
 		if (this.isValid())
 			return; // already loaded
 
-		if (!super.load("data/shaders/terrain.vert", "data/shaders/terrain.frag")) {
+		if (!await super.load("data/shaders/terrain.vert", "data/shaders/terrain.frag")) {
 			throw new Error("Failed to load terrain shaders!");
 		}
+		return true;
 	}
 
 	uniforms(): UPackTerrain {
