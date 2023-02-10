@@ -1,0 +1,8 @@
+{
+	"comment": "font description for Cantarell"
+	"texture": "Cantarell_256_16_8.png",
+	"rows": 8,
+	"columns" 16,
+	"firstChar": "!",
+	"defaultSize": 22
+}

@@ -1,7 +1,7 @@
 export let gl: WebGL2RenderingContext | WebGLRenderingContext;
 
-export function setGl(gl_: WebGL2RenderingContext | WebGLRenderingContext): void {
-	gl = gl_;
+export function initGL(canvas: HTMLCanvasElement, contextOptions?: WebGLContextAttributes): void {
+	gl = canvas.getContext("webgl2", contextOptions) || canvas.getContext("webgl", contextOptions);
 }
 
 /** returns true if an error was detected */

@@ -41,8 +41,8 @@ export namespace Shaders {
 		if (!gl.getProgramParameter(prog, gl.VALIDATE_STATUS) || checkGLError("validating shader program")) {
 			throw new Error("Failed to validate shader program: " + gl.getProgramInfoLog(prog));
 		}
-		// gl.deleteShader(vertexShader);
-		// gl.deleteShader(fragmentShader);
+		gl.deleteShader(vertexShader);
+		gl.deleteShader(fragmentShader);
 		return prog;
 	}
 

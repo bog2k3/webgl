@@ -1,11 +1,14 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
-import { gl, setGl } from "./joglr/glcontext";
+import { gl, initGL } from "./joglr/glcontext";
 import { Mesh } from "./joglr/mesh";
-import { renderViewport } from "./joglr/render";
 import { MeshRenderer } from "./joglr/render/mesh-renderer";
-import { SceneGraph } from "./joglr/scene-graph";
+import { SceneGraph } from "./scene/scene-graph";
 import { Viewport } from "./joglr/viewport";
+import { renderViewport } from "./scene/render";
+import { Vector } from "./joglr/math/vector";
+import { StaticMeshObject } from "./objects/static-mesh.object";
+import { Matrix } from "./joglr/math/matrix";
 
 const MOVE_SPEED = 0.5; // m/s
 
@@ -17,19 +20,20 @@ const keys = {};
 
 window.onload = main;
 async function main(): Promise<void> {
-	await initGraphics();
-	initInput();
+	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+	await initGraphics(canvas);
+	initializeScene();
+	initInput(canvas);
 	requestAnimationFrame(step);
 }
 
-async function initGraphics(): Promise<void> {
-	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	const contextOptions: WebGLContextAttributes = {
 		alpha: true,
 		depth: true,
 		preserveDrawingBuffer: true
 	};
-	setGl(canvas.getContext("webgl2", contextOptions) || canvas.getContext("webgl", contextOptions));
+	initGL(canvas, contextOptions);
 
 	gl.enable(gl.CULL_FACE);
 	gl.cullFace(gl.FRONT);
@@ -37,10 +41,6 @@ async function initGraphics(): Promise<void> {
 	gl.depthFunc(gl.LESS);
 
 	Mesh.ENABLE_COLOR_DEBUG = true;
-
-	vp1 = new Viewport(0, 0, 1280, 720);
-	scene = new SceneGraph(vp1.camera());
-
 	await MeshRenderer.initialize();
 }
 
@@ -67,31 +67,42 @@ function render() {
 function update(dt: number): void {
 	if (keys['ArrowLeft']) {
 		vp1.camera().move(vp1.camera().localX().scale(-MOVE_SPEED * dt));
-		// console.log(`camera position: `, vp1.camera().position());
 	}
 
 	if (keys['ArrowRight']) {
 		vp1.camera().move(vp1.camera().localX().scale(+MOVE_SPEED * dt));
-		// console.log(`camera position: `, vp1.camera().position());
 	}
 
 	if (keys['ArrowUp']) {
 		vp1.camera().move(vp1.camera().direction().scale(+MOVE_SPEED * dt));
-		// console.log(`camera position: `, vp1.camera().position());
 	}
 	if (keys['ArrowDown']) {
 		vp1.camera().move(vp1.camera().direction().scale(-MOVE_SPEED * dt));
-		// console.log(`camera position: `, vp1.camera().position());
 	}
 
 	scene.update(dt);
 }
 
-function initInput() {
+function initInput(canvas: HTMLCanvasElement) {
 	document.onkeydown = (ev) => {
 		keys[ev.key] = true;
 	}
 	document.onkeyup = (ev) => {
 		keys[ev.key] = false;
 	}
+	canvas.addEventListener("click", () =>
+		canvas.requestPointerLock()
+	);
+}
+
+function initializeScene(): void {
+	vp1 = new Viewport(0, 0, 1280, 720);
+	scene = new SceneGraph(vp1.camera());
+	const m = Mesh.makeBox(new Vector(), new Vector(0.4, 0.4, 0.4));
+	scene.addObject(new StaticMeshObject(m, Matrix.translate(new Vector(-0.5, +0.5))));
+	scene.addObject(new StaticMeshObject(m, Matrix.translate(new Vector(+0.5, +0.5))));
+	scene.addObject(new StaticMeshObject(m, Matrix.translate(new Vector(+0.5, -0.5))));
+	scene.addObject(new StaticMeshObject(m, Matrix.translate(new Vector(-0.5, -0.5))));
+
+	scene.addObject(new StaticMeshObject(m, Matrix.translate(new Vector(0, -1, 0)).mul(Matrix.scale(10, 0.1, 10))));
 }

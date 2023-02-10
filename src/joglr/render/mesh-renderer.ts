@@ -1,10 +1,11 @@
 import { checkGLError, gl } from "../glcontext";
+import { IGLResource } from "../glresource";
 import { Matrix } from "../math/matrix";
 import { Mesh, MeshRenderModes, MeshVertex } from "../mesh";
 import { RenderContext } from "../render-context";
 import { Shaders } from "../shaders";
 
-export class MeshRenderer {
+export class MeshRenderer implements IGLResource {
 	private static instance_: MeshRenderer;
 	static get(): MeshRenderer {
 		return MeshRenderer.instance_;
@@ -16,14 +17,14 @@ export class MeshRenderer {
 		return MeshRenderer.instance_.initialize();
 	}
 
-	private meshShaderProgram_: WebGLProgram;
-	private indexPos_ = 0;
-	private indexNorm_ = 0;
-	private indexUV1_ = 0;
-	private indexColor_ = 0;
-	private indexMatPVW_: WebGLUniformLocation;
+	release(): void {
+		if (this.meshShaderProgram_) {
+			gl.deleteProgram(this.meshShaderProgram_);
+			this.meshShaderProgram_ = null;
+		}
+	}
 
-	renderMesh(mesh: Mesh, worldTransform: Matrix, context: RenderContext): void {
+	render(mesh: Mesh, worldTransform: Matrix, context: RenderContext): void {
 		if (!this.meshShaderProgram_) {
 			console.error("MeshRenderer.render(): Mesh shader is not loaded");
 			return;
@@ -69,6 +70,16 @@ export class MeshRenderer {
 			gl.lineWidth(1.0);
 		}
 	}
+
+	// ------------- PRIVATE AREA ------------------- //
+	private constructor() {}
+
+	private meshShaderProgram_: WebGLProgram;
+	private indexPos_ = 0;
+	private indexNorm_ = 0;
+	private indexUV1_ = 0;
+	private indexColor_ = 0;
+	private indexMatPVW_: WebGLUniformLocation;
 
 	private async initialize() {
 		const meshVertexShaderCode: string = await (await fetch("/data/shaders/mesh.vert")).text();

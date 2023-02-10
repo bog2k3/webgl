@@ -62,6 +62,7 @@ export class Mesh implements IGLResource {
 		gl.deleteBuffer(this.VBO_);
 		gl.deleteBuffer(this.IBO_);
 		this.VBO_ = this.IBO_ = null;
+		this.indexCount_ = 0;
 	}
 
 	static makeScreenQuad(): Mesh {
