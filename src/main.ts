@@ -1,3 +1,6 @@
+import { ShaderWater } from './render/programs/shader-water';
+import { ShaderTerrainPreview } from './render/programs/shader-terrain-preview';
+import { ShaderProgramManager } from './render/shader-program-manager';
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
 import { gl, initGL } from "./joglr/glcontext";
@@ -10,6 +13,7 @@ import { Vector } from "./joglr/math/vector";
 import { StaticMesh } from "./world/entities/static-mesh.entity";
 import { Matrix } from "./joglr/math/matrix";
 import { DEBUG_ENTRY } from "./test";
+import { ShaderTerrain } from "./render/programs/shader-terrain";
 
 const MOVE_SPEED = 0.5; // m/s
 
@@ -47,6 +51,10 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 
 	Mesh.ENABLE_COLOR_DEBUG = true;
 	await MeshRenderer.initialize();
+
+	await ShaderProgramManager.loadProgram(ShaderTerrainPreview);
+	// await ShaderProgramManager.loadProgram(ShaderTerrain);
+	// await ShaderProgramManager.loadProgram(ShaderWater);
 }
 
 function step(): void {

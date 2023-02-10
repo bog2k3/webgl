@@ -3,17 +3,19 @@ import { ShaderProgram } from './../joglr/shader-program';
 export class ShaderProgramManager {
 
 	static async loadProgram(shaderClass: new () => ShaderProgram): Promise<void> {
-		if (!ShaderProgramManager.shaderPrograms_[shaderClass.toString()]) {
-			ShaderProgramManager.shaderPrograms_[shaderClass.toString()] = new shaderClass();
-			await (ShaderProgramManager.shaderPrograms_[shaderClass.toString()] as any).load();
+		const className = shaderClass.name;
+		if (!ShaderProgramManager.shaderPrograms_[className]) {
+			ShaderProgramManager.shaderPrograms_[className] = new shaderClass();
+			await (ShaderProgramManager.shaderPrograms_[className] as any).load();
 		}
 	}
 
 	static requestProgram<T extends ShaderProgram>(shaderClass: new () => T): T {
-		if (!ShaderProgramManager.shaderPrograms_[shaderClass.toString()]) {
+		const className = shaderClass.name;
+		if (!ShaderProgramManager.shaderPrograms_[className]) {
 			throw new Error("Requested program is not loaded!");
 		}
-		return ShaderProgramManager.shaderPrograms_[shaderClass.toString()] as any;
+		return ShaderProgramManager.shaderPrograms_[className] as any;
 	}
 
 	static unloadAll(): void {
@@ -23,5 +25,5 @@ export class ShaderProgramManager {
 		ShaderProgramManager.shaderPrograms_ = {};
 	}
 
-	private static shaderPrograms_: Record<string, ShaderProgram>;
+	private static shaderPrograms_: Record<string, ShaderProgram> = {};
 };
