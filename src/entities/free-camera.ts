@@ -10,10 +10,10 @@ import { Direction, IUserControllable } from "./user-controllable";
 export class FreeCamera extends Entity implements IUserControllable, IUpdatable {
 	constructor(position: Vector, direction: Vector) {
 		super();
-		this.transform_.setPosition(position);
+		this.transform.setPosition(position);
 		const up = new Vector(0, 1, 0);
 		const mRot: Matrix = matrixFromPositionDirection(new Vector(0), direction, up);
-		this.transform_.setOrientation(matrixToQuat(mRot));
+		this.transform.setOrientation(matrixToQuat(mRot));
 	}
 
 	override getType(): string {
@@ -29,18 +29,18 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 		if (fmv_len > 0) this.frameMoveValues_ = this.frameMoveValues_.scale(1.0 / fmv_len); // normalize direction vector
 		this.frameMoveValues_ = this.frameMoveValues_.scale(maxMoveSpeed); // this vector now represents our target speed in camera space
 		// transform it into world space:
-		this.frameMoveValues_ = this.frameMoveValues_.mulQ(this.transform_.orientation());
+		this.frameMoveValues_ = this.frameMoveValues_.mulQ(this.transform.orientation());
 		// how much ground we have to cover to reach that speed
 		const delta: Vector = this.frameMoveValues_.sub(this.speed_);
 		const factor: number = clamp(linearAcceleration * dt, 0, 1);
 		this.speed_ = this.speed_.add(delta.scale(factor));
-		this.transform_.moveWorld(this.speed_.scale(dt));
+		this.transform.moveWorld(this.speed_.scale(dt));
 		this.frameMoveValues_ = new Vector(0);
 
 		// compute rotation alteration based on inputs
 		const deltaRot: Vector = this.frameRotateValues_;
-		this.transform_.rotateLocal(quatRotation(new Vector(1, 0, 0), deltaRot.x));
-		this.transform_.rotateWorld(quatRotation(new Vector(0, 1, 0), deltaRot.y));
+		this.transform.rotateLocal(quatRotation(new Vector(1, 0, 0), deltaRot.x));
+		this.transform.rotateWorld(quatRotation(new Vector(0, 1, 0), deltaRot.y));
 		this.frameRotateValues_ = new Vector(0);
 	}
 

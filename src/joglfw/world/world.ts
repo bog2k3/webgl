@@ -5,6 +5,7 @@ import { isUpdatable, IUpdatable } from "./updateable";
 import { checkGLError } from "../glcontext";
 import { Event } from "../utils/event";
 import { assert } from "../utils/assert";
+import { physWorld } from "../../physics/physics";
 
 export class WorldConfig {
 	/** set to true to disable propagation of user events */
@@ -43,6 +44,9 @@ export class World implements IRenderable, IUpdatable {
 
 	update(dt: number): void {
 		++this.frameNumber_;
+		const fixedTimeStep = 1 / 60; // 60Hz update rate for physics
+		const maxSubsteps = 10;
+		physWorld.stepSimulation(dt, maxSubsteps, fixedTimeStep);
 		for (const e of this.entsToUpdate_) {
 			e.update(dt);
 		}

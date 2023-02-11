@@ -40,9 +40,4 @@ void main() {
 	vec4 final = vec4(color, 1.0);
 
 	gl_FragColor = final;
-
-	// debug texture blend factor:
-	// gl_FragColor = vec4(fTexBlendFactor.xyz, 1);
-
-	// gl_FragColor = t4;
 }

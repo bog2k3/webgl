@@ -34,6 +34,16 @@ export class PhysBodyConfig {
 	initialVelocity = new Vector(0);
 	/** initial angular velocity in rad/s expressed in world space */
 	initialAngularVelocity = Quat.identity();
+
+	constructor(data?: Partial<PhysBodyConfig>) {
+		if (data) {
+			for (let key in data) {
+				if (data[key] !== undefined) {
+					this[key] = data[key];
+				}
+			}
+		}
+	}
 }
 
 // every btCollisionObject in the world has a userPointer to this class:

@@ -15,6 +15,6 @@ export class StaticMesh extends Entity implements IRenderable {
 	}
 
 	render(context: RenderContext): void {
-		MeshRenderer.get().render(this.mesh, this.transform_.glMatrix(), context);
+		MeshRenderer.get().render(this.mesh, this.transform.glMatrix(), context);
 	}
 }

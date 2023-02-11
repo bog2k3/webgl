@@ -87,11 +87,12 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		}
 	}
 
-	// specify previewMode=true to enable "preview" (simplified) rendering for rendering in the menu.
-	constructor(private previewMode_ = false) {
+	/** specify previewMode=true to enable "preview" (simplified) rendering for rendering in the menu. */
+	constructor(options: { previewMode: boolean }) {
 		super();
 		this.renderData = new TerrainRenderData();
-		if (previewMode_) {
+		this.previewMode = options.previewMode;
+		if (this.previewMode) {
 			this.renderData.shaderProgram_ =
 				ShaderProgramManager.requestProgram<ShaderTerrainPreview>(ShaderTerrainPreview);
 		} else {
@@ -103,7 +104,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		});
 		this.setupVAO();
 
-		if (!previewMode_) this.water = new Water();
+		// if (!this.previewMode) this.water = new Water();
 	}
 
 	override getType(): string {
@@ -265,7 +266,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	finishGenerate(): void {
 		console.log("Updating render and physics objects . . .");
 		this.updateRenderBuffers();
-		if (!this.previewMode_) this.updatePhysics();
+		if (!this.previewMode) this.updatePhysics();
 		console.log("Complete.");
 	}
 
@@ -274,7 +275,10 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.vertices = null;
 		this.nVertices = 0;
 		this.triangles = null;
-		this.physicsBodyMeta.destroy();
+		if (this.physicsBodyMeta) {
+			this.physicsBodyMeta.destroy();
+			this.physicsBodyMeta = null;
+		}
 		this.heightFieldValues = null;
 		this.bspTree = null;
 	}
@@ -405,6 +409,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 	// ------------- PRIVATE AREA --------------- //
 
+	private previewMode: boolean;
 	private rows = 0;
 	private cols = 0;
 	private gridSpacing: Vector;

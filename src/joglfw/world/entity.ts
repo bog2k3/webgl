@@ -13,10 +13,10 @@ export abstract class Entity {
 	abstract getType(): string;
 
 	getTransform(): Transform {
-		return this.transform_;
+		return this.transform;
 	}
 
-	protected transform_ = new Transform();
+	protected transform = new Transform();
 
 	private isDestroyed_ = false;
 }
