@@ -27,8 +27,8 @@ export class Game {
 		tc.vertexDensity = 0.5;
 		tc.length = 100;
 		tc.width = 100;
-		tc.minElevation = -30;
-		tc.maxElevation = 50;
+		tc.minElevation = -10;
+		tc.maxElevation = 10;
 		tc.roughness = 0.8;
 		this.terrain_ = new Terrain({ previewMode: false });
 		this.terrain_.generate(tc);
@@ -53,7 +53,7 @@ export class Game {
 		// DEBUG---
 		const m: Mesh = Mesh.makeBox(new Vector(0, 0, 0), new Vector(1, 1, 1));
 		const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5));
-		const boxMass = 1000;
+		const boxMass = 50;
 		const box = new RigidObject(m, new Vector(0, tc.maxElevation + 5, 0), boxShape, boxMass);
 		World.getInstance().addEntity(box);
 		//---DEBUG

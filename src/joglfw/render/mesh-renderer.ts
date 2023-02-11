@@ -10,52 +10,52 @@ import { logprefix } from "../log";
 const console = logprefix("MeshRenderer");
 
 export class MeshRenderer implements IGLResource {
-	private static instance_: MeshRenderer;
+	private static instance: MeshRenderer;
 	static get(): MeshRenderer {
-		return MeshRenderer.instance_;
+		return MeshRenderer.instance;
 	}
 
 	static async initialize(): Promise<void> {
 		console.log("Initializing...");
-		MeshRenderer.instance_ = new MeshRenderer();
-		await MeshRenderer.instance_.initialize();
+		MeshRenderer.instance = new MeshRenderer();
+		await MeshRenderer.instance.initialize();
 		console.log("Ready.");
 	}
 
 	release(): void {
-		if (this.meshShaderProgram_) {
-			gl.deleteProgram(this.meshShaderProgram_);
-			this.meshShaderProgram_ = null;
+		if (this.meshShaderProgram) {
+			gl.deleteProgram(this.meshShaderProgram);
+			this.meshShaderProgram = null;
 		}
 	}
 
 	render(mesh: Mesh, worldTransform: Matrix, context: RenderContext): void {
-		if (!this.meshShaderProgram_) {
+		if (!this.meshShaderProgram) {
 			console.error("render(): Mesh shader is not loaded");
 			return;
 		}
-		gl.useProgram(this.meshShaderProgram_);
+		gl.useProgram(this.meshShaderProgram);
 		const matVP = context.viewport.camera().matViewProj();
 
 		const matWVP = worldTransform.mul(matVP);
-		gl.uniformMatrix4fv(this.indexMatWVP_, false, matWVP.getColumnMajorValues());
+		gl.uniformMatrix4fv(this.indexMatWVP, false, matWVP.getColumnMajorValues());
 		checkGLError("mWVP uniform setup");
 
 		const vao: VertexArrayObject = mesh.getVAO();
 		vao.bind();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.getIBO());
-		if (mesh.vertexAttribsProgramBinding_ != this.meshShaderProgram_) {
+		if (mesh.vertexAttribsProgramBinding_ != this.meshShaderProgram) {
 			const stride = MeshVertex.getStride();
 			gl.bindBuffer(gl.ARRAY_BUFFER, mesh.getVBO());
-			vao.vertexAttribPointer(this.indexPos_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
-			vao.vertexAttribPointer(this.indexNorm_, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
-			vao.vertexAttribPointer(this.indexUV1_, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
-			vao.vertexAttribPointer(this.indexColor_, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
+			vao.vertexAttribPointer(this.indexPos, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
+			vao.vertexAttribPointer(this.indexNorm, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
+			vao.vertexAttribPointer(this.indexUV1, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
+			vao.vertexAttribPointer(this.indexColor, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
 			// gl.enableVertexAttribArray(this.indexPos_);
 			// gl.enableVertexAttribArray(this.indexNorm_);
 			// gl.enableVertexAttribArray(this.indexUV1_);
 			// gl.enableVertexAttribArray(this.indexColor_); // TODO cleanup
-			mesh.vertexAttribsProgramBinding_ = this.meshShaderProgram_;
+			mesh.vertexAttribsProgramBinding_ = this.meshShaderProgram;
 			checkGLError("attrib arrays setup");
 		}
 
@@ -87,28 +87,28 @@ export class MeshRenderer implements IGLResource {
 	// ------------- PRIVATE AREA ------------------- //
 	protected constructor() {}
 
-	private meshShaderProgram_: WebGLProgram;
-	private indexPos_ = 0;
-	private indexNorm_ = 0;
-	private indexUV1_ = 0;
-	private indexColor_ = 0;
-	private indexMatWVP_: WebGLUniformLocation;
+	private meshShaderProgram: WebGLProgram;
+	private indexPos = 0;
+	private indexNorm = 0;
+	private indexUV1 = 0;
+	private indexColor = 0;
+	private indexMatWVP: WebGLUniformLocation;
 
 	private async initialize(): Promise<void> {
 		await Shaders.createProgram(
 			"/data/shaders/mesh.vert",
 			"/data/shaders/mesh-texture.frag",
 			(prog: WebGLProgram) => {
-				this.meshShaderProgram_ = prog;
-				this.indexPos_ = gl.getAttribLocation(this.meshShaderProgram_, "vPos");
-				this.indexNorm_ = gl.getAttribLocation(this.meshShaderProgram_, "vNormal");
-				this.indexUV1_ = gl.getAttribLocation(this.meshShaderProgram_, "vUV1");
-				this.indexColor_ = gl.getAttribLocation(this.meshShaderProgram_, "vColor");
-				this.indexMatWVP_ = gl.getUniformLocation(this.meshShaderProgram_, "mWVP");
+				this.meshShaderProgram = prog;
+				this.indexPos = gl.getAttribLocation(this.meshShaderProgram, "vPos");
+				this.indexNorm = gl.getAttribLocation(this.meshShaderProgram, "vNormal");
+				this.indexUV1 = gl.getAttribLocation(this.meshShaderProgram, "vUV1");
+				this.indexColor = gl.getAttribLocation(this.meshShaderProgram, "vColor");
+				this.indexMatWVP = gl.getUniformLocation(this.meshShaderProgram, "mWVP");
 				checkGLError("getAttribs");
 			},
 		);
-		if (!this.meshShaderProgram_) {
+		if (!this.meshShaderProgram) {
 			throw new Error("Failed to load mesh shader program");
 		}
 	}

@@ -17,33 +17,36 @@ export class Vector {
 		return new Vector(this.x + v.x, this.y + v.y, this.z + v.z, this.w + v.w);
 	}
 
-	addInPlace(v: Vector): void {
+	addInPlace(v: Vector): this {
 		this.x += v.x;
 		this.y += v.y;
 		this.z += v.z;
 		this.w += v.w;
+		return this;
 	}
 
 	sub(v: Vector): Vector {
 		return new Vector(this.x - v.x, this.y - v.y, this.z - v.z, this.w - v.w);
 	}
 
-	subInPlace(v: Vector): void {
+	subInPlace(v: Vector): this {
 		this.x -= v.x;
 		this.y -= v.y;
 		this.z -= v.z;
 		this.w -= v.w;
+		return this;
 	}
 
 	scale(f: number): Vector {
 		return new Vector(this.x * f, this.y * f, this.z * f, this.w * f);
 	}
 
-	scaleInPlace(f: number): void {
+	scaleInPlace(f: number): this {
 		this.x *= f;
 		this.y *= f;
 		this.z *= f;
 		this.w *= f;
+		return this;
 	}
 
 	length(): number {
@@ -63,8 +66,8 @@ export class Vector {
 		return new Vector(this.x * invLen, this.y * invLen, this.z * invLen, this.w * invLen);
 	}
 
-	normalizeInPlace(): void {
-		this.scaleInPlace(1.0 / this.length());
+	normalizeInPlace(): this {
+		return this.scaleInPlace(1.0 / this.length());
 	}
 
 	/**
@@ -114,6 +117,16 @@ export class Vector {
 		return new Vector(
 			this.dot(m.col(0)), this.dot(m.col(1)), this.dot(m.col(2)), this.dot(m.col(3))
 		);
+	}
+
+	/** Transforms this vector by a matrix in the order V * M */
+	mulInPlace(m: Matrix): this {
+		// prettier-ignore
+		this.x = this.dot(m.col(0));
+		this.y = this.dot(m.col(1));
+		this.z = this.dot(m.col(2));
+		this.w = this.dot(m.col(3));
+		return this;
 	}
 
 	/** rotates this vector by a quaternion, returning a new vector

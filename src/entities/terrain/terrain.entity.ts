@@ -371,7 +371,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		const node: BSPNode<number> = this.bspTree.getNodeAtPoint(where);
 		let intersectionPoint: Vector;
 		const rayStart = new Vector(where.x, this.config.maxElevation + 100, where.z);
-		const rayDir = new Vector(0, 1, 0);
+		const rayDir = new Vector(0, -1, 0);
 		for (let triIndex of node.objects) {
 			const p1: Vector = this.vertices[this.triangles[triIndex].iV1].pos;
 			const p2: Vector = this.vertices[this.triangles[triIndex].iV2].pos;
