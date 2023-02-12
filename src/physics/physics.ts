@@ -1,9 +1,11 @@
 import Ammo from "ammojs-typed";
+import { buildPhysDebugDrawer, PhysDebugDrawModes } from "./phys-debug-drawer";
 
 // export let physics: typeof Ammo = null;
 export let physWorld: Ammo.btDiscreteDynamicsWorld = null;
+let debugDrawer: Ammo.DebugDrawer = null;
 
-export async function initPhysics(): Promise<void> {
+export async function initPhysics(options?: { enableDebugDraw?: boolean }): Promise<void> {
 	await Ammo(Ammo);
 	// collision configuration contains default setup for memory , collision setup . Advanced users can create their own configuration .
 	const collisionConfig = new Ammo.btDefaultCollisionConfiguration();
@@ -15,8 +17,19 @@ export async function initPhysics(): Promise<void> {
 	const solver = new Ammo.btSequentialImpulseConstraintSolver();
 	physWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 	physWorld.setGravity(new Ammo.btVector3(0, -9.8, 0));
+
+	if (options?.enableDebugDraw) {
+		setPhysicsDebugDrawer(buildPhysDebugDrawer());
+	}
 }
 
 export function setPhysicsDebugDrawer(debugDrawer: Ammo.btIDebugDraw | null): void {
 	physWorld.setDebugDrawer(debugDrawer);
+}
+
+export function setPhysicsDebugDrawMode(mode: PhysDebugDrawModes & number) {
+	if (!debugDrawer) {
+		throw new Error("Debug draw not enabled (pass enableDebugDraw: true to initPhysics())");
+	}
+	debugDrawer.setDebugMode(mode);
 }
