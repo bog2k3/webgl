@@ -1,14 +1,16 @@
 import Ammo from "ammojs-typed";
 import { logprefix } from "../joglfw/log";
+import { ShapeRenderer } from "../joglfw/render/shape-renderer";
+import { bullet2Vec } from "./functions";
 
 logprefix("PhysDebugDraw");
 
-export class PhysDebugDrawer extends Ammo.btIDebugDraw {
-	override drawLine(from: Ammo.btVector3, to: Ammo.btVector3, color: Ammo.btVector3): void {
-		Shape3D::get()->drawLine(b2g(from), b2g(to), b2g(color));
+export class PhysDebugDrawer /*extends Ammo.btIDebugDraw*/ {
+	drawLine(from: Ammo.btVector3, to: Ammo.btVector3, color: Ammo.btVector3): void {
+		ShapeRenderer.get().queueLine(bullet2Vec(from), bullet2Vec(to), bullet2Vec(color));
 	}
 
-	override drawContactPoint(
+	drawContactPoint(
 		pointOnB: Ammo.btVector3,
 		normalOnB: Ammo.btVector3,
 		distance: number,
@@ -16,22 +18,26 @@ export class PhysDebugDrawer extends Ammo.btIDebugDraw {
 		color: Ammo.btVector3,
 	): void {
 		// TODO: use lifetime for alpha?
-		Shape3D::get()->drawLine(b2g(PointOnB), b2g(PointOnB+normalOnB * distance), glm::vec4(b2g(color), 1.f));
+		ShapeRenderer.get().queueLine(
+			bullet2Vec(pointOnB),
+			bullet2Vec(pointOnB.op_add(normalOnB.op_mul(distance))),
+			bullet2Vec(color),
+		);
 	}
 
-	override reportErrorWarning(warningString: string): void {
+	reportErrorWarning(warningString: string): void {
 		console.log("AMMO WARNING: ", warningString);
 	}
 
-	override draw3dText(location: Ammo.btVector3, textString: string): void {
+	draw3dText(location: Ammo.btVector3, textString: string): void {
 		// TODO
 	}
 
-	override setDebugMode(debugMode: number): void {
+	setDebugMode(debugMode: number): void {
 		this.debugMode = debugMode;
 	}
 
-	override getDebugMode(): number {
+	getDebugMode(): number {
 		return this.debugMode;
 	}
 

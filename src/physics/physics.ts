@@ -3,7 +3,7 @@ import Ammo from "ammojs-typed";
 // export let physics: typeof Ammo = null;
 export let physWorld: Ammo.btDiscreteDynamicsWorld = null;
 
-export async function initPhysics(debugDrawer?: Ammo.btIDebugDraw): Promise<void> {
+export async function initPhysics(): Promise<void> {
 	await Ammo(Ammo);
 	// collision configuration contains default setup for memory , collision setup . Advanced users can create their own configuration .
 	const collisionConfig = new Ammo.btDefaultCollisionConfiguration();
@@ -14,8 +14,9 @@ export async function initPhysics(debugDrawer?: Ammo.btIDebugDraw): Promise<void
 	// the default constraint solver . For parallel processing you can use a different solver ( see Extras / BulletMultiThreaded )
 	const solver = new Ammo.btSequentialImpulseConstraintSolver();
 	physWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	if (debugDrawer) {
-		physWorld.setDebugDrawer(debugDrawer);
-	}
 	physWorld.setGravity(new Ammo.btVector3(0, -9.8, 0));
+}
+
+export function setPhysicsDebugDrawer(debugDrawer: Ammo.btIDebugDraw | null): void {
+	physWorld.setDebugDrawer(debugDrawer);
 }

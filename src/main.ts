@@ -5,8 +5,10 @@ import { initGL } from "./joglfw/glcontext";
 import { Mesh } from "./joglfw/mesh";
 import { MeshRenderer } from "./joglfw/render/mesh-renderer";
 import { Shaders } from "./joglfw/render/shaders";
+import { ShapeRenderer } from "./joglfw/render/shape-renderer";
 import { World, WorldConfig } from "./joglfw/world/world";
-import { initPhysics } from "./physics/physics";
+import { PhysDebugDrawer } from "./physics/phys-debug-drawer";
+import { initPhysics, setPhysicsDebugDrawer } from "./physics/physics";
 import { PlayerInputHandler } from "./player-input-handler";
 import { ShaderTerrain } from "./render/programs/shader-terrain";
 import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
@@ -30,6 +32,7 @@ async function main(): Promise<void> {
 	await initGraphics(canvas);
 	initInput(canvas);
 	await initPhysics();
+	setPhysicsDebugDrawer(new PhysDebugDrawer());
 
 	initWorld();
 
@@ -51,6 +54,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	initGL(canvas, contextOptions);
 
 	renderData = new RenderData(canvas.width, canvas.height);
+	renderData.config.renderPhysicsDebug = true;
 	initRender(renderData);
 
 	Mesh.ENABLE_COLOR_DEBUG = true;
@@ -61,6 +65,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	// await ShaderProgramManager.loadProgram(ShaderWater);
 
 	await loadTextures();
+	await ShapeRenderer.initialize();
 }
 
 function step(): void {
@@ -143,7 +148,7 @@ function handlePlayerInputs(ev: InputEvent): void {
 
 function initWorld(): void {
 	const worldConfig = new WorldConfig();
-	worldConfig.drawBoundaries = false;
+	worldConfig.drawBoundaries = true;
 	world = new World(worldConfig);
 
 	// auto pImgDebugDraw = new ImgDebugDraw();

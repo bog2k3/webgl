@@ -1,16 +1,17 @@
+import { Terrain } from "../entities/terrain/terrain.entity";
+import { Water } from "../entities/terrain/water";
 import { checkGLError } from "../joglfw/glcontext";
 import { Vector } from "../joglfw/math/vector";
+import { IRenderable } from "../joglfw/render/renderable";
+import { ShapeRenderer } from "../joglfw/render/shape-renderer";
 import { assert } from "../joglfw/utils/assert";
-import { World } from "../joglfw/world/world";
-import { gl } from "./../joglfw/glcontext";
 import { Entity } from "../joglfw/world/entity";
+import { World } from "../joglfw/world/world";
+import { physWorld } from "../physics/physics";
+import { gl } from "./../joglfw/glcontext";
 import { RenderPass } from "./custom-render-context";
 import { SharedUniformPacks } from "./programs/shared-uniform-packs";
 import { PostProcessData, RenderData } from "./render-data";
-import { Terrain } from "../entities/terrain/terrain.entity";
-import { Water } from "../entities/terrain/water";
-import { IRenderable } from "../joglfw/render/renderable";
-import { physWorld } from "../physics/physics";
 
 export function initRender(renderData: RenderData): boolean {
 	SharedUniformPacks.initialize();
@@ -60,11 +61,6 @@ export function initRender(renderData: RenderData): boolean {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 	gl.bindTexture(gl.TEXTURE_2D, null);
-
-	// load render helpers
-	// RenderHelpers::Config rcfg = RenderHelpers::defaultConfig();
-	// RenderHelpers::load(rcfg);
-	// TODO cleanup
 
 	// set up viewport and camera
 	renderData.viewport.setBkColor(new Vector(0, 0, 0));
@@ -134,11 +130,6 @@ export function render(renderData: RenderData, world: World): void {
 		);
 		resetRenderPass(renderData, RenderPass.Standard);
 		checkGLError("render() pass #3");
-
-		// 4th pass - physics debug draw
-		if (renderData.config.renderPhysicsDebug) {
-			physWorld.debugDrawWorld();
-		}
 	} else {
 		renderData.renderCtx.cameraUnderwater = false;
 		renderData.viewport.clear();
@@ -150,6 +141,12 @@ export function render(renderData: RenderData, world: World): void {
 		}
 		resetRenderPass(renderData, RenderPass.Standard);
 	}
+
+	// final pass - physics debug draw and shapes
+	if (renderData.config.renderPhysicsDebug) {
+		physWorld.debugDrawWorld();
+	}
+	ShapeRenderer.get().renderAll(renderData.renderCtx);
 
 	checkGLError("render() pass #3");
 

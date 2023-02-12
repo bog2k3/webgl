@@ -6,6 +6,8 @@ import { checkGLError } from "../glcontext";
 import { Event } from "../utils/event";
 import { assert } from "../utils/assert";
 import { physWorld } from "../../physics/physics";
+import { Vector } from "../math/vector";
+import { ShapeRenderer } from "../render/shape-renderer";
 
 export class WorldConfig {
 	/** set to true to disable propagation of user events */
@@ -56,33 +58,73 @@ export class World implements IRenderable, IUpdatable {
 		checkGLError("before World::render");
 		// draw extent lines:
 		if (this.config_.drawBoundaries) {
-			// TODO implement
-			// glm::vec3 lineColor(0.2f, 0, 0.8f);
-			// const float overflow = 1.1f;
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_, extentYp_*overflow, extentZn_),
-			// 	glm::vec3(extentXn_, extentYn_*overflow, extentZn_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXp_, extentYp_*overflow, extentZn_),
-			// 	glm::vec3(extentXp_, extentYn_*overflow, extentZn_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_*overflow, extentYp_, extentZn_),
-			// 	glm::vec3(extentXp_*overflow, extentYp_, extentZn_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_*overflow, extentYn_, extentZn_),
-			// 	glm::vec3(extentXp_*overflow, extentYn_, extentZn_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_, extentYp_*overflow, extentZp_),
-			// 	glm::vec3(extentXn_, extentYn_*overflow, extentZp_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXp_, extentYp_*overflow, extentZp_),
-			// 	glm::vec3(extentXp_, extentYn_*overflow, extentZp_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_*overflow, extentYp_, extentZp_),
-			// 	glm::vec3(extentXp_*overflow, extentYp_, extentZp_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_*overflow, extentYn_, extentZp_),
-			// 	glm::vec3(extentXp_*overflow, extentYn_, extentZp_), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_, extentYn_, extentZn_*overflow),
-			// 	glm::vec3(extentXn_, extentYn_, extentZp_*overflow), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXn_, extentYp_, extentZn_*overflow),
-			// 	glm::vec3(extentXn_, extentYp_, extentZp_*overflow), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXp_, extentYn_, extentZn_*overflow),
-			// 	glm::vec3(extentXp_, extentYn_, extentZp_*overflow), lineColor);
-			// Shape3D::get()->drawLine(glm::vec3(extentXp_, extentYp_, extentZn_*overflow),
-			// 	glm::vec3(extentXp_, extentYp_, extentZp_*overflow), lineColor);
+			// draw the world origin:
+			ShapeRenderer.get().queueLine(new Vector(), new Vector(1, 0, 0), new Vector(1, 0, 0));
+			ShapeRenderer.get().queueLine(new Vector(), new Vector(0, 1, 0), new Vector(0, 1, 0));
+			ShapeRenderer.get().queueLine(new Vector(), new Vector(0, 0, 1), new Vector(0, 0, 1));
+			// draw the world boundaries:
+			const lineColor = new Vector(1, 0, 1);
+			const overflow = 1.1;
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yp * overflow, this.config_.extent_Zn),
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yn * overflow, this.config_.extent_Zn),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yp * overflow, this.config_.extent_Zn),
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yn * overflow, this.config_.extent_Zn),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn * overflow, this.config_.extent_Yp, this.config_.extent_Zn),
+				new Vector(this.config_.extent_Xp * overflow, this.config_.extent_Yp, this.config_.extent_Zn),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn * overflow, this.config_.extent_Yn, this.config_.extent_Zn),
+				new Vector(this.config_.extent_Xp * overflow, this.config_.extent_Yn, this.config_.extent_Zn),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yp * overflow, this.config_.extent_Zp),
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yn * overflow, this.config_.extent_Zp),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yp * overflow, this.config_.extent_Zp),
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yn * overflow, this.config_.extent_Zp),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn * overflow, this.config_.extent_Yp, this.config_.extent_Zp),
+				new Vector(this.config_.extent_Xp * overflow, this.config_.extent_Yp, this.config_.extent_Zp),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn * overflow, this.config_.extent_Yn, this.config_.extent_Zp),
+				new Vector(this.config_.extent_Xp * overflow, this.config_.extent_Yn, this.config_.extent_Zp),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yn, this.config_.extent_Zn * overflow),
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yn, this.config_.extent_Zp * overflow),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yp, this.config_.extent_Zn * overflow),
+				new Vector(this.config_.extent_Xn, this.config_.extent_Yp, this.config_.extent_Zp * overflow),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yn, this.config_.extent_Zn * overflow),
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yn, this.config_.extent_Zp * overflow),
+				lineColor,
+			);
+			ShapeRenderer.get().queueLine(
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yp, this.config_.extent_Zn * overflow),
+				new Vector(this.config_.extent_Xp, this.config_.extent_Yp, this.config_.extent_Zp * overflow),
+				lineColor,
+			);
 		}
 		// draw entities
 		checkGLError("World.render() draw boundaries");

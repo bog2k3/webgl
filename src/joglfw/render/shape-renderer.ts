@@ -6,22 +6,23 @@ import { Matrix } from "../math/matrix";
 import { Vector } from "../math/vector";
 import { assert } from "../utils/assert";
 import { AbstractVertex } from "./abstract-vertex";
+import { RenderContext } from "./render-context";
 import { Shaders } from "./shaders";
 import { VertexArrayObject } from "./vao";
 
 const console = logprefix("ShapeRenderer");
 
 export class ShapeRenderer implements IGLResource {
-	private static instance_: ShapeRenderer = null;
+	private static instance: ShapeRenderer = null;
 	static get(): ShapeRenderer {
-		assert(ShapeRenderer.instance_ != null, "ShapeRenderer has not been initialized.");
-		return ShapeRenderer.instance_;
+		assert(ShapeRenderer.instance != null, "ShapeRenderer has not been initialized.");
+		return ShapeRenderer.instance;
 	}
 
 	static async initialize(): Promise<void> {
 		console.log("Initializing...");
-		ShapeRenderer.instance_ = new ShapeRenderer();
-		await ShapeRenderer.instance_.initialize();
+		ShapeRenderer.instance = new ShapeRenderer();
+		await ShapeRenderer.instance.initialize();
 		console.log("Ready.");
 	}
 
@@ -42,70 +43,125 @@ export class ShapeRenderer implements IGLResource {
 		}
 	}
 
-	// draw a single line segment
-	queueLine(point1: Vector, point2: Vector, rgba: Vector): void {}
-	// draw a list of separate lines (pairs of two vertices)
-	queueLineList(verts: Vector[], rgba: Vector): void {}
-	// draw a line strip (connected lines)
-	queueLineStrip(verts: Vector[], rgba: Vector): void {}
+	/** draws a single line segment */
+	queueLine(point1: Vector, point2: Vector, rgba: Vector): void {
+		point1 = point1.copy();
+		point2 = point2.copy();
+		this.transform([point1, point2]);
+		this.vertices.push(new ShapeVertex({ pos: point1, rgba }));
+		this.pushIndex(this.vertices.length - 1);
+		this.vertices.push(new ShapeVertex({ pos: point2, rgba }));
+		this.pushIndex(this.vertices.length - 1);
+	}
 
-	// draw a polygon
-	queuePolygon(verts: Vector[], rgba: Vector): void {}
+	/** draws a list of separate lines (pairs of two vertices) */
+	queueLineList(verts: Vector[], rgba: Vector): void {
+		verts = verts.map((v) => v.copy());
+		this.transform(verts);
+		for (let i = 0; i < verts.length; i++) {
+			this.vertices.push(new ShapeVertex({ pos: verts[i], rgba }));
+			this.pushIndex(this.vertices.length - 1);
+		}
+	}
 
-	queueAABB(aabb: AABB, rgba: Vector): void {}
+	/** draws a line strip (connected lines) */
+	queueLineStrip(verts: Vector[], rgba: Vector): void {
+		verts = verts.map((v) => v.copy());
+		this.transform(verts);
+		for (let i = 0; i < verts.length; i++) {
+			this.vertices.push(new ShapeVertex({ pos: verts[i], rgba }));
+			this.pushIndex(this.vertices.length - 1);
+			if (i > 0 && i < verts.length - 1) {
+				this.pushIndex(this.vertices.length - 1);
+			}
+		}
+	}
+
+	/** draws a (closed) polygon - specify the vertices */
+	queuePolygon(verts: Vector[], rgba: Vector): void {
+		verts = verts.map((v) => v.copy());
+		this.transform(verts);
+		for (let i = 0; i < verts.length; i++) {
+			this.vertices.push(new ShapeVertex({ pos: verts[i], rgba }));
+			this.pushIndex(this.vertices.length - 1);
+			if (i > 0) {
+				this.pushIndex(this.vertices.length - 1);
+			}
+		}
+		this.pushIndex(this.vertices.length - verts.length);
+	}
+
+	queueAABB(aabb: AABB, rgba: Vector): void {
+		const verts: Vector[] = [
+			aabb.vMin, // bottom left back
+			new Vector(aabb.vMin.x, aabb.vMax.y, aabb.vMin.z), // top left back
+			new Vector(aabb.vMin.x, aabb.vMax.y, aabb.vMax.z), // top left front
+			new Vector(aabb.vMin.x, aabb.vMin.y, aabb.vMax.z), // bottom left front
+			new Vector(aabb.vMax.x, aabb.vMin.y, aabb.vMin.z), // bottom right back
+			new Vector(aabb.vMax.x, aabb.vMax.y, aabb.vMin.z), // top right back
+			aabb.vMax, // top right front
+			new Vector(aabb.vMax.x, aabb.vMin.y, aabb.vMax.z), // bottom right front
+		];
+		this.queueLine(verts[0], verts[1], rgba);
+		this.queueLine(verts[1], verts[2], rgba);
+		this.queueLine(verts[2], verts[3], rgba);
+		this.queueLine(verts[3], verts[0], rgba);
+		this.queueLine(verts[4], verts[5], rgba);
+		this.queueLine(verts[5], verts[6], rgba);
+		this.queueLine(verts[6], verts[7], rgba);
+		this.queueLine(verts[7], verts[4], rgba);
+		this.queueLine(verts[0], verts[4], rgba);
+		this.queueLine(verts[1], verts[5], rgba);
+		this.queueLine(verts[2], verts[6], rgba);
+		this.queueLine(verts[3], verts[7], rgba);
+	}
 
 	// sets a transform matrix that will affect all future drawXXX calls
 	setTransform(mat: Matrix): void {
 		this.transform_ = mat;
-		this.transformActive_ = true;
+		this.transformActive = true;
 	}
 
 	resetTransform(): void {
-		this.transformActive_ = false;
+		this.transformActive = false;
 	}
 
 	/** Renders all queued items and clears the queue. */
-	renderAll(): void {
-		if (!lineShaderProgram_)
-			return;
-
-		Viewport* pCrtViewport = RenderHelpers::getActiveViewport();
-		if (!pCrtViewport) {
-			assertDbg(!!!"No viewport is currently rendering!");
+	renderAll(ctx: RenderContext): void {
+		if (!this.shapeShaderProgram) {
 			return;
 		}
 
-		unsigned nIndices = indices_.size();
-		if (!nIndices)
+		if (!this.nIndices) {
 			return;
+		}
 
 		// update render buffers:
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(s_vertex) * buffer_.size(), &buffer_[0], GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO_);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_[0]) * indices_.size(), &indices_[0], GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.VBO);
+		gl.bufferData(gl.ARRAY_BUFFER, AbstractVertex.arrayToBuffer(this.vertices), gl.DYNAMIC_DRAW);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.IBO);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indices, gl.DYNAMIC_DRAW);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glBlendEquation(GL_BLEND_EQUATION_ALPHA);
+		gl.enable(gl.BLEND);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-		glUseProgram(lineShaderProgram_);
-		glBindVertexArray(VAO_);
-		auto mPV = pCrtViewport->camera().matProjView();
-		glUniformMatrix4fv(indexMatProjView_, 1, GL_FALSE, glm::value_ptr(mPV));
-		checkGLError("Shape3D::setupVAOandUnif");
+		gl.useProgram(this.shapeShaderProgram);
+		this.VAO.bind();
+		const mPV: Matrix = ctx.viewport.camera().matViewProj();
+		gl.uniformMatrix4fv(this.indexMatViewProj, false, mPV.getColumnMajorValues());
+		checkGLError("ShapeRenderer.setupVAOandUnif");
 
-		glDrawElements(GL_LINES, nIndices, GL_UNSIGNED_INT, 0);
+		gl.drawElements(gl.LINES, this.nIndices, gl.UNSIGNED_SHORT, 0);
 		checkGLError("Shape3D::glDrawElements");
 
-		glDisable(GL_BLEND);
-		glBindVertexArray(0);
+		gl.disable(gl.BLEND);
+		this.VAO.unbind();
 
 		// purge cached data:
-		buffer_.clear();
-		indices_.clear();
+		this.vertices.splice(0);
+		this.nIndices = 0;
 	}
 
 	// ------------- PRIVATE AREA ------------------- //
@@ -120,10 +176,11 @@ export class ShapeRenderer implements IGLResource {
 	private IBO: WebGLBuffer;
 
 	// line buffers
-	buffer_: ShapeVertex[] = [];
-	indices_ = new Uint16Array(1000);
+	vertices: ShapeVertex[] = [];
+	indices = new Uint16Array(1000);
+	nIndices = 0;
 	transform_ = Matrix.identity();
-	transformActive_ = false;
+	transformActive = false;
 
 	private async initialize(): Promise<void> {
 		this.VAO = new VertexArrayObject();
@@ -134,7 +191,7 @@ export class ShapeRenderer implements IGLResource {
 			"/data/shaders/shape3d.frag",
 			(prog: WebGLProgram) => {
 				this.shapeShaderProgram = prog;
-				this.indexMatViewProj = gl.getUniformLocation(this.shapeShaderProgram, "mVP");
+				this.indexMatViewProj = gl.getUniformLocation(this.shapeShaderProgram, "mViewProj");
 				this.indexPos = gl.getAttribLocation(this.shapeShaderProgram, "vPos");
 				this.indexColor = gl.getAttribLocation(this.shapeShaderProgram, "vColor");
 				checkGLError("getAttribs");
@@ -166,8 +223,17 @@ export class ShapeRenderer implements IGLResource {
 		}
 	}
 
+	private pushIndex(i: number): void {
+		if (this.nIndices == this.indices.length) {
+			const newIndices = new Uint16Array(this.indices.length * 2);
+			newIndices.set(this.indices);
+			this.indices = newIndices;
+		}
+		this.indices[this.nIndices++] = i;
+	}
+
 	transform(verts: Vector[]): void {
-		if (!this.transformActive_) {
+		if (!this.transformActive) {
 			return;
 		}
 		for (let v of verts) {
@@ -195,6 +261,15 @@ class ShapeVertex extends AbstractVertex {
 				return 4 * 3;
 			default:
 				throw new Error(`Invalid field specified in ShapeVertex.getOffset(): "${field}`);
+		}
+	}
+
+	constructor(data: Partial<ShapeVertex>) {
+		super();
+		Object.assign(this, data);
+		if (this.rgba.w === 0) {
+			// if alpha was not provided, assume full opaque. To achieve full transparent, use 0.001 or something
+			this.rgba.w = 1;
 		}
 	}
 
