@@ -30,9 +30,7 @@ async function main(): Promise<void> {
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	await initGraphics(canvas);
 	initInput(canvas);
-	await initPhysics({
-		enableDebugDraw: true,
-	});
+	await initPhysics();
 
 	initWorld();
 

@@ -10,6 +10,7 @@ export class TerrainConfig {
 	minElevation = -10.0;
 	/** maximum Y axis value */
 	maxElevation = 25.0;
+	seaFloorElevation = -20.0;
 
 	/** vertices per meter (actual density may be slightly higher due to rounding,
 	 * but is guaranteed to always be at least the specified value)
@@ -25,4 +26,4 @@ export class TerrainConfig {
 
 	/** between [0.0 and 1.0] */
 	roughness = 0.5;
-};
+}

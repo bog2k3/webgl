@@ -5,7 +5,7 @@ import { buildPhysDebugDrawer, PhysDebugDrawModes } from "./phys-debug-drawer";
 export let physWorld: Ammo.btDiscreteDynamicsWorld = null;
 let debugDrawer: Ammo.DebugDrawer = null;
 
-export async function initPhysics(options?: { enableDebugDraw?: boolean }): Promise<void> {
+export async function initPhysics(): Promise<void> {
 	await Ammo(Ammo);
 	// collision configuration contains default setup for memory , collision setup . Advanced users can create their own configuration .
 	const collisionConfig = new Ammo.btDefaultCollisionConfiguration();
@@ -18,9 +18,7 @@ export async function initPhysics(options?: { enableDebugDraw?: boolean }): Prom
 	physWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
 	physWorld.setGravity(new Ammo.btVector3(0, -9.8, 0));
 
-	if (options?.enableDebugDraw) {
-		setPhysicsDebugDrawer(buildPhysDebugDrawer());
-	}
+	setPhysicsDebugDrawer(buildPhysDebugDrawer());
 }
 
 export function setPhysicsDebugDrawer(debugDrawer: Ammo.btIDebugDraw | null): void {

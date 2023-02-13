@@ -48,10 +48,10 @@ export class ShapeRenderer implements IGLResource {
 		point1 = point1.copy();
 		point2 = point2.copy();
 		this.transform([point1, point2]);
-		this.vertices.push(new ShapeVertex({ pos: point1, rgba }));
-		this.pushIndex(this.vertices.length - 1);
-		this.vertices.push(new ShapeVertex({ pos: point2, rgba }));
-		this.pushIndex(this.vertices.length - 1);
+		this.pushVertex(point1.x, point1.y, point1.z, rgba.x, rgba.y, rgba.z);
+		this.pushIndex(this.nVertices - 1);
+		this.pushVertex(point2.x, point2.y, point2.z, rgba.x, rgba.y, rgba.z);
+		this.pushIndex(this.nVertices - 1);
 	}
 
 	/** draws a list of separate lines (pairs of two vertices) */
@@ -59,8 +59,8 @@ export class ShapeRenderer implements IGLResource {
 		verts = verts.map((v) => v.copy());
 		this.transform(verts);
 		for (let i = 0; i < verts.length; i++) {
-			this.vertices.push(new ShapeVertex({ pos: verts[i], rgba }));
-			this.pushIndex(this.vertices.length - 1);
+			this.pushVertex(verts[i].x, verts[i].y, verts[i].z, rgba.x, rgba.y, rgba.z);
+			this.pushIndex(this.nVertices - 1);
 		}
 	}
 
@@ -69,10 +69,10 @@ export class ShapeRenderer implements IGLResource {
 		verts = verts.map((v) => v.copy());
 		this.transform(verts);
 		for (let i = 0; i < verts.length; i++) {
-			this.vertices.push(new ShapeVertex({ pos: verts[i], rgba }));
-			this.pushIndex(this.vertices.length - 1);
-			if (i > 0 && i < verts.length - 1) {
-				this.pushIndex(this.vertices.length - 1);
+			this.pushVertex(verts[i].x, verts[i].y, verts[i].z, rgba.x, rgba.y, rgba.z);
+			this.pushIndex(this.nVertices - 1);
+			if (i > 0 && i < this.nVertices - 1) {
+				this.pushIndex(this.nVertices - 1);
 			}
 		}
 	}
@@ -82,13 +82,13 @@ export class ShapeRenderer implements IGLResource {
 		verts = verts.map((v) => v.copy());
 		this.transform(verts);
 		for (let i = 0; i < verts.length; i++) {
-			this.vertices.push(new ShapeVertex({ pos: verts[i], rgba }));
-			this.pushIndex(this.vertices.length - 1);
+			this.pushVertex(verts[i].x, verts[i].y, verts[i].z, rgba.x, rgba.y, rgba.z);
+			this.pushIndex(this.nVertices - 1);
 			if (i > 0) {
-				this.pushIndex(this.vertices.length - 1);
+				this.pushIndex(this.nVertices - 1);
 			}
 		}
-		this.pushIndex(this.vertices.length - verts.length);
+		this.pushIndex(this.nVertices - verts.length);
 	}
 
 	queueAABB(aabb: AABB, rgba: Vector): void {
@@ -159,8 +159,8 @@ export class ShapeRenderer implements IGLResource {
 		gl.disable(gl.BLEND);
 		this.VAO.unbind();
 
-		// purge cached data:
-		this.vertices.splice(0);
+		// reset buffers
+		this.nVertices = 0;
 		this.nIndices = 0;
 	}
 
@@ -178,6 +178,7 @@ export class ShapeRenderer implements IGLResource {
 	// line buffers
 	vertices: ShapeVertex[] = [];
 	indices = new Uint16Array(1000);
+	nVertices = 0;
 	nIndices = 0;
 	transform_ = Matrix.identity();
 	transformActive = false;
@@ -221,6 +222,26 @@ export class ShapeRenderer implements IGLResource {
 		if (!this.shapeShaderProgram) {
 			throw new Error("Failed to load mesh shader program");
 		}
+	}
+
+	private pushVertex(x: number, y: number, z: number, r: number, g: number, b: number, a: number = 1): void {
+		if (this.nVertices === this.vertices.length) {
+			this.vertices.push(
+				new ShapeVertex({
+					pos: new Vector(x, y, z),
+					rgba: new Vector(r, g, b, a),
+				}),
+			);
+		} else {
+			this.vertices[this.nVertices].pos.x = x;
+			this.vertices[this.nVertices].pos.y = y;
+			this.vertices[this.nVertices].pos.z = z;
+			this.vertices[this.nVertices].rgba.x = r;
+			this.vertices[this.nVertices].rgba.y = g;
+			this.vertices[this.nVertices].rgba.z = b;
+			this.vertices[this.nVertices].rgba.w = a;
+		}
+		this.nVertices++;
 	}
 
 	private pushIndex(i: number): void {
@@ -267,10 +288,6 @@ class ShapeVertex extends AbstractVertex {
 	constructor(data: Partial<ShapeVertex>) {
 		super();
 		Object.assign(this, data);
-		if (this.rgba.w === 0) {
-			// if alpha was not provided, assume full opaque. To achieve full transparent, use 0.001 or something
-			this.rgba.w = 1;
-		}
 	}
 
 	override getStride(): number {

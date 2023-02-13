@@ -2,7 +2,6 @@ import Ammo from "ammojs-typed";
 import { logprefix } from "../joglfw/log";
 import { Vector } from "../joglfw/math/vector";
 import { ShapeRenderer } from "../joglfw/render/shape-renderer";
-import { bullet2Vec } from "./functions";
 
 logprefix("PhysDebugDraw");
 

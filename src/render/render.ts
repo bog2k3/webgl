@@ -136,9 +136,6 @@ export function render(renderData: RenderData, world: World): void {
 		// no water, just render everything in one pass:
 		setupRenderPass(renderData, RenderPass.Standard);
 		renderData.viewport.renderList([world], renderData.renderCtx);
-		if (renderData.config.renderPhysicsDebug) {
-			physWorld.debugDrawWorld();
-		}
 		resetRenderPass(renderData, RenderPass.Standard);
 	}
 

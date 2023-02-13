@@ -27,7 +27,7 @@ export function rayIntersectTri(start: Vector, dir: Vector, p1: Vector, p2: Vect
 	const p1p3: Vector = p3.sub(p1);
 	const p1p2: Vector = p2.sub(p1);
 	const triNorm: Vector = p1p2.cross(p1p3).normalize(); // triangle normal
-	const d: number = triNorm.dot(p1); // d component of plane equation (triNorm has a,b,c)
+	const d: number = -triNorm.dot(p1); // d component of plane equation (triNorm has a,b,c)
 
 	const I: Vector | null = rayIntersectPlane(start, dir, new Plane(triNorm.x, triNorm.y, triNorm.z, d));
 	if (!I) {

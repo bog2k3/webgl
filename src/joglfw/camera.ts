@@ -28,14 +28,14 @@ export class Camera {
 		return this.matViewProj_;
 	}
 
-	// returns the camera position in world space
+	/** Returns a copy of the camera position vector, in world space */
 	position(): Vector {
-		return this.position_;
+		return this.position_.copy();
 	}
 
-	// returns the camera look direction in world space
+	/** Returns a copy of the camera look direction vector, in world space */
 	direction(): Vector {
-		return this.direction_;
+		return this.direction_.copy();
 	}
 
 	// returns the local X axis (right) vector of the camera, expressed in world space

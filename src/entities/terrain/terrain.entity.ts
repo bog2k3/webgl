@@ -28,6 +28,7 @@ import { AABB } from "../../joglfw/math/aabb";
 import { rayIntersectTri } from "../../joglfw/math/intersect";
 import { PhysBodyProxy, PhysBodyConfig } from "../../physics/phys-body-proxy";
 import Ammo from "ammojs-typed";
+import { ShapeRenderer } from "../../joglfw/render/shape-renderer";
 
 const console = logprefix("Terrain");
 
@@ -201,7 +202,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			const x = seaBedRadius * Math.cos(i * skirtVertSector);
 			const z = seaBedRadius * Math.sin(i * skirtVertSector);
 			this.vertices[this.rows * this.cols + i] = new TerrainVertex({
-				pos: new Vector(x, this.config.minElevation - 20, z),
+				pos: new Vector(x, this.config.seaFloorElevation, z),
 				normal: new Vector(0.0, 1.0, 0.0),
 				color: new Vector(1.0, 1.0, 1.0),
 				uv1: new Vector(0.0, 0.0),
@@ -279,7 +280,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			this.physicsBodyMeta.destroy();
 			this.physicsBodyMeta = null;
 		}
-		this.heightFieldValues = null;
 		this.bspTree = null;
 	}
 
@@ -360,6 +360,15 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		} else if (rctx.renderPass === RenderPass.WaterSurface) {
 			if (this.water) this.water.render(context);
 		}
+
+		// DEBUG ======================
+		const camPos: Vector = context.viewport.camera().position();
+		camPos.y = this.getHeightValue(camPos);
+		const color = new Vector(0, 1, 0);
+		ShapeRenderer.get().queueLine(camPos.add(new Vector(-0.5, 0, 0)), camPos.add(new Vector(+0.5, 0, 0)), color);
+		ShapeRenderer.get().queueLine(camPos.add(new Vector(0, 0, -0.5)), camPos.add(new Vector(0, 0, +0.5)), color);
+		ShapeRenderer.get().queueLine(camPos.add(new Vector(0, -0.5, 0)), camPos.add(new Vector(0, +0.5, 0)), color);
+		// DEBUG ======================
 	}
 
 	update(dt: number): void {
@@ -378,6 +387,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			const p3: Vector = this.vertices[this.triangles[triIndex].iV3].pos;
 			const intersectionPoint: Vector | null = rayIntersectTri(rayStart, rayDir, p1, p2, p3);
 			if (intersectionPoint) {
+				if (Math.abs(intersectionPoint.y) > 30) {
+					rayIntersectTri(rayStart, rayDir, p1, p2, p3);
+				}
 				return intersectionPoint.y;
 			}
 		}
@@ -386,9 +398,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 	getConfig(): TerrainConfig {
 		return this.config;
-	}
-	getHeightField(): number[] {
-		return this.heightFieldValues;
 	}
 	getGridSize(): Vector {
 		return new Vector(this.cols, this.rows);
@@ -423,7 +432,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	private bspTree: BSPTree<number> = null;
 
 	private physicsBodyMeta: PhysBodyProxy;
-	heightFieldValues: number[] = null;
 
 	private computeDisplacements(seed: number): void {
 		const hparam = new HeightmapParams();
@@ -643,23 +651,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	}
 
 	private updatePhysics(): void {
-		// create array of height values:
-		if (this.heightFieldValues) {
-			this.heightFieldValues = null;
-		}
-		const hfRows: number = Math.ceil(this.config.length);
-		const hfCols: number = Math.ceil(this.config.width);
-		this.heightFieldValues = new Array(hfRows * hfCols);
-		const bottomLeft = new Vector(-this.config.width * 0.5, 0, -this.config.length * 0.5);
-		const dx: number = this.config.width / (hfCols - 1);
-		const dz: number = this.config.length / (hfRows - 1);
-		const heightOffset = 0.1; // offset physics geometry slightly higher
-		for (let i = 0; i < hfRows; i++) {
-			for (let j = 0; j < hfCols; j++) {
-				this.heightFieldValues[i * hfCols + j] =
-					this.getHeightValue(bottomLeft.add(new Vector(j * dx, 0, i * dz))) + heightOffset;
-			}
-		}
+		const heightFieldPtr: number = this.buildAmmoHeightField();
 		// create ground body
 		if (this.physicsBodyMeta) {
 			this.physicsBodyMeta.destroy();
@@ -671,9 +663,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		bodyCfg.mass = 0;
 		bodyCfg.friction = 0.5;
 		bodyCfg.shape = new Ammo.btHeightfieldTerrainShape(
-			hfCols,
-			hfRows,
-			this.heightFieldValues,
+			this.rows,
+			this.cols,
+			heightFieldPtr, // TODO this heightfield is not copied and can be modified dynamically
 			1,
 			this.config.minElevation,
 			this.config.maxElevation,
@@ -681,7 +673,27 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			"PHY_FLOAT",
 			false,
 		);
+		bodyCfg.shape.setLocalScaling(
+			new Ammo.btVector3(this.config.width / (this.cols - 1), 1, this.config.length / (this.rows - 1)),
+		);
 		this.physicsBodyMeta.createBody(bodyCfg);
+	}
+
+	private buildAmmoHeightField(): number {
+		const heightFieldPtr: number = Ammo._malloc(4 * this.rows * this.cols);
+		const bottomLeft = new Vector(-this.config.width * 0.5, 0, -this.config.length * 0.5);
+		const dx: number = this.config.width / (this.cols - 1);
+		const dz: number = this.config.length / (this.rows - 1);
+		const heightOffset = 0.1; // offset physics geometry slightly higher
+		let offsPtr = 0;
+		for (let i = 0; i < this.rows; i++) {
+			for (let j = 0; j < this.cols; j++) {
+				Ammo.HEAPF32[(heightFieldPtr + offsPtr) >> 2] =
+					this.getHeightValue(bottomLeft.add(new Vector(j * dx, 0, i * dz))) + heightOffset;
+				offsPtr += 4; // 4 bytes per float
+			}
+		}
+		return heightFieldPtr;
 	}
 
 	private setupVAO(): void {
