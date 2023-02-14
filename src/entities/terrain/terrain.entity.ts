@@ -505,8 +505,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// 2: rescale the values to fill the entire height range
 		const scale = (this.config.maxElevation - this.config.minElevation) / (vmax - vmin);
 		for (let i = 0; i < this.rows * this.cols; i++) {
-			const row = Math.floor(i / this.cols);
-			const col = i % this.cols;
 			this.vertices[i].pos.y = this.config.minElevation + (this.vertices[i].pos.y - vmin) * scale;
 		}
 	}
