@@ -24,11 +24,11 @@ export class Game {
 		console.log("Initializing");
 		const tc = new TerrainConfig();
 		tc.seed = rand();
-		tc.vertexDensity = 0.1;
+		tc.vertexDensity = 0.5;
 		tc.length = 100;
 		tc.width = 100;
 		tc.minElevation = -10;
-		tc.maxElevation = 10;
+		tc.maxElevation = 20;
 		tc.seaFloorElevation = -10;
 		tc.roughness = 0.8;
 		this.terrain_ = new Terrain({ previewMode: false });

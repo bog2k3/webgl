@@ -98,12 +98,12 @@ export class BSPNode<ObjectType> {
 
 			// and do the split now:
 			this.negative = new BSPNode<ObjectType>(this.aabbGenerator, this, aabbNegative, objectsNeg);
-			this.negative.depth = this.depth;
+			this.negative.depth = this.depth.copy();
 			this.negative.depth[splitAxis]++;
 			this.negative.split(config);
 
 			this.positive = new BSPNode<ObjectType>(this.aabbGenerator, this, aabbPositive, objectsPos);
-			this.positive.depth = this.depth;
+			this.positive.depth = this.depth.copy();
 			this.positive.depth[splitAxis]++;
 			this.positive.split(config);
 

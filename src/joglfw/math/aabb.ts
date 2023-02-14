@@ -101,8 +101,12 @@ export class AABB {
 		const axes = ["x", "y", "z"];
 		for (let p of ps) {
 			for (let i = 0; i < 3; i++) {
-				if (p[axes[i]] < this.vMin[axes[i]]) this.vMin[axes[i]] = p[axes[i]];
-				else if (p[axes[i]] > this.vMax[axes[i]]) this.vMax[axes[i]] = p[axes[i]];
+				if (p[axes[i]] < this.vMin[axes[i]]) {
+					this.vMin[axes[i]] = p[axes[i]];
+				}
+				if (p[axes[i]] > this.vMax[axes[i]]) {
+					this.vMax[axes[i]] = p[axes[i]];
+				}
 			}
 		}
 	}

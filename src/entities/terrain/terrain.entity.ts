@@ -14,7 +14,7 @@ import { Progress } from "../../progress";
 import { checkGLError, gl } from "../../joglfw/glcontext";
 import { ShaderTerrain } from "../../render/programs/shader-terrain";
 import { assert } from "../../joglfw/utils/assert";
-import { rand, randSeed } from "../../joglfw/utils/random";
+import { rand, randSeed, srand } from "../../joglfw/utils/random";
 import { Vector } from "../../joglfw/math/vector";
 import { RenderContext } from "../../joglfw/render/render-context";
 import { AbstractVertex } from "../../joglfw/render/abstract-vertex";
@@ -173,8 +173,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		for (let i = 0; i < this.rows; i++) {
 			for (let j = 0; j < this.cols; j++) {
 				const jitter = new Vector(
-					rand() * config.relativeRandomJitter * dx,
-					rand() * config.relativeRandomJitter * dz,
+					srand() * config.relativeRandomJitter * dx,
+					srand() * config.relativeRandomJitter * dz,
 				);
 				this.vertices[i * this.cols + j] = new TerrainVertex({
 					pos: bottomLeft.add(new Vector(dx * j + jitter.x, config.minElevation, dz * i + jitter.y)),
@@ -266,8 +266,10 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// Generate the render buffers and physics data structures
 	finishGenerate(): void {
 		console.log("Updating render and physics objects . . .");
+		if (!this.previewMode) {
+			this.updatePhysics();
+		}
 		this.updateRenderBuffers();
-		if (!this.previewMode) this.updatePhysics();
 		console.log("Complete.");
 	}
 
@@ -287,7 +289,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		if (!this.renderData.shaderProgram_.isValid()) {
 			return;
 		}
-
 		const rctx = CustomRenderContext.fromCtx(context);
 
 		if (
@@ -360,15 +361,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		} else if (rctx.renderPass === RenderPass.WaterSurface) {
 			if (this.water) this.water.render(context);
 		}
-
-		// DEBUG ======================
-		const camPos: Vector = context.viewport.camera().position();
-		camPos.y = this.getHeightValue(camPos);
-		const color = new Vector(0, 1, 0);
-		ShapeRenderer.get().queueLine(camPos.add(new Vector(-0.5, 0, 0)), camPos.add(new Vector(+0.5, 0, 0)), color);
-		ShapeRenderer.get().queueLine(camPos.add(new Vector(0, 0, -0.5)), camPos.add(new Vector(0, 0, +0.5)), color);
-		ShapeRenderer.get().queueLine(camPos.add(new Vector(0, -0.5, 0)), camPos.add(new Vector(0, +0.5, 0)), color);
-		// DEBUG ======================
 	}
 
 	update(dt: number): void {
@@ -387,9 +379,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			const p3: Vector = this.vertices[this.triangles[triIndex].iV3].pos;
 			const intersectionPoint: Vector | null = rayIntersectTri(rayStart, rayDir, p1, p2, p3);
 			if (intersectionPoint) {
-				if (Math.abs(intersectionPoint.y) > 30) {
-					rayIntersectTri(rayStart, rayDir, p1, p2, p3);
-				}
 				return intersectionPoint.y;
 			}
 		}
@@ -419,8 +408,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	// ------------- PRIVATE AREA --------------- //
 
 	private previewMode: boolean;
-	private rows = 0;
-	private cols = 0;
+	private rows = 0; // number of vertex rows (on Z axis)
+	private cols = 0; // number of vertex cols (on X axis)
 	private gridSpacing: Vector;
 	private vertices: TerrainVertex[] = null;
 	private nVertices = 0;
@@ -665,7 +654,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		bodyCfg.shape = new Ammo.btHeightfieldTerrainShape(
 			this.rows,
 			this.cols,
-			heightFieldPtr, // TODO this heightfield is not copied and can be modified dynamically
+			heightFieldPtr, // TODO this heightfield is not copied and can be modified dynamically -> deformable terrain? :-)
 			1,
 			this.config.minElevation,
 			this.config.maxElevation,
