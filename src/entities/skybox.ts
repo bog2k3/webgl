@@ -68,24 +68,7 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	}
 
-	// ------------------------ PRIVATE AREA ---------------------------- //
-
-	private renderData = new SkyBoxRenderData();
-
-	private setupVAO(): void {
-		this.renderData.screenQuad.VAO.bind();
-		const mapVertexSources: Record<string, VertexAttribSource> = {
-			pos: {
-				VBO: this.renderData.screenQuad.VBO,
-				stride: MeshVertex.getStride(),
-				offset: MeshVertex.getOffset("position"),
-			},
-		};
-		this.renderData.shaderProgram.setupVertexStreams(this.renderData.screenQuad.VAO, mapVertexSources);
-		this.renderData.screenQuad.VAO.unbind();
-	}
-
-	private async loadTextures(baseUrl: string): Promise<void> {
+	async load(baseUrl: string): Promise<void> {
 		this.clear();
 		const urls: string[] = [
 			baseUrl + "/right.png", //X+
@@ -103,7 +86,24 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 		//glTexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		//glTexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		gl.bindTexture(gl.TEXTURE_CUBE_MAP, 0);
+		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+	}
+
+	// ------------------------ PRIVATE AREA ---------------------------- //
+
+	private renderData = new SkyBoxRenderData();
+
+	private setupVAO(): void {
+		this.renderData.screenQuad.VAO.bind();
+		const mapVertexSources: Record<string, VertexAttribSource> = {
+			pos: {
+				VBO: this.renderData.screenQuad.VBO,
+				stride: MeshVertex.getStride(),
+				offset: MeshVertex.getOffset("position"),
+			},
+		};
+		this.renderData.shaderProgram.setupVertexStreams(this.renderData.screenQuad.VAO, mapVertexSources);
+		this.renderData.screenQuad.VAO.unbind();
 	}
 
 	private clear(): void {

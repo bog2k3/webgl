@@ -2,7 +2,6 @@ import Ammo from "ammojs-typed";
 import { FreeCamera } from "./entities/free-camera";
 import { RigidObject } from "./entities/rigid-object.entity";
 import { SkyBox } from "./entities/skybox";
-import { StaticMesh } from "./entities/static-mesh.entity";
 import { TerrainConfig } from "./entities/terrain/config";
 import { Terrain } from "./entities/terrain/terrain.entity";
 import { logprefix } from "./joglfw/log";
@@ -35,7 +34,7 @@ export class Game {
 		this.terrain_.generate(tc);
 		this.terrain_.finishGenerate();
 
-		// World.getInstance().addEntity(this.terrain_);
+		World.getInstance().addEntity(this.terrain_);
 
 		this.freeCam_ = new FreeCamera(new Vector(10, tc.maxElevation, 10), new Vector(-1, -0.2, -1));
 		World.getInstance().addEntity(this.freeCam_);
@@ -49,6 +48,7 @@ export class Game {
 		// World::getInstance().takeOwnershipOf(player_);
 
 		this.skyBox_ = new SkyBox();
+		this.skyBox_.load("data/textures/sky/1");
 		World.getInstance().addEntity(this.skyBox_);
 
 		// DEBUG---
@@ -56,7 +56,7 @@ export class Game {
 		const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5));
 		const boxMass = 50;
 		const box = new RigidObject(m, new Vector(0, tc.maxElevation + 5, 0), boxShape, boxMass);
-		// World.getInstance().addEntity(box);
+		World.getInstance().addEntity(box);
 		//---DEBUG
 
 		console.log("Ready");
@@ -64,16 +64,16 @@ export class Game {
 
 	start(): void {
 		console.log("Starting game...");
-		assert(!this.started_, "Game already started");
-		this.started_ = true;
+		assert(!this.started, "Game already started");
+		this.started = true;
 		this.onStart.trigger();
 		console.log("Game started.");
 	}
 
 	stop(): void {
 		console.log("Stopping game...");
-		assert(this.started_, "Game is not started");
-		this.started_ = false;
+		assert(this.started, "Game is not started");
+		this.started = false;
 		this.onStop.trigger();
 		console.log("Game stopped.");
 	}
@@ -99,7 +99,7 @@ export class Game {
 	}
 
 	// -------------------- PRIVATE AREA ----------------------------- //
-	private started_ = false;
+	private started = false;
 	terrain_: Terrain;
 	skyBox_: SkyBox;
 	// player_: Player;
