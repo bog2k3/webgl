@@ -60,43 +60,48 @@ export class Mesh implements IGLResource {
 	static RenderModes = MeshRenderModes;
 	static ENABLE_COLOR_DEBUG = false;
 
+	// the following are used only by Mesh renderers
+	vertexAttribsProgramBinding_: WebGLProgram = null;
+	VAO: VertexArrayObject;
+	VBO: WebGLBuffer;
+	IBO: WebGLBuffer;
+	indexCount = 0;
+	mode: MeshRenderModes = MeshRenderModes.Triangles;
+
 	constructor() {
-		this.VAO_ = new VertexArrayObject();
-		this.VBO_ = gl.createBuffer();
-		this.IBO_ = gl.createBuffer();
+		this.VAO = new VertexArrayObject();
+		this.VBO = gl.createBuffer();
+		this.IBO = gl.createBuffer();
 	}
 
 	release(): void {
-		gl.deleteBuffer(this.VBO_);
-		gl.deleteBuffer(this.IBO_);
-		this.VBO_ = this.IBO_ = null;
-		this.indexCount_ = 0;
-		this.VAO_.release();
-		this.VAO_ = null;
+		gl.deleteBuffer(this.VBO);
+		gl.deleteBuffer(this.IBO);
+		this.VBO = this.IBO = null;
+		this.indexCount = 0;
+		this.VAO.release();
+		this.VAO = null;
 	}
 
 	getRenderMode(): MeshRenderModes {
-		return this.mode_;
+		return this.mode;
 	}
 
 	getElementsCount(): number {
-		return this.indexCount_;
+		return this.indexCount;
 	}
 
 	getVAO(): VertexArrayObject {
-		return this.VAO_;
+		return this.VAO;
 	}
 
 	getVBO(): WebGLBuffer {
-		return this.VBO_;
+		return this.VBO;
 	}
 
 	getIBO(): WebGLBuffer {
-		return this.IBO_;
+		return this.IBO;
 	}
-
-	// the following are used only by Mesh renderers
-	vertexAttribsProgramBinding_: WebGLProgram = null;
 
 	static makeScreenQuad(): Mesh {
 		const vertices: MeshVertex[] = [
@@ -353,24 +358,19 @@ export class Mesh implements IGLResource {
 
 	// ----------------------- PRIVATE AREA ---------------------- //
 
-	private VAO_: VertexArrayObject;
-	private VBO_: WebGLBuffer;
-	private IBO_: WebGLBuffer;
-	private indexCount_ = 0;
-	private mode_: MeshRenderModes = MeshRenderModes.Triangles;
-
 	private static makeMesh(vertices: MeshVertex[], indices: Uint16Array): Mesh {
 		const m = new Mesh();
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, m.VBO_);
+		gl.bindBuffer(gl.ARRAY_BUFFER, m.VBO);
 		gl.bufferData(gl.ARRAY_BUFFER, AbstractVertex.arrayToBuffer(vertices), gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-		m.indexCount_ = indices.length;
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.IBO_);
+
+		m.indexCount = indices.length;
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.IBO);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-		m.mode_ = MeshRenderModes.Triangles;
+		m.mode = MeshRenderModes.Triangles;
 		return m;
 	}
 }

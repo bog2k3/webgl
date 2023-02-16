@@ -51,12 +51,8 @@ export class MeshRenderer implements IGLResource {
 			vao.vertexAttribPointer(this.indexNorm, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
 			vao.vertexAttribPointer(this.indexUV1, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
 			vao.vertexAttribPointer(this.indexColor, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
-			// gl.enableVertexAttribArray(this.indexPos_);
-			// gl.enableVertexAttribArray(this.indexNorm_);
-			// gl.enableVertexAttribArray(this.indexUV1_);
-			// gl.enableVertexAttribArray(this.indexColor_); // TODO cleanup
 			mesh.vertexAttribsProgramBinding_ = this.meshShaderProgram;
-			checkGLError("attrib arrays setup");
+			checkGLError("mesh renderer attrib arrays setup");
 		}
 
 		// decide what to draw:

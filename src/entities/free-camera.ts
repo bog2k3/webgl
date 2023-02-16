@@ -1,3 +1,4 @@
+import { AABB } from "../joglfw/math/aabb";
 import { matrixFromPositionDirection, clamp } from "../joglfw/math/functions";
 import { Matrix } from "../joglfw/math/matrix";
 import { matrixToQuat, quatRotation } from "../joglfw/math/quat-functions";
@@ -18,6 +19,10 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 
 	override getType(): string {
 		return EntityTypes.FreeCamera;
+	}
+
+	override getAABB(): AABB {
+		return AABB.empty().expandInPlace(this.transform.position());
 	}
 
 	update(dt: number) {

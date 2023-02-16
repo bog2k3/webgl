@@ -1,4 +1,5 @@
 import Ammo from "ammojs-typed";
+import { AABB } from "../joglfw/math/aabb";
 import { Quat } from "../joglfw/math/quat";
 import { Vector } from "../joglfw/math/vector";
 import { Mesh } from "../joglfw/mesh";
@@ -33,6 +34,10 @@ export class RigidObject extends Entity implements IRenderable, IUpdatable {
 
 	override getType(): string {
 		return EntityTypes.RigidObject;
+	}
+
+	override getAABB(): AABB {
+		throw new Error("not implemented"); // FIXME
 	}
 
 	render(context: RenderContext): void {

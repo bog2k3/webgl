@@ -97,7 +97,7 @@ export class AABB {
 	}
 
 	/** expands this AABB to include the new point(s) */
-	expandInPlace(...ps: Vector[]): void {
+	expandInPlace(...ps: Vector[]): this {
 		const axes = ["x", "y", "z"];
 		for (let p of ps) {
 			for (let i = 0; i < 3; i++) {
@@ -109,6 +109,7 @@ export class AABB {
 				}
 			}
 		}
+		return this;
 	}
 
 	/** creates a new AABB that is expanded to include the new point(s) */
@@ -123,8 +124,8 @@ export class AABB {
 		return this.expand(other.vMin, other.vMax);
 	}
 
-	unionInPlace(other: AABB): void {
-		this.expandInPlace(other.vMin, other.vMax);
+	unionInPlace(other: AABB): this {
+		return this.expandInPlace(other.vMin, other.vMax);
 	}
 
 	/** creates a new AABB from the intersection of this and another AABB (will contain only points that are contained in both) */
@@ -155,9 +156,10 @@ export class AABB {
 	}
 
 	/** offsets this AABB by a given amount */
-	offsetInPlace(offs: Vector): void {
+	offsetInPlace(offs: Vector): this {
 		this.vMin.addInPlace(offs);
 		this.vMax.addInPlace(offs);
+		return this;
 	}
 
 	/** offsets this AABB by a given amount */

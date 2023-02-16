@@ -1,3 +1,4 @@
+import { AABB } from "../joglfw/math/aabb";
 import { Mesh } from "../joglfw/mesh";
 import { MeshRenderer } from "../joglfw/render/mesh-renderer";
 import { RenderContext } from "../joglfw/render/render-context";
@@ -12,6 +13,10 @@ export class StaticMesh extends Entity implements IRenderable {
 
 	override getType(): string {
 		return EntityTypes.StaticMesh;
+	}
+
+	override getAABB(): AABB {
+		throw new Error("not implemented"); // FIXME
 	}
 
 	render(context: RenderContext): void {

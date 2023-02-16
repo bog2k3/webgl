@@ -26,7 +26,7 @@ export class Water implements IRenderable, IGLResource {
 		switch (step) {
 			case 0:
 				WaterRenderData.textureNormal_ = (
-					await TextureLoader.loadFromPNG("data/textures/water/normal.png", false)
+					await TextureLoader.load("data/textures/water/normal.png", false)
 				).texture;
 				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureNormal_);
 				gl.generateMipmap(gl.TEXTURE_2D);
@@ -34,9 +34,7 @@ export class Water implements IRenderable, IGLResource {
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 				break;
 			case 1:
-				WaterRenderData.textureFoam_ = (
-					await TextureLoader.loadFromPNG("data/textures/water/foam.png", true)
-				).texture;
+				WaterRenderData.textureFoam_ = (await TextureLoader.load("data/textures/water/foam.png", true)).texture;
 				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam_);
 				gl.generateMipmap(gl.TEXTURE_2D);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);

@@ -64,7 +64,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		];
 		await Promise.all(
 			textureInfo.map((tInfo, index) =>
-				TextureLoader.loadFromPNG(tInfo.url, true).then((result: TextureInfo) => {
+				TextureLoader.load(tInfo.url, true).then((result: TextureInfo) => {
 					TerrainRenderData.textures_[index] = new TerrainTextureInfo({
 						texture: result.texture,
 						wWidth: tInfo.wWidth,
@@ -112,6 +112,10 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		return EntityTypes.Terrain;
 	}
 
+	override getAABB(): AABB {
+		return this.aabb;
+	}
+
 	override destroy(): void {
 		this.clear();
 		this.release();
@@ -148,6 +152,13 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.validateSettings(config);
 		this.clear();
 		this.config = config;
+
+		this.aabb.vMin.x = -config.width * 0.5;
+		this.aabb.vMin.y = config.seaFloorElevation;
+		this.aabb.vMin.z = -config.length * 0.5;
+		this.aabb.vMax.x = config.width * 0.5;
+		this.aabb.vMax.y = config.maxElevation;
+		this.aabb.vMax.z = config.length * 0.5;
 
 		const nextSeed = rand();
 		randSeed(config.seed);
@@ -419,6 +430,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	private water: Water = null;
 	private triangleAABBGenerator = new TriangleAABBGenerator(this);
 	private bspTree: BSPTree<number> = null;
+	private aabb = AABB.empty();
 
 	private physicsBodyMeta: PhysBodyProxy;
 

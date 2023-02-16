@@ -1,3 +1,4 @@
+import { AABB } from "../math/aabb";
 import { Transform } from "../math/transform";
 import { World } from "./world";
 export abstract class Entity {
@@ -11,6 +12,8 @@ export abstract class Entity {
 	}
 
 	abstract getType(): string;
+
+	abstract getAABB(): AABB;
 
 	getTransform(): Transform {
 		return this.transform;

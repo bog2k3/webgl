@@ -1,4 +1,5 @@
 import { Camera } from "../camera";
+import { AABB } from "../math/aabb";
 import { Transform } from "../math/transform";
 import { Vector } from "../math/vector";
 import { Entity } from "./entity";
@@ -13,6 +14,10 @@ export class CameraController extends Entity implements IUpdatable {
 
 	override getType(): string {
 		return StockEntityTypes.CameraController;
+	}
+
+	override getAABB(): AABB {
+		return AABB.empty();
 	}
 
 	setTargetCamera(target: Camera): void {
