@@ -9,5 +9,9 @@ export class UPackSkybox extends UniformPack {
 		});
 	}
 
+	setSkyboxSampler(val: number): void {
+		this.setUniform(this.iSamplerSky, val);
+	}
+
 	private iSamplerSky = 0;
 }

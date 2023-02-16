@@ -1,9 +1,12 @@
-#version 330 core
+#version 100
 
-in vec3 fUV;
+precision mediump float;
+precision mediump int;
+
+varying vec3 fUV;
 
 uniform samplerCube textureSky;
 
 void main() {
-	gl_FragColor = texture2D(textureSky, fUV);
+	gl_FragColor = textureCube(textureSky, fUV);
 }

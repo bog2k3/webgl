@@ -9,6 +9,7 @@ import { ShapeRenderer } from "./joglfw/render/shape-renderer";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
 import { PlayerInputHandler } from "./player-input-handler";
+import { ShaderSkybox } from "./render/programs/shader-skybox";
 import { ShaderTerrain } from "./render/programs/shader-terrain";
 import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
 import { initRender, render } from "./render/render";
@@ -60,6 +61,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 
 	await ShaderProgramManager.loadProgram(ShaderTerrainPreview);
 	await ShaderProgramManager.loadProgram(ShaderTerrain);
+	await ShaderProgramManager.loadProgram(ShaderSkybox);
 	// await ShaderProgramManager.loadProgram(ShaderWater);
 
 	await loadTextures();

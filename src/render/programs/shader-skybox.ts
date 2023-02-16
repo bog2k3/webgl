@@ -3,7 +3,7 @@ import { ShaderProgram } from "../../joglfw/render/shader-program";
 import { SharedUniformPacks } from "./shared-uniform-packs";
 import { UPackSkybox } from "./uniform-pack-skybox";
 
-export class SkyboxShaderProgram extends ShaderProgram {
+export class ShaderSkybox extends ShaderProgram {
 	constructor() {
 		super();
 		this.useUniformPack(SharedUniformPacks.upCommon);
@@ -16,6 +16,10 @@ export class SkyboxShaderProgram extends ShaderProgram {
 			return; // already loaded
 		}
 		return super.load("data/shaders/skybox.vert", "data/shaders/skybox.frag");
+	}
+
+	uniforms(): UPackSkybox {
+		return this.upackSkybox;
 	}
 
 	private upackSkybox = new UPackSkybox();
