@@ -48,9 +48,13 @@ export class MeshRenderer implements IGLResource {
 			const stride = MeshVertex.getStride();
 			gl.bindBuffer(gl.ARRAY_BUFFER, mesh.VBO);
 			vao.vertexAttribPointer(this.indexPos, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
-			vao.vertexAttribPointer(this.indexNorm, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
-			vao.vertexAttribPointer(this.indexUV1, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
 			vao.vertexAttribPointer(this.indexColor, 4, gl.FLOAT, false, stride, MeshVertex.getOffset("color"));
+			if (false) {
+				vao.vertexAttribPointer(this.indexNorm, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
+				vao.vertexAttribPointer(this.indexUV1, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));
+			} else {
+				console.warn(`Re-enable mesh attribs`);
+			}
 			mesh.vertexAttribsProgramBinding_ = this.meshShaderProgram;
 			checkGLError("mesh renderer attrib arrays setup");
 		}

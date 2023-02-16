@@ -8,5 +8,5 @@ varying vec3 fUV;
 uniform samplerCube textureSky;
 
 void main() {
-	gl_FragColor = textureCube(textureSky, fUV);
+	gl_FragColor = vec4(fUV.xy, 0, 1);//textureCube(textureSky, fUV);
 }

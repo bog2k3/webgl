@@ -30,7 +30,6 @@ export class CustomRenderContext extends RenderContext {
 	time = 0;
 
 	meshRenderer: CustomMeshRenderer = null;
-	// physics::DebugDrawer* physDebugDraw = nullptr;
 
 	updateCommonUniforms(): void {
 		if (!SharedUniformPacks.upCommon) {

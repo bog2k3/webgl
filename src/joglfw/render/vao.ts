@@ -48,6 +48,10 @@ export class VertexArrayObject implements IGLResource {
 		stride: number,
 		offset: number,
 	): void {
+		if (index < 0) {
+			debugger;
+			return;
+		}
 		if (!(gl instanceof WebGL2RenderingContext)) {
 			this.vertexSources[index] = <VertexSourceDesc>{
 				VBO: gl.getParameter(gl.ARRAY_BUFFER_BINDING),

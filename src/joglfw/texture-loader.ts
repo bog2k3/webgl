@@ -114,6 +114,7 @@ export class TextureLoader {
 		}
 		if (skippedFaces.length) {
 			const dummyPixels = new Uint8Array([255, 0, 255, 255]); // opaque magenta for missing faces
+			gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
 			for (let i of skippedFaces) {
 				gl.texImage2D(faceIds[i], 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, dummyPixels);
 			}

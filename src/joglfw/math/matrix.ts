@@ -169,4 +169,54 @@ export class Matrix {
 			...this.m, // we pass the column-major values as row-major and the constructor will transpose them
 		);
 	}
+
+	inverse(): Matrix {
+		const A2323 = this.m[2 * 4 + 2] * this.m[3 * 4 + 3] - this.m[2 * 4 + 3] * this.m[3 * 4 + 2];
+		const A1323 = this.m[2 * 4 + 1] * this.m[3 * 4 + 3] - this.m[2 * 4 + 3] * this.m[3 * 4 + 1];
+		const A1223 = this.m[2 * 4 + 1] * this.m[3 * 4 + 2] - this.m[2 * 4 + 2] * this.m[3 * 4 + 1];
+		const A0323 = this.m[2 * 4 + 0] * this.m[3 * 4 + 3] - this.m[2 * 4 + 3] * this.m[3 * 4 + 0];
+		const A0223 = this.m[2 * 4 + 0] * this.m[3 * 4 + 2] - this.m[2 * 4 + 2] * this.m[3 * 4 + 0];
+		const A0123 = this.m[2 * 4 + 0] * this.m[3 * 4 + 1] - this.m[2 * 4 + 1] * this.m[3 * 4 + 0];
+		const A2313 = this.m[1 * 4 + 2] * this.m[3 * 4 + 3] - this.m[1 * 4 + 3] * this.m[3 * 4 + 2];
+		const A1313 = this.m[1 * 4 + 1] * this.m[3 * 4 + 3] - this.m[1 * 4 + 3] * this.m[3 * 4 + 1];
+		const A1213 = this.m[1 * 4 + 1] * this.m[3 * 4 + 2] - this.m[1 * 4 + 2] * this.m[3 * 4 + 1];
+		const A2312 = this.m[1 * 4 + 2] * this.m[2 * 4 + 3] - this.m[1 * 4 + 3] * this.m[2 * 4 + 2];
+		const A1312 = this.m[1 * 4 + 1] * this.m[2 * 4 + 3] - this.m[1 * 4 + 3] * this.m[2 * 4 + 1];
+		const A1212 = this.m[1 * 4 + 1] * this.m[2 * 4 + 2] - this.m[1 * 4 + 2] * this.m[2 * 4 + 1];
+		const A0313 = this.m[1 * 4 + 0] * this.m[3 * 4 + 3] - this.m[1 * 4 + 3] * this.m[3 * 4 + 0];
+		const A0213 = this.m[1 * 4 + 0] * this.m[3 * 4 + 2] - this.m[1 * 4 + 2] * this.m[3 * 4 + 0];
+		const A0312 = this.m[1 * 4 + 0] * this.m[2 * 4 + 3] - this.m[1 * 4 + 3] * this.m[2 * 4 + 0];
+		const A0212 = this.m[1 * 4 + 0] * this.m[2 * 4 + 2] - this.m[1 * 4 + 2] * this.m[2 * 4 + 0];
+		const A0113 = this.m[1 * 4 + 0] * this.m[3 * 4 + 1] - this.m[1 * 4 + 1] * this.m[3 * 4 + 0];
+		const A0112 = this.m[1 * 4 + 0] * this.m[2 * 4 + 1] - this.m[1 * 4 + 1] * this.m[2 * 4 + 0];
+
+		var det =
+			this.m[0 * 4 + 0] * (this.m[1 * 4 + 1] * A2323 - this.m[1 * 4 + 2] * A1323 + this.m[1 * 4 + 3] * A1223) -
+			this.m[0 * 4 + 1] * (this.m[1 * 4 + 0] * A2323 - this.m[1 * 4 + 2] * A0323 + this.m[1 * 4 + 3] * A0223) +
+			this.m[0 * 4 + 2] * (this.m[1 * 4 + 0] * A1323 - this.m[1 * 4 + 1] * A0323 + this.m[1 * 4 + 3] * A0123) -
+			this.m[0 * 4 + 3] * (this.m[1 * 4 + 0] * A1223 - this.m[1 * 4 + 1] * A0223 + this.m[1 * 4 + 2] * A0123);
+		if (det === 0) {
+			return Matrix.identity();
+		}
+		det = 1 / det;
+
+		return new Matrix(
+			det * (this.m[1 * 4 + 1] * A2323 - this.m[1 * 4 + 2] * A1323 + this.m[1 * 4 + 3] * A1223),
+			det * -(this.m[0 * 4 + 1] * A2323 - this.m[0 * 4 + 2] * A1323 + this.m[0 * 4 + 3] * A1223),
+			det * (this.m[0 * 4 + 1] * A2313 - this.m[0 * 4 + 2] * A1313 + this.m[0 * 4 + 3] * A1213),
+			det * -(this.m[0 * 4 + 1] * A2312 - this.m[0 * 4 + 2] * A1312 + this.m[0 * 4 + 3] * A1212),
+			det * -(this.m[1 * 4 + 0] * A2323 - this.m[1 * 4 + 2] * A0323 + this.m[1 * 4 + 3] * A0223),
+			det * (this.m[0 * 4 + 0] * A2323 - this.m[0 * 4 + 2] * A0323 + this.m[0 * 4 + 3] * A0223),
+			det * -(this.m[0 * 4 + 0] * A2313 - this.m[0 * 4 + 2] * A0313 + this.m[0 * 4 + 3] * A0213),
+			det * (this.m[0 * 4 + 0] * A2312 - this.m[0 * 4 + 2] * A0312 + this.m[0 * 4 + 3] * A0212),
+			det * (this.m[1 * 4 + 0] * A1323 - this.m[1 * 4 + 1] * A0323 + this.m[1 * 4 + 3] * A0123),
+			det * -(this.m[0 * 4 + 0] * A1323 - this.m[0 * 4 + 1] * A0323 + this.m[0 * 4 + 3] * A0123),
+			det * (this.m[0 * 4 + 0] * A1313 - this.m[0 * 4 + 1] * A0313 + this.m[0 * 4 + 3] * A0113),
+			det * -(this.m[0 * 4 + 0] * A1312 - this.m[0 * 4 + 1] * A0312 + this.m[0 * 4 + 3] * A0112),
+			det * -(this.m[1 * 4 + 0] * A1223 - this.m[1 * 4 + 1] * A0223 + this.m[1 * 4 + 2] * A0123),
+			det * (this.m[0 * 4 + 0] * A1223 - this.m[0 * 4 + 1] * A0223 + this.m[0 * 4 + 2] * A0123),
+			det * -(this.m[0 * 4 + 0] * A1213 - this.m[0 * 4 + 1] * A0213 + this.m[0 * 4 + 2] * A0113),
+			det * (this.m[0 * 4 + 0] * A1212 - this.m[0 * 4 + 1] * A0212 + this.m[0 * 4 + 2] * A0112),
+		).transpose();
+	}
 }

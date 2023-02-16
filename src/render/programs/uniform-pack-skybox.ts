@@ -1,3 +1,4 @@
+import { Matrix } from "../../joglfw/math/matrix";
 import { UniformDescriptor, UniformPack, UniformType } from "../../joglfw/render/uniform-pack";
 
 export class UPackSkybox extends UniformPack {
@@ -7,11 +8,20 @@ export class UPackSkybox extends UniformPack {
 			name: "textureSky",
 			type: UniformType.INT,
 		});
+		this.iMatVPInverse = this.addUniform(<UniformDescriptor>{
+			name: "matVP_inverse",
+			type: UniformType.MAT4,
+		});
 	}
 
 	setSkyboxSampler(val: number): void {
 		this.setUniform(this.iSamplerSky, val);
 	}
 
-	private iSamplerSky = 0;
+	setMatVPInverse(m: Matrix): void {
+		this.setUniform(this.iMatVPInverse, m);
+	}
+
+	private iSamplerSky: number;
+	private iMatVPInverse: number;
 }

@@ -12,5 +12,9 @@ export function logprefix(prefix: string) {
 			const message: string = args.shift();
 			console.error(`[${prefix}] ${message}`, ...args);
 		},
+		debug(...args): void {
+			const message: string = args.shift();
+			console.debug(`[${prefix}] ${message}`, ...args);
+		},
 	};
 }

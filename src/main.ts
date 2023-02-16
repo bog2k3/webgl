@@ -36,7 +36,7 @@ async function main(): Promise<void> {
 	initWorld();
 
 	game = new Game();
-	game.initialize();
+	await game.initialize();
 	game.onStart.add(onGameStarted);
 	game.onStop.add(onGameEnded);
 	game.start();

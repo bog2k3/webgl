@@ -19,7 +19,7 @@ export class Game {
 	onStart = new Event<() => void>();
 	onStop = new Event<() => void>();
 
-	initialize(): void {
+	async initialize(): Promise<void> {
 		console.log("Initializing");
 		const tc = new TerrainConfig();
 		tc.seed = rand();
@@ -48,7 +48,7 @@ export class Game {
 		// World::getInstance().takeOwnershipOf(player_);
 
 		this.skyBox_ = new SkyBox();
-		this.skyBox_.load("data/textures/sky/1");
+		await this.skyBox_.load("data/textures/sky/1");
 		World.getInstance().addEntity(this.skyBox_);
 
 		// DEBUG---

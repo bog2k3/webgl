@@ -2,11 +2,7 @@ import { checkGLError, gl } from "../joglfw/glcontext";
 import { IGLResource } from "../joglfw/glresource";
 import { logprefix } from "../joglfw/log";
 import { AABB } from "../joglfw/math/aabb";
-import { Matrix } from "../joglfw/math/matrix";
-import { Vector } from "../joglfw/math/vector";
 import { Mesh, MeshVertex } from "../joglfw/mesh";
-import { AbstractVertex } from "../joglfw/render/abstract-vertex";
-import { MeshRenderer } from "../joglfw/render/mesh-renderer";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
 import { VertexAttribSource } from "../joglfw/render/shader-program";
@@ -49,23 +45,23 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 			console.error("render(): Shader is not loaded");
 			return;
 		}
-		this.renderData.shaderProgram.uniforms().setSkyboxSampler(0);
-		this.renderData.shaderProgram.begin();
-		this.renderData.screenQuad.VAO.bind();
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData.screenQuad.IBO);
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData.texture);
-
 		const oldDepthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
 		gl.depthMask(false); // disable depth buffer writing
 
+		this.renderData.shaderProgram.uniforms().setSkyboxSampler(0);
+		this.renderData.shaderProgram.uniforms().setMatVPInverse(context.viewport.camera().matViewProj().inverse());
+		this.renderData.shaderProgram.begin();
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData.texture);
+
+		this.renderData.screenQuad.VAO.bind();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData.screenQuad.IBO);
 		gl.drawElements(gl.TRIANGLES, this.renderData.screenQuad.getElementsCount(), gl.UNSIGNED_SHORT, 0);
-
-		gl.depthMask(oldDepthMask); // enable depth buffer writing
-
-		this.renderData.shaderProgram.end();
 		this.renderData.screenQuad.VAO.unbind();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+		this.renderData.shaderProgram.end();
+
+		gl.depthMask(oldDepthMask); // enable depth buffer writing
 	}
 
 	async load(baseUrl: string): Promise<void> {
@@ -87,6 +83,7 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 		//glTexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+		checkGLError("SkyBox.load()::after");
 	}
 
 	// ------------------------ PRIVATE AREA ---------------------------- //
