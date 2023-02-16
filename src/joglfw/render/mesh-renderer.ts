@@ -41,12 +41,12 @@ export class MeshRenderer implements IGLResource {
 		gl.uniformMatrix4fv(this.indexMatWVP, false, matWVP.getColumnMajorValues());
 		checkGLError("mWVP uniform setup");
 
-		const vao: VertexArrayObject = mesh.getVAO();
+		const vao: VertexArrayObject = mesh.VAO;
 		vao.bind();
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.getIBO());
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.IBO);
 		if (mesh.vertexAttribsProgramBinding_ != this.meshShaderProgram) {
 			const stride = MeshVertex.getStride();
-			gl.bindBuffer(gl.ARRAY_BUFFER, mesh.getVBO());
+			gl.bindBuffer(gl.ARRAY_BUFFER, mesh.VBO);
 			vao.vertexAttribPointer(this.indexPos, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("position"));
 			vao.vertexAttribPointer(this.indexNorm, 3, gl.FLOAT, false, stride, MeshVertex.getOffset("normal"));
 			vao.vertexAttribPointer(this.indexUV1, 2, gl.FLOAT, false, stride, MeshVertex.getOffset("UV1"));

@@ -2,9 +2,11 @@ import { checkGLError, gl } from "../joglfw/glcontext";
 import { IGLResource } from "../joglfw/glresource";
 import { logprefix } from "../joglfw/log";
 import { AABB } from "../joglfw/math/aabb";
+import { Matrix } from "../joglfw/math/matrix";
 import { Vector } from "../joglfw/math/vector";
-import { Mesh } from "../joglfw/mesh";
+import { Mesh, MeshVertex } from "../joglfw/mesh";
 import { AbstractVertex } from "../joglfw/render/abstract-vertex";
+import { MeshRenderer } from "../joglfw/render/mesh-renderer";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
 import { VertexAttribSource } from "../joglfw/render/shader-program";
@@ -47,26 +49,12 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 			console.error("render(): Shader is not loaded");
 			return;
 		}
-		this.renderData.screenQuad.VAO.bind();
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData.screenQuad.IBO);
-		// if (this.renderData.screenQuad.vertexAttribsProgramBinding_ != this.renderData.shaderProgram) {
-		// const stride = SkyBoxVertex.getStride();
-		// gl.bindBuffer(gl.ARRAY_BUFFER, this.renderData.screenQuad.getVBO());
-		// this.renderData.screenQuad.VAO.vertexAttribPointer(
-		// 	this.renderData.indexPos,
-		// 	3,
-		// 	gl.FLOAT,
-		// 	false,
-		// 	stride,
-		// 	SkyBoxVertex.getOffset("pos"),
-		// );
-		// 	this.renderData.screenQuad.vertexAttribsProgramBinding_ = this.renderData.shaderProgram;
-		// 	checkGLError("skybox attrib arrays setup");
-		// }
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData.texture);
 		this.renderData.shaderProgram.uniforms().setSkyboxSampler(0);
 		this.renderData.shaderProgram.begin();
+		this.renderData.screenQuad.VAO.bind();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData.screenQuad.IBO);
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData.texture);
 
 		const oldDepthMask = gl.getParameter(gl.DEPTH_WRITEMASK);
 		gl.depthMask(false); // disable depth buffer writing
@@ -89,8 +77,8 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 		const mapVertexSources: Record<string, VertexAttribSource> = {
 			pos: {
 				VBO: this.renderData.screenQuad.VBO,
-				stride: SkyBoxVertex.getStride(),
-				offset: SkyBoxVertex.getOffset("pos"),
+				stride: MeshVertex.getStride(),
+				offset: MeshVertex.getOffset("position"),
 			},
 		};
 		this.renderData.shaderProgram.setupVertexStreams(this.renderData.screenQuad.VAO, mapVertexSources);
@@ -121,32 +109,6 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 	private clear(): void {
 		if (this.renderData.texture) gl.deleteTexture(this.renderData.texture);
 		this.renderData.texture = null;
-	}
-}
-
-class SkyBoxVertex extends AbstractVertex {
-	pos: Vector; // 3
-
-	static getStride() {
-		return 3 * 4;
-	}
-
-	static getOffset(field: keyof SkyBoxVertex): number {
-		switch (field) {
-			case "pos":
-				return 0;
-			default:
-				throw new Error("Unknown field");
-		}
-	}
-
-	getStride(): number {
-		return SkyBoxVertex.getStride();
-	}
-
-	serialize(target: Float32Array, offset: number) {
-		const values: number[] = [...this.pos.values(3)];
-		target.set(values, offset);
 	}
 }
 

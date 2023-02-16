@@ -8,22 +8,22 @@ import { Event } from "../utils/event";
 
 export class ShaderProgram implements IGLResource {
 	release(): void {
-		if (this.program_) {
-			Shaders.deleteProgram(this.program_);
-			this.program_ = null;
+		if (this.program) {
+			Shaders.deleteProgram(this.program);
+			this.program = null;
 		}
-		this.uniformPackProxies_ = [];
-		this.vertexAttribs_ = [];
+		this.uniformPackProxies = [];
+		this.vertexAttribs = [];
 	}
 
 	// Assigns a uniform pack to be used by this program.
 	// This can be called multiple times with different packs, all of which will be used.
 	// The method can be called before or after loading the program, but not while the program is active for rendering.
 	useUniformPack(pack: UniformPack): void {
-		this.uniformPackProxies_.push(new UniformPackProxy(pack));
-		if (this.program_ != null) {
+		this.uniformPackProxies.push(new UniformPackProxy(pack));
+		if (this.program != null) {
 			// program has already been linked, let's update the uniforms mapping
-			this.uniformPackProxies_[this.uniformPackProxies_.length - 1].updateMappings(this.program_);
+			this.uniformPackProxies[this.uniformPackProxies.length - 1].updateMappings(this.program);
 		}
 	}
 
@@ -37,7 +37,7 @@ export class ShaderProgram implements IGLResource {
 		if (!VertexAttribDescriptor.validateParams(componentType)) {
 			throw new Error("Invalid vertex attribute type!");
 		}
-		this.vertexAttribs_.push(<VertexAttribDescriptor>{
+		this.vertexAttribs.push(<VertexAttribDescriptor>{
 			name,
 			componentType,
 			componentCount,
@@ -53,13 +53,13 @@ export class ShaderProgram implements IGLResource {
 		}
 		vao.bind();
 		let boundVBO: WebGLBuffer = null;
-		for (let vAttrDesc of this.vertexAttribs_) {
+		for (let vAttrDesc of this.vertexAttribs) {
 			const attrSrc: VertexAttribSource = mapAttribSource[vAttrDesc.name];
 			if (!attrSrc) {
 				console.error(`Source for attribute '${vAttrDesc.name}' not specified in attribute source map!`);
 				continue;
 			}
-			const location: number = gl.getAttribLocation(this.program_, vAttrDesc.name);
+			const location: number = gl.getAttribLocation(this.program, vAttrDesc.name);
 			if (location >= 0) {
 				if (attrSrc.VBO != boundVBO) {
 					gl.bindBuffer(gl.ARRAY_BUFFER, attrSrc.VBO);
@@ -82,7 +82,7 @@ export class ShaderProgram implements IGLResource {
 	// this should only be called one time.
 	// returns true on success or false if there was an error with loading/compiling/linking the shaders.
 	async load(vertPath: string, fragPath: string): Promise<boolean> {
-		if (this.program_) {
+		if (this.program) {
 			throw new Error("This ShaderProgram has already been loaded!");
 		}
 		await Shaders.createProgram(vertPath, fragPath, this.onProgramLinked.bind(this));
@@ -97,8 +97,8 @@ export class ShaderProgram implements IGLResource {
 		if (!this.isValid()) {
 			throw new Error("This ShaderProgram has not been loaded (or there was a compile/link error)!");
 		}
-		gl.useProgram(this.program_);
-		for (let pack of this.uniformPackProxies_) {
+		gl.useProgram(this.program);
+		for (let pack of this.uniformPackProxies) {
 			pack.pushValues();
 		}
 	}
@@ -110,7 +110,7 @@ export class ShaderProgram implements IGLResource {
 
 	// checks whether this object contains a valid openGL shader program that has been successfuly loaded and linked.
 	isValid(): boolean {
-		return this.program_ !== null;
+		return this.program !== null;
 	}
 
 	// returns the gl location of a uniform identified by name.
@@ -119,7 +119,7 @@ export class ShaderProgram implements IGLResource {
 		if (!this.isValid()) {
 			throw new Error("This ShaderProgram has not been loaded (or there was a compile/link error)!");
 		}
-		return gl.getUniformLocation(this.program_, uName);
+		return gl.getUniformLocation(this.program, uName);
 	}
 
 	// this event is triggered whith a reference to this object every time the shader program has been successfully linked.
@@ -128,14 +128,14 @@ export class ShaderProgram implements IGLResource {
 
 	// --------------------- PRIVATE AREA ------------------------ //
 
-	private program_: WebGLProgram = null;
-	private uniformPackProxies_: UniformPackProxy[] = [];
-	private vertexAttribs_: VertexAttribDescriptor[] = [];
+	private program: WebGLProgram = null;
+	private uniformPackProxies: UniformPackProxy[] = [];
+	private vertexAttribs: VertexAttribDescriptor[] = [];
 
 	private onProgramLinked(program: WebGLProgram): void {
-		this.program_ = program;
+		this.program = program;
 		if (program !== null) {
-			for (let pack of this.uniformPackProxies_) {
+			for (let pack of this.uniformPackProxies) {
 				pack.updateMappings(program);
 			}
 

@@ -130,7 +130,7 @@ export class World implements IRenderable, IUpdatable {
 		checkGLError("World.render() draw boundaries");
 		for (const e of this.entsToRender_) {
 			e.render(context);
-			checkGLError(`Entity render (${e["constructor"].name}`);
+			checkGLError(`Entity render (${e["constructor"].name})`);
 		}
 		checkGLError("World.render() end");
 	}

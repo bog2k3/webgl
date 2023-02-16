@@ -35,7 +35,7 @@ export class Game {
 		this.terrain_.generate(tc);
 		this.terrain_.finishGenerate();
 
-		World.getInstance().addEntity(this.terrain_);
+		// World.getInstance().addEntity(this.terrain_);
 
 		this.freeCam_ = new FreeCamera(new Vector(10, tc.maxElevation, 10), new Vector(-1, -0.2, -1));
 		World.getInstance().addEntity(this.freeCam_);
@@ -56,7 +56,7 @@ export class Game {
 		const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5));
 		const boxMass = 50;
 		const box = new RigidObject(m, new Vector(0, tc.maxElevation + 5, 0), boxShape, boxMass);
-		World.getInstance().addEntity(box);
+		// World.getInstance().addEntity(box);
 		//---DEBUG
 
 		console.log("Ready");

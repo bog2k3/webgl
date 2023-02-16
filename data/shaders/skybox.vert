@@ -11,7 +11,7 @@ varying vec3 fUV;
 
 void main(){
 	vec4 projected = vec4(pos, 1);
-	projected.z = projected.w; // move the vertex back to the far clipping plane
+	projected.z = projected.w - 0.0000001; // move the vertex back to the far clipping plane
 	gl_Position = projected;
 	fUV = pos;
 }

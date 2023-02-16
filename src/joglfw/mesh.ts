@@ -91,18 +91,6 @@ export class Mesh implements IGLResource {
 		return this.indexCount;
 	}
 
-	getVAO(): VertexArrayObject {
-		return this.VAO;
-	}
-
-	getVBO(): WebGLBuffer {
-		return this.VBO;
-	}
-
-	getIBO(): WebGLBuffer {
-		return this.IBO;
-	}
-
 	static makeScreenQuad(): Mesh {
 		const vertices: MeshVertex[] = [
 			new MeshVertex({
