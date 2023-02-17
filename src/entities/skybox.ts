@@ -74,7 +74,7 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 			baseUrl + "/front.png", //Z+
 			baseUrl + "/back.png", //Z-
 		];
-		this.renderData.texture = await TextureLoader.loadCube(urls, true);
+		this.renderData.texture = await TextureLoader.loadCube(urls, false);
 		if (!this.renderData.texture) {
 			console.error("Failed to load skybox textures from ", baseUrl);
 		}

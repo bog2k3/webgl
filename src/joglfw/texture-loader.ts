@@ -85,10 +85,10 @@ export class TextureLoader {
 		];
 
 		const skippedFaces: number[] = [];
-		const loadPromises: Promise<void>[] = [];
+		const loadPromises: Promise<number[]>[] = [];
 		for (let i = 0; i < 6; i++) {
 			if (urls[i].length === 0) {
-				skippedFaces.push(i);
+				skippedFaces.push(faceIds[i]);
 				continue;
 			}
 			loadPromises.push(
@@ -109,17 +109,25 @@ export class TextureLoader {
 							image.data,
 						);
 					}
+					return [image.width, image.height];
 				}),
 			);
 		}
+		const [imageWidth, imageHeight] = (await Promise.all(loadPromises))[0];
 		if (skippedFaces.length) {
-			const dummyPixels = new Uint8Array([255, 0, 255, 255]); // opaque magenta for missing faces
+			const dummyPixels = new Uint8Array(imageWidth * imageHeight * 4);
+			for (let i = 0; i < imageWidth * imageHeight; i++) {
+				// opaque magenta for missing faces
+				dummyPixels[i * 4 + 0] = 255;
+				dummyPixels[i * 4 + 1] = 0;
+				dummyPixels[i * 4 + 2] = 255;
+				dummyPixels[i * 4 + 3] = 255;
+			}
 			gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
-			for (let i of skippedFaces) {
-				gl.texImage2D(faceIds[i], 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, dummyPixels);
+			for (let face of skippedFaces) {
+				gl.texImage2D(face, 0, gl.RGBA, imageWidth, imageHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, dummyPixels);
 			}
 		}
-		await Promise.all(loadPromises);
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
 		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
