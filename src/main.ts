@@ -1,4 +1,5 @@
 import { Terrain } from "./entities/terrain/terrain.entity";
+import { Water } from "./entities/terrain/water";
 import { Game } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
@@ -85,6 +86,7 @@ function update(dt: number): void {
 	}
 	playerInputHandler.update(dt);
 	world.update(dt);
+	renderData.renderCtx.time += dt;
 }
 
 function onGameStarted(): void {
@@ -165,9 +167,10 @@ function initWorld(): void {
 	// });
 }
 
-async function loadTextures() {
-	let progress = await Terrain.loadTextures(0);
-	while (progress.completed < progress.total) {
-		progress = await Terrain.loadTextures(progress.completed);
-	}
+function loadTextures(): Promise<void> {
+	// prettier-ignore
+	return Promise.all([
+		Terrain.loadTextures(0),
+		Water.loadTextures(0)
+	]).then();
 }

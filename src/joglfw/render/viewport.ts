@@ -104,7 +104,7 @@ export class Viewport {
 	}
 
 	clear(): void {
-		gl.clearColor(1, 1, 1, 1);
+		gl.clearColor(this.backgroundColor_.x, this.backgroundColor_.y, this.backgroundColor_.z, 1);
 		gl.clearDepth(1);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		// TODO this will clear the whole screen instead of the viewport, fix

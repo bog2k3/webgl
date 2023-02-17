@@ -145,7 +145,6 @@ export class ShapeRenderer implements IGLResource {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
 		gl.enable(gl.BLEND);
-		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 		gl.useProgram(this.shapeShaderProgram);
 		this.VAO.bind();

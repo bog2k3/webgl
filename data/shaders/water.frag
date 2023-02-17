@@ -182,7 +182,7 @@ void main() {
 	float foamFactor = pow(1.0 / (1.0 + transmitUWDist), 8.0);
 	vec3 foamColor = vec3(1.0, 0.95, 0.85);
 	float foamLight_gs = (foamLight.x + foamLight.y + foamLight.z) * 1.5;
-	final.rgb = mix(final.rgb, foamColor * foamLight_gs, foamFactor * foamTransp);
+	// final.rgb = mix(final.rgb, foamColor * foamLight_gs, foamFactor * foamTransp);
 
 // fade out far edges of water
 	float alpha = 1.0 - pow(fFog, 3.0);
@@ -191,7 +191,7 @@ void main() {
 	//final.xyz = reflectColor;
 
 // DEBUG:
-	final = vec4(normal.xyz, 1);
+	// final = vec4(normal.xyz, 1);
 	//float f = pow(abs((T_targetElevation - transmitElevation) / T_targetElevation), 2.2);
 	//float f = pow(foamTransp, 2.2);
 	//final = vec4(f, f, f, 1.0) + 0.00001 * final;

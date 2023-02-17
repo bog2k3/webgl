@@ -6,7 +6,7 @@ import { RenderContext } from "../../joglfw/render/render-context";
 import { IRenderable } from "../../joglfw/render/renderable";
 import { VertexAttribSource } from "../../joglfw/render/shader-program";
 import { VertexArrayObject } from "../../joglfw/render/vao";
-import { TextureLoader } from "../../joglfw/texture-loader";
+import { TextureInfo, TextureLoader } from "../../joglfw/texture-loader";
 import { assert } from "../../joglfw/utils/assert";
 import { srand } from "../../joglfw/utils/random";
 import { Progress } from "../../progress";
@@ -22,28 +22,25 @@ export class WaterConfig {
 	// if false, a square of length 2*innerRadius will be used instead (faster)
 }
 export class Water implements IRenderable, IGLResource {
-	static async loadTextures(step: number): Promise<Progress> {
-		switch (step) {
-			case 0:
-				WaterRenderData.textureNormal = (
-					await TextureLoader.load("data/textures/water/normal.png", false)
-				).texture;
+	static loadTextures(step: number): Promise<Progress> {
+		return Promise.all([
+			TextureLoader.load("data/textures/water/normal.png", false).then((textureInfo: TextureInfo) => {
+				WaterRenderData.textureNormal = textureInfo.texture;
 				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureNormal);
 				gl.generateMipmap(gl.TEXTURE_2D);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); //gl.NEAREST_MIPMAP_LINEAR);// gl.LINEAR_MIPMAP_LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-				break;
-			case 1:
-				WaterRenderData.textureFoam = (await TextureLoader.load("data/textures/water/foam.png", true)).texture;
+				gl.bindTexture(gl.TEXTURE_2D, null);
+			}),
+			TextureLoader.load("data/textures/water/foam.png", true).then((textureInfo: TextureInfo) => {
+				WaterRenderData.textureFoam = textureInfo.texture;
 				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam);
 				gl.generateMipmap(gl.TEXTURE_2D);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-				break;
-		}
-		gl.bindTexture(gl.TEXTURE_2D, null);
-
-		return { completed: step + 1, total: 2 };
+				gl.bindTexture(gl.TEXTURE_2D, null);
+			}),
+		]).then(() => <Progress>{ completed: 1, total: 1 });
 	}
 
 	static unloadAllResources(): void {
@@ -81,7 +78,6 @@ export class Water implements IRenderable, IGLResource {
 	}
 
 	render(context: RenderContext): void {
-		return;
 		if (!this.renderData.shaderProgram.isValid()) {
 			return;
 		}

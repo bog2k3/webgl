@@ -25,6 +25,9 @@ export function initRender(renderData: RenderData): boolean {
 	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LESS);
 
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+
 	// set up post processing hook
 	// TODO implement
 	// if (initPostProcessData(renderData.windowW, renderData.windowH, renderData.postProcessData)) {
@@ -211,8 +214,6 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 				renderData.renderCtx.enableClipPlane = renderData.renderCtx.enableWaterRender;
 				if (renderData.renderCtx.cameraUnderwater) {
 					renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
-				} else {
-					renderData.viewport.setBkColor(new Vector(1, 0, 1, 1)); // TODO perhaps only clear depth instead
 				}
 				renderData.viewport.clear();
 			}
