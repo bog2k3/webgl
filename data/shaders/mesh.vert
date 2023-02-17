@@ -1,6 +1,6 @@
 #version 100
 
-precision mediump float;
+precision highp float;
 precision mediump int;
 
 attribute vec3 vPos;

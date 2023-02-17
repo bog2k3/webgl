@@ -1,6 +1,6 @@
 #version 100
 
-precision mediump float;
+precision highp float;
 precision mediump int;
 
 varying vec3 fUV;

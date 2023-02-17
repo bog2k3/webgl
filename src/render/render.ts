@@ -178,6 +178,7 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 	}
 
 	const waterDepthFactor = Math.pow(1.0 / (Math.max(0, -renderData.viewport.camera().position().y) + 1), 0.5);
+
 	switch (renderData.renderCtx.renderPass) {
 		case RenderPass.WaterReflection:
 			renderData.waterRenderData.reflectionFramebuffer.bind();
@@ -193,33 +194,33 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 			renderData.renderCtx.enableClipPlane = true;
 			renderData.viewport.camera().mirror(new Vector(0, renderData.renderCtx.subspace, 0, 0));
 			break;
+
 		case RenderPass.WaterRefraction:
-			{
-				renderData.waterRenderData.refractionFramebuffer.bind();
-				renderData.viewport.setArea(
-					0,
-					0,
-					renderData.waterRenderData.refractionFBDesc.width,
-					renderData.waterRenderData.refractionFBDesc.height,
-				);
-				renderData.viewport.setBkColor(new Vector(0.07, 0.16, 0.2, 1.0));
-				renderData.viewport.clear();
-				renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? +1.0 : -1.0;
-				renderData.renderCtx.enableClipPlane = true;
-			}
+			renderData.waterRenderData.refractionFramebuffer.bind();
+			renderData.viewport.setArea(
+				0,
+				0,
+				renderData.waterRenderData.refractionFBDesc.width,
+				renderData.waterRenderData.refractionFBDesc.height,
+			);
+			renderData.viewport.setBkColor(new Vector(0.07, 0.16, 0.2, 1.0)); // TODO hardcoded value
+			renderData.viewport.clear();
+			renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? +1.0 : -1.0;
+			renderData.renderCtx.enableClipPlane = true;
 			break;
+
 		case RenderPass.Standard:
-			{
-				renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? -1.0 : +1.0;
-				renderData.renderCtx.enableClipPlane = renderData.renderCtx.enableWaterRender;
-				if (renderData.renderCtx.cameraUnderwater) {
-					renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
-				}
-				renderData.viewport.clear();
+			renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? -1.0 : +1.0;
+			renderData.renderCtx.enableClipPlane = renderData.renderCtx.enableWaterRender;
+			if (renderData.renderCtx.cameraUnderwater) {
+				renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
 			}
+			renderData.viewport.clear();
 			break;
+
 		case RenderPass.WaterSurface:
 			break;
+
 		case RenderPass.UI:
 			gl.disable(gl.DEPTH_TEST);
 			if (renderData.config.renderWireFrame) {
@@ -228,6 +229,7 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 				// gl.lineWidth(1.0);
 			}
 			break;
+
 		case RenderPass.None:
 			break;
 	}
