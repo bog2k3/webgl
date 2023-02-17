@@ -211,8 +211,10 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 				renderData.renderCtx.enableClipPlane = renderData.renderCtx.enableWaterRender;
 				if (renderData.renderCtx.cameraUnderwater) {
 					renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
-					renderData.viewport.clear();
+				} else {
+					renderData.viewport.setBkColor(new Vector(1, 0, 1, 1)); // TODO perhaps only clear depth instead
 				}
+				renderData.viewport.clear();
 			}
 			break;
 		case RenderPass.WaterSurface:

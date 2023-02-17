@@ -347,7 +347,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 						gl.TRIANGLES,
 						this.renderData.trisAboveWater_ * 3,
 						gl.UNSIGNED_SHORT,
-						this.renderData.trisBelowWater_ * 3 * 4,
+						this.renderData.trisBelowWater_ * 3,
 					);
 				}
 			} else {

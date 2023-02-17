@@ -159,10 +159,10 @@ export class World implements IRenderable, IUpdatable {
 			if (filterTypes.length && !filterTypes.includes(e.getType())) {
 				return false;
 			}
-			if (options?.renderable !== !isRenderable(e)) {
+			if (options?.renderable && !isRenderable(e)) {
 				return false;
 			}
-			if (options?.updatable !== isUpdatable(e)) {
+			if (options?.updatable && !isUpdatable(e)) {
 				return false;
 			}
 			return true;

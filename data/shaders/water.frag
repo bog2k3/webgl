@@ -191,6 +191,7 @@ void main() {
 	//final.xyz = reflectColor;
 
 // DEBUG:
+	final = vec4(normal.xyz, 1);
 	//float f = pow(abs((T_targetElevation - transmitElevation) / T_targetElevation), 2.2);
 	//float f = pow(foamTransp, 2.2);
 	//final = vec4(f, f, f, 1.0) + 0.00001 * final;

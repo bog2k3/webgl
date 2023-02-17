@@ -81,6 +81,7 @@ export class Water implements IRenderable, IGLResource {
 	}
 
 	render(context: RenderContext): void {
+		return;
 		if (!this.renderData.shaderProgram.isValid()) {
 			return;
 		}
