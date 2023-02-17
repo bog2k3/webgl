@@ -25,41 +25,41 @@ export class Water implements IRenderable, IGLResource {
 	static async loadTextures(step: number): Promise<Progress> {
 		switch (step) {
 			case 0:
-				WaterRenderData.textureNormal_ = (
+				WaterRenderData.textureNormal = (
 					await TextureLoader.load("data/textures/water/normal.png", false)
 				).texture;
-				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureNormal_);
+				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureNormal);
 				gl.generateMipmap(gl.TEXTURE_2D);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); //gl.NEAREST_MIPMAP_LINEAR);// gl.LINEAR_MIPMAP_LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 				break;
 			case 1:
-				WaterRenderData.textureFoam_ = (await TextureLoader.load("data/textures/water/foam.png", true)).texture;
-				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam_);
+				WaterRenderData.textureFoam = (await TextureLoader.load("data/textures/water/foam.png", true)).texture;
+				gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam);
 				gl.generateMipmap(gl.TEXTURE_2D);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 				break;
 		}
-		gl.bindTexture(gl.TEXTURE_2D, 0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 
 		return { completed: step + 1, total: 2 };
 	}
 
 	static unloadAllResources(): void {
-		for (let tex of [WaterRenderData.textureFoam_, WaterRenderData.textureNormal_]) {
+		for (let tex of [WaterRenderData.textureFoam, WaterRenderData.textureNormal]) {
 			gl.deleteTexture(tex);
 		}
 	}
 
 	constructor() {
-		this.renderData_ = new WaterRenderData();
-		this.renderData_.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderWater>(ShaderWater);
-		this.renderData_.VAO_ = new VertexArrayObject();
-		this.renderData_.VBO_ = gl.createBuffer();
-		this.renderData_.IBO_ = gl.createBuffer();
+		this.renderData = new WaterRenderData();
+		this.renderData.shaderProgram = ShaderProgramManager.requestProgram<ShaderWater>(ShaderWater);
+		this.renderData.VAO = new VertexArrayObject();
+		this.renderData.VBO = gl.createBuffer();
+		this.renderData.IBO = gl.createBuffer();
 
-		this.renderData_.reloadHandler = this.renderData_.shaderProgram_.onProgramReloaded.add(() => {
+		this.renderData.reloadHandler = this.renderData.shaderProgram.onProgramReloaded.add(() => {
 			this.setupVAO();
 		});
 		this.setupVAO();
@@ -67,21 +67,21 @@ export class Water implements IRenderable, IGLResource {
 
 	setupVAO(): void {
 		const mapVertexSources: Record<string, VertexAttribSource> = {
-			pos: { VBO: this.renderData_.VBO_, stride: WaterVertex.getStride(), offset: WaterVertex.getOffset("pos") },
-			fog: { VBO: this.renderData_.VBO_, stride: WaterVertex.getStride(), offset: WaterVertex.getOffset("fog") },
+			pos: { VBO: this.renderData.VBO, stride: WaterVertex.getStride(), offset: WaterVertex.getOffset("pos") },
+			fog: { VBO: this.renderData.VBO, stride: WaterVertex.getStride(), offset: WaterVertex.getOffset("fog") },
 		};
-		this.renderData_.shaderProgram_.setupVertexStreams(this.renderData_.VAO_, mapVertexSources);
+		this.renderData.shaderProgram.setupVertexStreams(this.renderData.VAO, mapVertexSources);
 	}
 
 	release(): void {
-		if (this.renderData_) {
-			this.renderData_.shaderProgram_.onProgramReloaded.remove(this.renderData_.reloadHandler);
-			this.renderData_ = null;
+		if (this.renderData) {
+			this.renderData.shaderProgram.onProgramReloaded.remove(this.renderData.reloadHandler);
+			this.renderData = null;
 		}
 	}
 
 	render(context: RenderContext): void {
-		if (!this.renderData_.shaderProgram_.isValid()) {
+		if (!this.renderData.shaderProgram.isValid()) {
 			return;
 		}
 		// configure backface culling
@@ -89,31 +89,33 @@ export class Water implements IRenderable, IGLResource {
 		gl.enable(gl.BLEND);
 		// set-up textures
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureNormal_);
-		this.renderData_.shaderProgram_.uniforms().setWaterNormalTexSampler(0);
+		gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureNormal);
+		this.renderData.shaderProgram.uniforms().setWaterNormalTexSampler(0);
 		gl.activeTexture(gl.TEXTURE1);
-		gl.bindTexture(gl.TEXTURE_2D, this.renderData_.textureReflection_);
-		this.renderData_.shaderProgram_.uniforms().setReflectionTexSampler(1);
+		gl.bindTexture(gl.TEXTURE_2D, this.renderData.textureReflection);
+		this.renderData.shaderProgram.uniforms().setReflectionTexSampler(1);
 		gl.activeTexture(gl.TEXTURE2);
-		gl.bindTexture(gl.TEXTURE_2D, this.renderData_.textureRefraction_);
-		this.renderData_.shaderProgram_.uniforms().setRefractionTexSampler(2);
+		gl.bindTexture(gl.TEXTURE_2D, this.renderData.textureRefraction);
+		this.renderData.shaderProgram.uniforms().setRefractionTexSampler(2);
 		gl.activeTexture(gl.TEXTURE3);
-		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData_.textureRefraction_Cube_);
-		this.renderData_.shaderProgram_.uniforms().setRefractionCubeTexSampler(3);
+		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData.textureRefractionCube);
+		this.renderData.shaderProgram.uniforms().setRefractionCubeTexSampler(3);
 		gl.activeTexture(gl.TEXTURE4);
-		gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam_);
-		this.renderData_.shaderProgram_.uniforms().setFoamTexSampler(4);
+		gl.bindTexture(gl.TEXTURE_2D, WaterRenderData.textureFoam);
+		this.renderData.shaderProgram.uniforms().setFoamTexSampler(4);
 
 		// set-up shader and vertex buffer
-		this.renderData_.shaderProgram_.begin();
-		this.renderData_.VAO_.bind();
+		this.renderData.shaderProgram.begin();
+		this.renderData.VAO.bind();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData.IBO);
 		// do the drawing
-		gl.drawElements(gl.TRIANGLES, this.triangles_.length * 3, gl.UNSIGNED_SHORT, 0);
+		gl.drawElements(gl.TRIANGLES, this.triangles.length * 3, gl.UNSIGNED_SHORT, 0);
 		// unbind stuff
-		this.renderData_.VAO_.unbind();
-		this.renderData_.shaderProgram_.end();
+		this.renderData.VAO.unbind();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+		this.renderData.shaderProgram.end();
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, 0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 
 		gl.enable(gl.CULL_FACE);
 		gl.disable(gl.BLEND);
@@ -124,7 +126,7 @@ export class Water implements IRenderable, IGLResource {
 	generate(config: WaterConfig): void {
 		this.validateConfig(config);
 		this.clear();
-		this.config_ = config;
+		this.config = config;
 
 		// TODO implement constrainToCircle
 
@@ -136,8 +138,7 @@ export class Water implements IRenderable, IGLResource {
 		const skirtVertSpacing = 30; // meters
 		const nSkirtVerts = Math.floor((2 * Math.PI * extentRadius) / skirtVertSpacing);
 		const skirtVertSector = (2 * Math.PI) / nSkirtVerts; // sector size between two skirt vertices
-		this.nVertices_ = rows * cols + 2 * nSkirtVerts;
-		this.vertices_ = new Array(this.nVertices_);
+		this.vertices = new Array(rows * cols + 2 * nSkirtVerts);
 
 		const topleft = new Vector(-config.innerRadius, 0, -config.innerRadius);
 		const dx = (config.innerRadius * 2) / (cols - 1);
@@ -148,60 +149,57 @@ export class Water implements IRenderable, IGLResource {
 		for (let i = 0; i < rows; i++)
 			for (let j = 0; j < cols; j++) {
 				const jitter = new Vector((srand() * 0.1, srand() * 0.1));
-				this.vertices_[i * rows + j] = <WaterVertex>{
+				this.vertices[i * rows + j] = new WaterVertex({
 					pos: topleft.add(new Vector(dx * j + jitter.x, 0, dz * i + jitter.y)), // position
 					fog: 0, // fog
-				};
+				});
 			}
 		// compute skirt vertices
 		for (let i = 0; i < nSkirtVerts; i++) {
 			const jitter = new Vector(srand() * 0.1, srand() * 0.1);
 			let x = extentRadius * Math.cos(i * skirtVertSector) + jitter.x;
 			let z = extentRadius * Math.sin(i * skirtVertSector) + jitter.y;
-			this.vertices_[rows * cols + i] = <WaterVertex>{
+			this.vertices[rows * cols + i] = new WaterVertex({
 				pos: new Vector(x, 0, z), // position
 				fog: 0, //1																	// fog
-			};
+			});
 
 			x = (extentRadius + 50) * Math.cos(i * skirtVertSector) - jitter.x;
 			z = (extentRadius + 50) * Math.sin(i * skirtVertSector) - jitter.y;
-			this.vertices_[rows * cols + i + nSkirtVerts] = <WaterVertex>{
+			this.vertices[rows * cols + i + nSkirtVerts] = new WaterVertex({
 				pos: new Vector(x, 20, z), // position
 				fog: 1, // fog
-			};
+			});
 		}
 
-		this.triangles_ = triangulate(this.vertices_, (v: WaterVertex, n: number) => {
+		this.triangles = triangulate(this.vertices, (v: WaterVertex, n: number) => {
 			return n == 0 ? v.pos.x : n == 1 ? v.pos.z : 0;
 		});
-		// TODO this might not be necessary any more
-		this.fixTriangleWinding(); // after triangulation some triangles are ccw, we need to fix them
 
 		this.updateRenderBuffers();
 	}
 
 	setReflectionTexture(tex_2D: WebGLTexture): void {
-		this.renderData_.textureReflection_ = tex_2D;
+		this.renderData.textureReflection = tex_2D;
 	}
 
 	setRefractionTexture(tex_2D: WebGLTexture, tex_Cube: WebGLTexture): void {
-		this.renderData_.textureRefraction_ = tex_2D;
-		this.renderData_.textureRefraction_Cube_ = tex_Cube;
+		this.renderData.textureRefraction = tex_2D;
+		this.renderData.textureRefractionCube = tex_Cube;
 	}
 
 	update(dt: number): void {}
 
 	getNormalTexture(): WebGLTexture {
-		return WaterRenderData.textureNormal_;
+		return WaterRenderData.textureNormal;
 	}
 
 	// ---------------------- PRIVATE AREA --------------------------- //
 
-	private config_: WaterConfig;
-	private renderData_: WaterRenderData;
-	private vertices_: WaterVertex[];
-	private nVertices_: number;
-	private triangles_: Triangle[];
+	private config: WaterConfig;
+	private renderData: WaterRenderData;
+	private vertices: WaterVertex[];
+	private triangles: Triangle[];
 
 	private validateConfig(p: WaterConfig): void {
 		assert(p.innerRadius > 0);
@@ -210,61 +208,41 @@ export class Water implements IRenderable, IGLResource {
 	}
 
 	private clear(): void {
-		this.vertices_.splice(0);
-		this.triangles_.splice(0);
-	}
-
-	private fixTriangleWinding() {
-		// all triangles must be CW as seen from above
-		for (const t of this.triangles_) {
-			const n: Vector = this.vertices_[t.iV2].pos
-				.sub(this.vertices_[t.iV1].pos)
-				.cross(this.vertices_[t.iV3].pos.sub(this.vertices_[t.iV1].pos));
-			if (n.y < 0) {
-				// triangle is CCW, we need to reverse it
-				// exchange vertices 1 and 3
-				let tmp = t.iV1;
-				t.iV1 = t.iV3;
-				t.iV3 = tmp;
-				// exchange edges 1-2 and 2-3
-				// tmp = t.iN12;
-				// t.iN12 = t.iN23;
-				// t.iN23 = tmp;
-			}
-		}
+		this.vertices = null;
+		this.triangles = null;
 	}
 
 	private updateRenderBuffers() {
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.renderData_.VBO_);
-		gl.bufferData(gl.ARRAY_BUFFER, AbstractVertex.arrayToBuffer(this.vertices_), gl.STATIC_DRAW);
-		gl.bindBuffer(gl.ARRAY_BUFFER, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.renderData.VBO);
+		gl.bufferData(gl.ARRAY_BUFFER, AbstractVertex.arrayToBuffer(this.vertices), gl.STATIC_DRAW);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-		const indices = new Uint16Array(3 * this.triangles_.length);
-		for (let i = 0; i < this.triangles_.length; i++) {
-			indices[i * 3 + 0] = this.triangles_[i].iV1;
-			indices[i * 3 + 1] = this.triangles_[i].iV2;
-			indices[i * 3 + 2] = this.triangles_[i].iV3;
+		const indices = new Uint16Array(3 * this.triangles.length);
+		for (let i = 0; i < this.triangles.length; i++) {
+			indices[i * 3 + 0] = this.triangles[i].iV1;
+			indices[i * 3 + 1] = this.triangles[i].iV2;
+			indices[i * 3 + 2] = this.triangles[i].iV3;
 		}
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData_.IBO_);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.renderData.IBO);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
-		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	}
 }
 
 class WaterRenderData {
-	VAO_: VertexArrayObject;
-	VBO_: WebGLBuffer;
-	IBO_: WebGLBuffer;
+	VAO: VertexArrayObject;
+	VBO: WebGLBuffer;
+	IBO: WebGLBuffer;
 
-	shaderProgram_: ShaderWater;
+	shaderProgram: ShaderWater;
 	reloadHandler: number;
 
-	static textureNormal_: WebGLTexture;
-	static textureFoam_: WebGLTexture;
+	static textureNormal: WebGLTexture;
+	static textureFoam: WebGLTexture;
 
-	textureReflection_: WebGLTexture;
-	textureRefraction_Cube_: WebGLTexture;
-	textureRefraction_: WebGLTexture;
+	textureReflection: WebGLTexture;
+	textureRefractionCube: WebGLTexture;
+	textureRefraction: WebGLTexture;
 }
 
 class WaterVertex extends AbstractVertex {
@@ -285,6 +263,11 @@ class WaterVertex extends AbstractVertex {
 			default:
 				throw new Error(`Invalid field specified in WaterVertex.getOffset(): "${field}`);
 		}
+	}
+
+	constructor(data: Partial<WaterVertex>) {
+		super();
+		Object.assign(this, data);
 	}
 
 	getStride(): number {

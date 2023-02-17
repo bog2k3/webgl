@@ -12,6 +12,7 @@ import { PlayerInputHandler } from "./player-input-handler";
 import { ShaderSkybox } from "./render/programs/shader-skybox";
 import { ShaderTerrain } from "./render/programs/shader-terrain";
 import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
+import { ShaderWater } from "./render/programs/shader-water";
 import { initRender, render } from "./render/render";
 import { RenderData } from "./render/render-data";
 import { ShaderProgramManager } from "./render/shader-program-manager";
@@ -62,7 +63,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	await ShaderProgramManager.loadProgram(ShaderTerrainPreview);
 	await ShaderProgramManager.loadProgram(ShaderTerrain);
 	await ShaderProgramManager.loadProgram(ShaderSkybox);
-	// await ShaderProgramManager.loadProgram(ShaderWater);
+	await ShaderProgramManager.loadProgram(ShaderWater);
 
 	await loadTextures();
 	await ShapeRenderer.initialize();
@@ -91,9 +92,12 @@ function onGameStarted(): void {
 	game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
 	game.terrain()?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	// TODO activate these
-	// game.terrain().setWaterRefractionTex(renderData.waterRenderData.refractionFramebuffer.fbTexture(), game.skyBox().getCubeMapTexture());
-	// renderData.renderCtx.meshRenderer.setWaterNormalTexture(game.terrain().getWaterNormalTexture());
-	// renderData.renderCtx.enableWaterRender = true;
+	game.terrain().setWaterRefractionTex(
+		renderData.waterRenderData.refractionFramebuffer.fbTexture(),
+		game.skyBox().getCubeMapTexture(),
+	);
+	renderData.renderCtx.meshRenderer.setWaterNormalTexture(game.terrain().getWaterNormalTexture());
+	renderData.renderCtx.enableWaterRender = true;
 	renderData.skyBox = game.skyBox();
 	renderData.terrain = game.terrain();
 }

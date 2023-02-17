@@ -110,10 +110,10 @@ export class CustomMeshRenderer extends MeshRenderer {
 	}
 
 	setWaterNormalTexture(texture: WebGLTexture): void {
-		this.renderData_.waterNormalTex = texture;
+		this.renderData.waterNormalTex = texture;
 	}
 
-	private renderData_: CustomMeshRenderData;
+	private renderData = new CustomMeshRenderData();
 }
 
 class CustomMeshRenderData {

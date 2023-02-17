@@ -1,17 +1,20 @@
-#version 330 core
+#version 100
+
+precision mediump float;
+precision mediump int;
 
 #include common.glsl
 
-in vec3 pos;
-in float fog;
+attribute vec3 pos;
+attribute float fog;
 
-out vec3 fWPos;
-out float fFog;
-out vec3 fScreenUV;
+varying vec3 fWPos;
+varying float fFog;
+varying vec3 fScreenUV;
 
 void main() {
-   	gl_Position = matPV * vec4(pos, 1);
+	gl_Position = vec4(pos, 1) * matVP;
 	fScreenUV = gl_Position.xyw;
 	fWPos = pos;
-   	fFog = fog;
+	fFog = fog;
 }

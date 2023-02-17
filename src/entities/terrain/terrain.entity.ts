@@ -105,7 +105,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		});
 		this.setupVAO();
 
-		// if (!this.previewMode) this.water = new Water();
+		if (!this.previewMode) {
+			this.water = new Water();
+		}
 	}
 
 	override getType(): string {
@@ -119,7 +121,10 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	override destroy(): void {
 		this.clear();
 		this.release();
-		if (this.water) this.water = null;
+		if (this.water) {
+			this.water.release();
+			this.water = null;
+		}
 	}
 
 	release(): void {
@@ -129,7 +134,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		}
 		this.renderData.release();
 		this.renderData = null;
-		if (this.water) this.water.release();
+		if (this.water) {
+			this.water.release();
+		}
 	}
 
 	// unsigned getEntityType() const override { return EntityTypes::TERRAIN; }
@@ -262,14 +269,14 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.bspTree = new BSPTree<number>(bspConfig, this.triangleAABBGenerator, triIndices);
 
 		console.log("Generating water . . .");
-		// if (this.water_) {
-		// 	this.water_.generate(<WaterConfig>{
-		// 		innerRadius: terrainRadius, // inner radius
-		// 		outerExtent: seaBedRadius - terrainRadius + 200, // outer extent
-		// 		vertexDensity: Math.max(0.05, 2.0 / terrainRadius), // vertex density
-		// 		constrainToCircle: false, // constrain to circle
-		// 	});
-		// }
+		if (this.water) {
+			this.water.generate(<WaterConfig>{
+				innerRadius: terrainRadius, // inner radius
+				outerExtent: seaBedRadius - terrainRadius + 200, // outer extent
+				vertexDensity: Math.max(0.05, 2.0 / terrainRadius), // vertex density
+				constrainToCircle: false, // constrain to circle
+			});
+		}
 		console.log("Done generating.");
 		randSeed(nextSeed);
 	}

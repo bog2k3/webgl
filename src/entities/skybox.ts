@@ -33,6 +33,10 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 		return AABB.empty(); // prevent the skybox being retrieved by spatial queries.
 	}
 
+	getCubeMapTexture(): WebGLTexture {
+		return this.renderData.texture;
+	}
+
 	release(): void {
 		this.clear();
 		this.renderData.shaderProgram.onProgramReloaded.remove(this.renderData.reloadHandler);

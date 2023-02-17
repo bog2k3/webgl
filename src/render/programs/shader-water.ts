@@ -1,9 +1,17 @@
+import { gl } from "../../joglfw/glcontext";
 import { ShaderProgram } from "../../joglfw/render/shader-program";
+import { SharedUniformPacks } from "./shared-uniform-packs";
 import { UPackWater } from "./uniform-pack-water";
 
 export class ShaderWater extends ShaderProgram {
 	constructor() {
 		super();
+		this.useUniformPack(SharedUniformPacks.upCommon);
+		this.useUniformPack(SharedUniformPacks.upWaterSurface);
+		this.useUniformPack(this.upackWater);
+
+		this.defineVertexAttrib("pos", gl.FLOAT, 3);
+		this.defineVertexAttrib("fog", gl.FLOAT, 1);
 	}
 
 	async load(): Promise<boolean> {
@@ -18,8 +26,8 @@ export class ShaderWater extends ShaderProgram {
 	}
 
 	uniforms(): UPackWater {
-		return this.upackWater_;
+		return this.upackWater;
 	}
 
-	private upackWater_ = new UPackWater();
+	private upackWater = new UPackWater();
 }
