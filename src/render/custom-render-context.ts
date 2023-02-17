@@ -43,5 +43,7 @@ export class CustomRenderContext extends RenderContext {
 		unifCommon.setEnableClipping(this.enableClipPlane);
 		unifCommon.setSubspace(this.subspace);
 		unifCommon.setTime(this.time);
+		unifCommon.setFOV(this.viewport.camera().FOV(), this.viewport.aspectRatio());
+		unifCommon.setMatView(this.viewport.camera().matView());
 	}
 }

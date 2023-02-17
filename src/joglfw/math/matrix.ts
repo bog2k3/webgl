@@ -151,6 +151,18 @@ export class Matrix {
 		);
 	}
 
+	/** Creates and returns a deep copy of this matrix */
+	copy(): Matrix {
+		const a = this.m;
+		// prettier-ignore
+		return new Matrix(
+			a[0], a[4], a[8], a[12],
+			a[1], a[5], a[9], a[13],
+			a[2], a[6], a[10], a[14],
+			a[3], a[7], a[11], a[15]
+		);
+	}
+
 	/** Performs matrix multiplication, returning a new matrix
 	 * Equivalent to this * m
 	 */
@@ -171,6 +183,7 @@ export class Matrix {
 	}
 
 	inverse(): Matrix {
+		// FIXME test - this may be transposed
 		const A2323 = this.m[2 * 4 + 2] * this.m[3 * 4 + 3] - this.m[2 * 4 + 3] * this.m[3 * 4 + 2];
 		const A1323 = this.m[2 * 4 + 1] * this.m[3 * 4 + 3] - this.m[2 * 4 + 3] * this.m[3 * 4 + 1];
 		const A1223 = this.m[2 * 4 + 1] * this.m[3 * 4 + 2] - this.m[2 * 4 + 2] * this.m[3 * 4 + 1];
@@ -217,6 +230,6 @@ export class Matrix {
 			det * (this.m[0 * 4 + 0] * A1223 - this.m[0 * 4 + 1] * A0223 + this.m[0 * 4 + 2] * A0123),
 			det * -(this.m[0 * 4 + 0] * A1213 - this.m[0 * 4 + 1] * A0213 + this.m[0 * 4 + 2] * A0113),
 			det * (this.m[0 * 4 + 0] * A1212 - this.m[0 * 4 + 1] * A0212 + this.m[0 * 4 + 2] * A0112),
-		).transpose();
+		);
 	}
 }

@@ -24,6 +24,10 @@ export class Camera {
 	private up_ = new Vector(0, 1, 0);
 	private orthoSize_: Vector; // in world units
 
+	matView(): Matrix {
+		return this.matView_;
+	}
+
 	matViewProj(): Matrix {
 		return this.matViewProj_;
 	}
