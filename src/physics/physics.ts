@@ -21,7 +21,8 @@ export async function initPhysics(): Promise<void> {
 	setPhysicsDebugDrawer(buildPhysDebugDrawer());
 }
 
-export function setPhysicsDebugDrawer(debugDrawer: Ammo.btIDebugDraw | null): void {
+export function setPhysicsDebugDrawer(debugDrawer_: Ammo.btIDebugDraw | null): void {
+	debugDrawer = debugDrawer_;
 	physWorld.setDebugDrawer(debugDrawer);
 }
 

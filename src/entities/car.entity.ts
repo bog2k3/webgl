@@ -2,23 +2,26 @@ import Ammo from "ammojs-typed";
 import { AABB } from "../joglfw/math/aabb";
 import { Quat } from "../joglfw/math/quat";
 import { Vector } from "../joglfw/math/vector";
+import { RenderContext } from "../joglfw/render/render-context";
+import { IRenderable } from "../joglfw/render/renderable";
 import { Entity } from "../joglfw/world/entity";
+import { IUpdatable } from "../joglfw/world/updateable";
 import { quat2Bullet, vec2Bullet } from "../physics/functions";
 import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
 
-export class Car extends Entity {
-	static readonly BODY_WIDTH = 1.2;
+export class Car extends Entity implements IUpdatable, IRenderable {
+	static readonly BODY_WIDTH = 1.4;
 	static readonly BODY_LENGTH = 3;
-	static readonly BODY_HEIGHT = 1.4;
+	static readonly BODY_HEIGHT = 1.2;
 	static readonly BODY_MASS = 200;
 	static readonly WHEEL_DIAMETER = 0.625;
 	static readonly WHEEL_WIDTH = 0.25;
 	static readonly WHEEL_MASS = 20;
 	static readonly WHEEL_X = Car.BODY_WIDTH / 2;
-	static readonly FRONT_AXLE_Z = Car.BODY_LENGTH / 2 - Car.WHEEL_DIAMETER * 1.4;
-	static readonly REAR_AXLE_Z = -Car.BODY_LENGTH / 2 + Car.WHEEL_DIAMETER * 1.4;
+	static readonly FRONT_AXLE_Z = Car.BODY_LENGTH / 2 - Car.WHEEL_DIAMETER * 0.6;
+	static readonly REAR_AXLE_Z = -Car.BODY_LENGTH / 2 + Car.WHEEL_DIAMETER * 0.6;
 	static readonly AXLES_Y = -Car.BODY_HEIGHT / 2 - Car.WHEEL_DIAMETER * 0.2;
 	static readonly WHEEL_POSTIONS = [
 		new Vector(-Car.WHEEL_X, Car.AXLES_Y, Car.FRONT_AXLE_Z), // front-left
@@ -82,6 +85,23 @@ export class Car extends Entity {
 
 	getAABB(): AABB {
 		return AABB.empty(); // TODO implement
+	}
+
+	update(dt: number): void {}
+
+	render(ctx: RenderContext): void {
+		physWorld.debugDrawObject(
+			this.chassisBody.body.getWorldTransform(),
+			this.chassisBody.body.getCollisionShape(),
+			new Ammo.btVector3(1, 0, 1),
+		);
+		for (let i = 0; i < 4; i++) {
+			physWorld.debugDrawObject(
+				this.wheelBodies[i].body.getWorldTransform(),
+				this.wheelBodies[i].body.getCollisionShape(),
+				new Ammo.btVector3(1, 1, 0),
+			);
+		}
 	}
 
 	// ----------------------------- PRIVATE AREA ----------------------------- //

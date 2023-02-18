@@ -29,7 +29,7 @@ export class Game {
 		tc.length = 100;
 		tc.width = 100;
 		tc.minElevation = -2;
-		tc.maxElevation = 10;
+		tc.maxElevation = 2;
 		tc.seaFloorElevation = -10;
 		tc.roughness = 0.8;
 		this.terrain_ = new Terrain({ previewMode: false });
@@ -54,7 +54,7 @@ export class Game {
 		await this.skyBox_.load("data/textures/sky/1");
 		World.getInstance().addEntity(this.skyBox_);
 
-		const playerCar = new Car(new Vector(0, tc.maxElevation, 0), Quat.identity());
+		const playerCar = new Car(new Vector(0, tc.maxElevation + 3, 0), Quat.identity());
 		World.getInstance().addEntity(playerCar);
 
 		// DEBUG---
