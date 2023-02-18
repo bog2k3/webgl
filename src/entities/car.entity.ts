@@ -18,7 +18,7 @@ export class Car extends Entity {
 	static readonly WHEEL_MASS = 20;
 	static readonly WHEEL_X = Car.BODY_WIDTH / 2;
 	static readonly FRONT_AXLE_Z = Car.BODY_LENGTH / 2 - Car.WHEEL_DIAMETER * 1.4;
-	static readonly REAR_AXLE_Z = Car.BODY_LENGTH / 2 - Car.WHEEL_DIAMETER * 1.4;
+	static readonly REAR_AXLE_Z = -Car.BODY_LENGTH / 2 + Car.WHEEL_DIAMETER * 1.4;
 	static readonly AXLES_Y = -Car.BODY_HEIGHT / 2 - Car.WHEEL_DIAMETER * 0.2;
 	static readonly WHEEL_POSTIONS = [
 		new Vector(-Car.WHEEL_X, Car.AXLES_Y, Car.FRONT_AXLE_Z), // front-left
@@ -62,12 +62,16 @@ export class Car extends Entity {
 				this.wheelBodies[i].body,
 				new Ammo.btTransform(quat2Bullet(Quat.identity()), vec2Bullet(Car.WHEEL_POSTIONS[i])),
 				new Ammo.btTransform(quat2Bullet(Quat.identity()), vec2Bullet(new Vector(0))),
-				true,
+				false,
 			);
 			spring.enableSpring(1, true);
 			spring.setStiffness(1, 35);
 			spring.setDamping(1, 0.3);
 			spring.setEquilibriumPoint();
+			spring.setAngularLowerLimit(new Ammo.btVector3(0, 0, 0));
+			spring.setAngularUpperLimit(new Ammo.btVector3(-1, 0, 0));
+			spring.setLinearLowerLimit(new Ammo.btVector3(0, -0.2, 0));
+			spring.setLinearUpperLimit(new Ammo.btVector3(0, +0.2, 0));
 			physWorld.addConstraint(spring);
 		}
 	}

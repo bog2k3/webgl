@@ -39,7 +39,8 @@ export class Game {
 		World.getInstance().addEntity(this.terrain_);
 
 		this.freeCam_ = new FreeCamera(
-			new Vector(tc.width / 1.8, tc.maxElevation + 20, tc.length / 1.8),
+			// new Vector(tc.width / 1.8, tc.maxElevation + 20, tc.length / 1.8),
+			new Vector(tc.width / 3.8, tc.maxElevation + 10, tc.length / 3.8),
 			new Vector(-1, -0.45, -1),
 		);
 		World.getInstance().addEntity(this.freeCam_);
@@ -57,11 +58,11 @@ export class Game {
 		World.getInstance().addEntity(playerCar);
 
 		// DEBUG---
-		const m: Mesh = Mesh.makeBox(new Vector(0, 0, 0), new Vector(1, 1, 1));
-		const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5));
-		const boxMass = 50;
-		const box = new RigidObject(m, new Vector(0, tc.maxElevation + 5, 0), boxShape, boxMass);
-		World.getInstance().addEntity(box);
+		// const m: Mesh = Mesh.makeBox(new Vector(0, 0, 0), new Vector(1, 1, 1));
+		// const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5));
+		// const boxMass = 50;
+		// const box = new RigidObject(m, new Vector(0, tc.maxElevation + 5, 0), boxShape, boxMass);
+		// World.getInstance().addEntity(box);
 		//---DEBUG
 
 		console.log("Ready");
