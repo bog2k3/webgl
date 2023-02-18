@@ -55,7 +55,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 	initGL(canvas, contextOptions);
 
 	renderData = new RenderData(canvas.width, canvas.height);
-	// renderData.config.renderPhysicsDebug = true;
+	renderData.config.renderPhysicsDebug = true;
 	initRender(renderData);
 
 	Mesh.ENABLE_COLOR_DEBUG = true;

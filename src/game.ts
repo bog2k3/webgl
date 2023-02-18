@@ -1,10 +1,12 @@
 import Ammo from "ammojs-typed";
+import { Car } from "./entities/car.entity";
 import { FreeCamera } from "./entities/free-camera";
 import { RigidObject } from "./entities/rigid-object.entity";
 import { SkyBox } from "./entities/skybox";
 import { TerrainConfig } from "./entities/terrain/config";
 import { Terrain } from "./entities/terrain/terrain.entity";
 import { logprefix } from "./joglfw/log";
+import { Quat } from "./joglfw/math/quat";
 import { Vector } from "./joglfw/math/vector";
 import { Mesh } from "./joglfw/mesh";
 import { assert } from "./joglfw/utils/assert";
@@ -26,8 +28,8 @@ export class Game {
 		tc.vertexDensity = 0.5;
 		tc.length = 100;
 		tc.width = 100;
-		tc.minElevation = -10;
-		tc.maxElevation = 20;
+		tc.minElevation = -2;
+		tc.maxElevation = 10;
 		tc.seaFloorElevation = -10;
 		tc.roughness = 0.8;
 		this.terrain_ = new Terrain({ previewMode: false });
@@ -36,7 +38,10 @@ export class Game {
 
 		World.getInstance().addEntity(this.terrain_);
 
-		this.freeCam_ = new FreeCamera(new Vector(10, tc.maxElevation, 10), new Vector(-1, -0.2, -1));
+		this.freeCam_ = new FreeCamera(
+			new Vector(tc.width / 1.8, tc.maxElevation + 20, tc.length / 1.8),
+			new Vector(-1, -0.45, -1),
+		);
 		World.getInstance().addEntity(this.freeCam_);
 
 		// camera controller (this one moves the render camera to the position of the target entity)
@@ -44,12 +49,12 @@ export class Game {
 		World.getInstance().addEntity(this.cameraCtrl_);
 		this.cameraCtrl_.attachToEntity(this.freeCam_, new Vector(0, 0, 0));
 
-		// player_ = std::make_shared<PlayerEntity>(glm::vec3{0.f, config_.terrainConfig.maxElevation + 10, 0.f}, 0.f);
-		// World::getInstance().takeOwnershipOf(player_);
-
 		this.skyBox_ = new SkyBox();
 		await this.skyBox_.load("data/textures/sky/1");
 		World.getInstance().addEntity(this.skyBox_);
+
+		const playerCar = new Car(new Vector(0, tc.maxElevation, 0), Quat.identity());
+		World.getInstance().addEntity(playerCar);
 
 		// DEBUG---
 		const m: Mesh = Mesh.makeBox(new Vector(0, 0, 0), new Vector(1, 1, 1));

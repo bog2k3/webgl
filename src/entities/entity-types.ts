@@ -6,6 +6,7 @@ export enum CustomEntityType {
 	SkyBox = "SkyBox",
 	FreeCamera = "FreeCamera",
 	RigidObject = "RigidObject",
+	Car = "Car",
 }
 
 export const EntityTypes = {
