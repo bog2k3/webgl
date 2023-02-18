@@ -45,7 +45,8 @@ float fresnel(vec3 normal, vec3 incident, float n1, float n2) {
 	float cosXN1gtN2 = sqrt(1.0-min(1.0, sinT2));
 	cosX = mix(cosX, cosXN1gtN2, sign(n1 - n2) * 0.5 + 0.5);
 	float x = 1.0 - cosX;
-	float fres = r0 + (1.0-r0) * pow(x, 5.0);
+	// float fres = r0 + (1.0-r0) * pow(x, 5.0);
+	float fres = r0 + (1.0-r0) * pow(x, 2.0);
 	return max(0.0, min(1.0, fres));
 }
 
@@ -55,7 +56,8 @@ vec4 underToAboveTransm(vec3 normal, vec2 screenCoord, float dxyW, vec3 eyeDir, 
 	//float targetDist = sqrt(targetZ*targetZ * (1 + dxyW*dxyW / (Zn*Zn)));
 	//float targetDistUW = targetDist - eyeDist; // distance through water to target 0
 	vec3 T = refract(-eyeDir, normal, 1.0 / n_water);
-	float targetDepth = -(refractTarget.a - 0.5) * 100.0;
+	// float targetDepth = -(refractTarget.a - 0.5) * 100.0;
+	float targetDepth = refractTarget.a * 10.0;
 	float h_d = dot(-T, waterSmoothNormal);
 	float t0 = acos(h_d);
 	float targetDistUW = targetDepth / h_d;
@@ -67,7 +69,7 @@ vec4 underToAboveTransm(vec3 normal, vec2 screenCoord, float dxyW, vec3 eyeDir, 
 	float transmitSampleOutsideFactor = targetDepth > 50.0 ? 0.0 : 1.0;
 
 	vec3 w_perturbation = (normal-waterSmoothNormal) * displacement * 40.0;
-	vec2 s_perturbation = (vec4(w_perturbation, 0) * matVP).xy;
+	vec2 s_perturbation = (vec4(w_perturbation, 0) * matVP).xy * 5.0;
 	s_perturbation *= pow(clamp(targetDepth*0.4, 0.0, 1.0), 1.0) * transmitSampleOutsideFactor;
 	vec2 sampleCoord = screenCoord + s_perturbation;
 	vec3 transmitColor = texture2D(textureRefraction, sampleCoord).rgb;
@@ -76,7 +78,8 @@ vec4 underToAboveTransm(vec3 normal, vec2 screenCoord, float dxyW, vec3 eyeDir, 
 
 	float fresnelFactor = 1.0 - fresnel(normal, -T, n_water, n_air);
 
-	return vec4(transmitColor * fresnelFactor, targetDistUW);
+	return vec4(transmitColor * fresnelFactor, targetDistUW * 0.1);
+	// return vec4(transmitColor * fresnelFactor, -targetDepth / 10.0);
 }
 
 vec4 aboveToUnderTransm(vec3 normal, vec3 eyeDir, float eyeDist, out vec3 foamColor) {
@@ -178,11 +181,13 @@ void main() {
 	vec4 foamSamp1 = texture2D(textureFoam, fWPos.xz * foamTile1 + time * 0.2 * vec2(0.0101020, 0.0987987));
 	vec4 foamSamp2 = texture2D(textureFoam, fWPos.xz * foamTile2 - time * 2.0 * vec2(0.09859954, 0.112345));
 	float foamTransp = (foamSamp1 + foamSamp2).x * 0.5;
-	foamTransp = pow(abs(foamTransp - 0.38) * 3.0, 3.0);
-	float foamFactor = pow(1.0 / (1.0 + transmitUWDist), 8.0);
+	foamTransp = pow(abs(foamTransp - 0.38) * 3.0, 1.5);
+	float foamFactor = pow(1.0 / (1.0 + transmitUWDist), 20.0);
 	vec3 foamColor = vec3(1.0, 0.95, 0.85);
-	float foamLight_gs = (foamLight.x + foamLight.y + foamLight.z) * 1.5;
+	float foamLight_gs = (foamLight.x + foamLight.y + foamLight.z) * 0.6;
 	final.rgb = mix(final.rgb, foamColor * foamLight_gs, foamFactor * foamTransp);
+
+	// final.rgb = vec3(foamFactor * foamTransp);// * foamTransp;
 
 // fade out far edges of water
 	float alpha = 1.0 - pow(fFog, 3.0);

@@ -24,8 +24,9 @@ export function initRender(renderData: RenderData): boolean {
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LESS);
+	gl.disable(gl.BLEND);
 
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	// gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
 
 	// set up post processing hook

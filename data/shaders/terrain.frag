@@ -54,7 +54,8 @@ void main() {
 
 	vec4 final = vec4(color, 1.0);
 	if (bRefraction > 0 || bReflection > 0)
-		final.a = (fWPos.y / 200.0) + 0.5;
+		// final.a = (fWPos.y / 200.0) + 0.5;
+		final.a = max(0.0, -fWPos.y / 10.0);
 	// 	final.a = computeZValue(gl_FragCoord);
 
 	// final = vec4(texColor, 1.0);
