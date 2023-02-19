@@ -1,7 +1,11 @@
 import Ammo from "ammojs-typed";
 import { buildPhysDebugDrawer, PhysDebugDrawModes } from "./phys-debug-drawer";
 
-// export let physics: typeof Ammo = null;
+/**
+ * Bullet3D API Documentation:
+ * https://raw.githubusercontent.com/bulletphysics/bullet3/master/docs/Bullet_User_Manual.pdf
+ */
+
 export let physWorld: Ammo.btDiscreteDynamicsWorld = null;
 let debugDrawer: Ammo.DebugDrawer = null;
 

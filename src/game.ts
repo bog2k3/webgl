@@ -39,7 +39,7 @@ export class Game {
 		tc.vertexDensity = 0.5;
 		tc.length = 100;
 		tc.width = 100;
-		tc.minElevation = -0.5;
+		tc.minElevation = -1.5;
 		tc.maxElevation = 2;
 		tc.seaFloorElevation = -10;
 		tc.roughness = 0.8;
