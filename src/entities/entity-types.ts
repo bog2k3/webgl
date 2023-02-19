@@ -7,6 +7,7 @@ export enum CustomEntityType {
 	FreeCamera = "FreeCamera",
 	RigidObject = "RigidObject",
 	Car = "Car",
+	Player = "Player",
 }
 
 export const EntityTypes = {

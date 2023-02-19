@@ -1,22 +1,11 @@
-import { Terrain } from "./entities/terrain/terrain.entity";
-import { Water } from "./entities/terrain/water";
 import { Game } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
-import { Mesh } from "./joglfw/mesh";
-import { MeshRenderer } from "./joglfw/render/mesh-renderer";
 import { Shaders } from "./joglfw/render/shaders";
-import { ShapeRenderer } from "./joglfw/render/shape-renderer";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
-import { PlayerInputHandler } from "./player-input-handler";
-import { ShaderSkybox } from "./render/programs/shader-skybox";
-import { ShaderTerrain } from "./render/programs/shader-terrain";
-import { ShaderTerrainPreview } from "./render/programs/shader-terrain-preview";
-import { ShaderWater } from "./render/programs/shader-water";
 import { initRender, render } from "./render/render";
 import { RenderData } from "./render/render-data";
-import { ShaderProgramManager } from "./render/shader-program-manager";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -26,7 +15,6 @@ let renderData: RenderData;
 let world: World;
 let game: Game;
 let inputHandler: HtmlInputHandler;
-let playerInputHandler: PlayerInputHandler;
 
 window.onload = main;
 async function main(): Promise<void> {
@@ -56,18 +44,7 @@ async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
 
 	renderData = new RenderData(canvas.width, canvas.height);
 	// renderData.config.renderPhysicsDebug = true;
-	initRender(renderData);
-
-	Mesh.ENABLE_COLOR_DEBUG = true;
-	await MeshRenderer.initialize();
-
-	await ShaderProgramManager.loadProgram(ShaderTerrainPreview);
-	await ShaderProgramManager.loadProgram(ShaderTerrain);
-	await ShaderProgramManager.loadProgram(ShaderSkybox);
-	await ShaderProgramManager.loadProgram(ShaderWater);
-
-	await loadTextures();
-	await ShapeRenderer.initialize();
+	await initRender(renderData);
 }
 
 function step(): void {
@@ -84,28 +61,25 @@ function update(dt: number): void {
 	for (let event of inputHandler.getEvents()) {
 		handleInputEvent(event);
 	}
-	playerInputHandler.update(dt);
-	world.update(dt);
+	game.update(dt);
 	renderData.renderCtx.time += dt;
 }
 
 function onGameStarted(): void {
-	playerInputHandler.setTargetObject(game.freeCam());
-	game.cameraCtrl().setTargetCamera(renderData.viewport.camera());
-	game.terrain()?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
+	game.cameraCtrl.setTargetCamera(renderData.viewport.camera());
+	game.terrain?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	// TODO activate these
-	game.terrain().setWaterRefractionTex(
+	game.terrain.setWaterRefractionTex(
 		renderData.waterRenderData.refractionFramebuffer.fbTexture(),
-		game.skyBox().getCubeMapTexture(),
+		game.skyBox.getCubeMapTexture(),
 	);
-	renderData.renderCtx.meshRenderer.setWaterNormalTexture(game.terrain().getWaterNormalTexture());
+	renderData.renderCtx.meshRenderer.setWaterNormalTexture(game.terrain.getWaterNormalTexture());
 	renderData.renderCtx.enableWaterRender = true;
-	renderData.skyBox = game.skyBox();
-	renderData.terrain = game.terrain();
+	renderData.skyBox = game.skyBox;
+	renderData.terrain = game.terrain;
 }
 
 function onGameEnded(): void {
-	playerInputHandler.setTargetObject(null);
 	renderData.renderCtx.meshRenderer.setWaterNormalTexture(null);
 	renderData.renderCtx.enableWaterRender = false;
 	renderData.skyBox = null;
@@ -115,7 +89,6 @@ function onGameEnded(): void {
 function initInput(canvas: HTMLCanvasElement) {
 	canvas.addEventListener("click", () => canvas.requestPointerLock());
 	inputHandler = new HtmlInputHandler(canvas);
-	playerInputHandler = new PlayerInputHandler();
 }
 
 function handleInputEvent(ev: InputEvent): void {
@@ -138,7 +111,13 @@ function handleSystemKeys(ev: InputEvent): void {
 function handleDebugKeys(ev: InputEvent) {
 	switch (ev.keyCode) {
 		case "KeyR":
+			game.resetPlayer();
+			break;
+		case "KeyP":
 			Shaders.reloadAllShaders();
+			break;
+		case "Tab":
+			game.toggleCamera();
 			break;
 		default:
 			return; // return without consuming the event if it's not handled
@@ -149,7 +128,7 @@ function handleDebugKeys(ev: InputEvent) {
 function handleGUIInputs(ev: InputEvent): void {}
 
 function handlePlayerInputs(ev: InputEvent): void {
-	playerInputHandler.handleInputEvent(ev);
+	game.playerInputHandler.handleInputEvent(ev);
 }
 
 function initWorld(): void {
@@ -165,12 +144,4 @@ function initWorld(): void {
 	// World::getGlobal<GuiSystem>()->onMousePointerDisplayRequest.add([](bool show) {
 	// 	setMouseCapture(!show);
 	// });
-}
-
-function loadTextures(): Promise<void> {
-	// prettier-ignore
-	return Promise.all([
-		Terrain.loadTextures(0),
-		Water.loadTextures(0)
-	]).then();
 }

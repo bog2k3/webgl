@@ -14,7 +14,7 @@ import { EntityTypes } from "./entity-types";
 export class Car extends Entity implements IUpdatable, IRenderable {
 	static readonly BODY_WIDTH = 1.4;
 	static readonly BODY_LENGTH = 3;
-	static readonly BODY_HEIGHT = 1.2;
+	static readonly BODY_HEIGHT = 1.0;
 	static readonly BODY_MASS = 200;
 	static readonly WHEEL_DIAMETER = 0.625;
 	static readonly WHEEL_WIDTH = 0.25;
@@ -29,7 +29,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		new Vector(-Car.WHEEL_X, Car.AXLES_Y, Car.REAR_AXLE_Z), // rear-left
 		new Vector(+Car.WHEEL_X, Car.AXLES_Y, Car.REAR_AXLE_Z), // rear-right
 	];
-	static readonly WHEEL_FRICTION = 0.8;
+	static readonly WHEEL_FRICTION = 0.9;
+	static readonly SPRING_STIFFNESS = 10;
+	static readonly SPRING_DAMPING = 0.1;
 
 	constructor(position: Vector, orientation: Quat) {
 		super();
@@ -60,6 +62,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 					orientation,
 				}),
 			);
+			// this.wheelBodies[i].body.setRollingFriction(Car.WHEEL_FRICTION);
 			const spring = new Ammo.btGeneric6DofSpringConstraint(
 				this.chassisBody.body,
 				this.wheelBodies[i].body,
@@ -68,13 +71,13 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 				false,
 			);
 			spring.enableSpring(1, true);
-			spring.setStiffness(1, 35);
-			spring.setDamping(1, 0.3);
+			spring.setStiffness(1, Car.SPRING_STIFFNESS);
+			spring.setDamping(1, Car.SPRING_DAMPING);
 			spring.setEquilibriumPoint();
 			spring.setAngularLowerLimit(new Ammo.btVector3(0, 0, 0));
 			spring.setAngularUpperLimit(new Ammo.btVector3(-1, 0, 0));
-			spring.setLinearLowerLimit(new Ammo.btVector3(0, -0.2, 0));
-			spring.setLinearUpperLimit(new Ammo.btVector3(0, +0.2, 0));
+			spring.setLinearLowerLimit(new Ammo.btVector3(0, -0.4, 0));
+			spring.setLinearUpperLimit(new Ammo.btVector3(0, +0.4, 0));
 			physWorld.addConstraint(spring);
 		}
 	}
@@ -86,8 +89,6 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	getAABB(): AABB {
 		return AABB.empty(); // TODO implement
 	}
-
-	update(dt: number): void {}
 
 	render(ctx: RenderContext): void {
 		physWorld.debugDrawObject(
@@ -102,6 +103,45 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 				new Ammo.btVector3(1, 1, 0),
 			);
 		}
+	}
+
+	teleport(where: Vector, orientation: Quat): void {
+		const zero = new Ammo.btVector3(0, 0, 0);
+		this.chassisBody.body.setWorldTransform(new Ammo.btTransform(quat2Bullet(orientation), vec2Bullet(where)));
+		this.chassisBody.body.clearForces();
+		this.chassisBody.body.setLinearVelocity(zero);
+		this.chassisBody.body.setAngularVelocity(zero);
+		this.chassisBody.body.activate();
+		for (let i = 0; i < 4; i++) {
+			this.wheelBodies[i].body.clearForces();
+			this.wheelBodies[i].body.setLinearVelocity(zero);
+			this.wheelBodies[i].body.setAngularVelocity(zero);
+			this.wheelBodies[i].body.activate();
+		}
+	}
+
+	accelerate(): void {
+		const torque = new Ammo.btVector3(100, 0, 0);
+		this.wheelBodies[0].body.applyLocalTorque(torque);
+		this.wheelBodies[1].body.applyLocalTorque(torque);
+
+		this.chassisBody.body.applyCentralLocalForce(new Ammo.btVector3(0, 0, 1000));
+	}
+
+	break(): void {
+		const torque = new Ammo.btVector3(-100, 0, 0);
+		this.wheelBodies[0].body.applyLocalTorque(torque);
+		this.wheelBodies[1].body.applyLocalTorque(torque);
+
+		this.chassisBody.body.applyCentralLocalForce(new Ammo.btVector3(0, 0, -1000));
+	}
+
+	steerLeft(): void {}
+
+	steerRight(): void {}
+
+	update(dt: number): void {
+		this.chassisBody.getTransform(this.transform);
 	}
 
 	// ----------------------------- PRIVATE AREA ----------------------------- //

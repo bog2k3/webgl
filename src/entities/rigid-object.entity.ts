@@ -45,7 +45,7 @@ export class RigidObject extends Entity implements IRenderable, IUpdatable {
 	}
 
 	update(dt: number): void {
-		this.physBodyProxy.updateTransform(this.transform);
+		this.physBodyProxy.getTransform(this.transform);
 	}
 
 	// -------------------- PRIVATE AREA ---------------------------- //

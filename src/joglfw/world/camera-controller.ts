@@ -31,7 +31,7 @@ export class CameraController extends Entity implements IUpdatable {
 		}
 		if (this.attachedEntity_) {
 			const tr: Transform = this.attachedEntity_.getTransform();
-			const pos: Vector = this.attachOffset_.add(tr.position());
+			const pos: Vector = this.attachOffset_.mulQ(tr.orientation()).add(tr.position());
 			this.camera_.moveTo(pos);
 			const dir: Vector = tr.axisZ();
 			const up: Vector = tr.axisY();

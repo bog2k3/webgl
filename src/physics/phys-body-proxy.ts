@@ -87,12 +87,12 @@ export class PhysBodyProxy {
 	}
 
 	/** updates the given transform from the physics body's interpolated transform. */
-	updateTransform(tr: Transform): void {
+	getTransform(out_tr: Transform): void {
 		// update transform from physics:
 		const wTrans = new Ammo.btTransform();
 		this.motionState.getWorldTransform(wTrans); // we get the interpolated transform here
-		tr.setPosition(bullet2Vec(wTrans.getOrigin()));
-		tr.setOrientation(bullet2Quat(wTrans.getRotation()));
+		out_tr.setPosition(bullet2Vec(wTrans.getOrigin()));
+		out_tr.setOrientation(bullet2Quat(wTrans.getRotation()));
 	}
 
 	/** type of associated entity */

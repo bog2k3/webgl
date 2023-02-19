@@ -2,6 +2,8 @@ import { Terrain } from "../entities/terrain/terrain.entity";
 import { Water } from "../entities/terrain/water";
 import { checkGLError } from "../joglfw/glcontext";
 import { Vector } from "../joglfw/math/vector";
+import { Mesh } from "../joglfw/mesh";
+import { MeshRenderer } from "../joglfw/render/mesh-renderer";
 import { IRenderable } from "../joglfw/render/renderable";
 import { ShapeRenderer } from "../joglfw/render/shape-renderer";
 import { assert } from "../joglfw/utils/assert";
@@ -10,10 +12,15 @@ import { World } from "../joglfw/world/world";
 import { physWorld } from "../physics/physics";
 import { gl } from "./../joglfw/glcontext";
 import { RenderPass } from "./custom-render-context";
+import { ShaderSkybox } from "./programs/shader-skybox";
+import { ShaderTerrain } from "./programs/shader-terrain";
+import { ShaderTerrainPreview } from "./programs/shader-terrain-preview";
+import { ShaderWater } from "./programs/shader-water";
 import { SharedUniformPacks } from "./programs/shared-uniform-packs";
 import { PostProcessData, RenderData } from "./render-data";
+import { ShaderProgramManager } from "./shader-program-manager";
 
-export function initRender(renderData: RenderData): boolean {
+export async function initRender(renderData: RenderData): Promise<boolean> {
 	SharedUniformPacks.initialize();
 	renderData["setupDependencies"]();
 
@@ -72,8 +79,32 @@ export function initRender(renderData: RenderData): boolean {
 	renderData.viewport.camera().setZPlanes(0.15, 1000);
 	renderData.viewport.camera().moveTo(new Vector(0, 0, -1));
 
+	Mesh.ENABLE_COLOR_DEBUG = true;
+	await MeshRenderer.initialize();
+	await ShapeRenderer.initialize();
+
+	await loadShaders();
+	await loadTextures();
+
 	// done
 	return true;
+}
+
+function loadShaders(): Promise<void> {
+	return Promise.all([
+		ShaderProgramManager.loadProgram(ShaderTerrainPreview),
+		ShaderProgramManager.loadProgram(ShaderTerrain),
+		ShaderProgramManager.loadProgram(ShaderSkybox),
+		ShaderProgramManager.loadProgram(ShaderWater),
+	]).then();
+}
+
+function loadTextures(): Promise<void> {
+	// prettier-ignore
+	return Promise.all([
+		Terrain.loadTextures(0),
+		Water.loadTextures(0)
+	]).then();
 }
 
 export function unloadRender(renderData: RenderData): void {
