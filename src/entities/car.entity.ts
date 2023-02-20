@@ -94,8 +94,8 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 	accelerate(): void {
 		const torque = new Ammo.btVector3(100, 0, 0);
-		this.wheelBodies[0].body.applyLocalTorque(torque);
-		this.wheelBodies[1].body.applyLocalTorque(torque);
+		this.wheelBodies[2].body.applyLocalTorque(torque);
+		this.wheelBodies[3].body.applyLocalTorque(torque);
 
 		this.chassisBody.body.applyCentralLocalForce(new Ammo.btVector3(0, 0, 1000));
 	}
