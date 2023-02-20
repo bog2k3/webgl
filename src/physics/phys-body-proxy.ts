@@ -40,6 +40,8 @@ export class PhysBodyConfig {
 	/** A mask to enable collisions only for overlapping groups. Zero enables for all */
 	collisionMask = 0xffffffff;
 
+	customInertia?: Ammo.btVector3;
+
 	constructor(data?: Partial<PhysBodyConfig>) {
 		if (data) {
 			for (let key in data) {
@@ -76,8 +78,11 @@ export class PhysBodyProxy {
 	createBody(cfg: PhysBodyConfig): void {
 		assert(cfg.shape != null);
 		assert(cfg.mass >= 0);
-		const inertia = new Ammo.btVector3();
-		cfg.shape.calculateLocalInertia(cfg.mass, inertia);
+		let inertia = cfg.customInertia;
+		if (!inertia) {
+			inertia = new Ammo.btVector3();
+			cfg.shape.calculateLocalInertia(cfg.mass, inertia);
+		}
 
 		const vPos: Ammo.btVector3 = vec2Bullet(cfg.position);
 		const qOrient: Ammo.btQuaternion = quat2Bullet(cfg.orientation);

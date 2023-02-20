@@ -13,17 +13,21 @@ import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
 
 export class Car extends Entity implements IUpdatable, IRenderable {
-	static readonly BODY_WIDTH = 1.4;
-	static readonly BODY_LENGTH = 3;
-	static readonly BODY_HEIGHT = 1.0;
-	static readonly BODY_MASS = 200;
+	static readonly UPPER_BODY_WIDTH = 1.2;
+	static readonly UPPER_BODY_LENGTH = 2.5;
+	static readonly UPPER_BODY_HEIGHT = 0.9;
+	static readonly UPPER_BODY_MASS = 100;
+	static readonly LOWER_BODY_WIDTH = 1.4;
+	static readonly LOWER_BODY_LENGTH = 3.0;
+	static readonly LOWER_BODY_HEIGHT = 0.5;
+	static readonly LOWER_BODY_MASS = 300;
 	static readonly WHEEL_DIAMETER = 0.625;
 	static readonly WHEEL_WIDTH = 0.25;
 	static readonly WHEEL_MASS = 20;
-	static readonly WHEEL_X = Car.BODY_WIDTH / 2;
-	static readonly FRONT_AXLE_Z = Car.BODY_LENGTH / 2 - Car.WHEEL_DIAMETER * 0.6;
-	static readonly REAR_AXLE_Z = -Car.BODY_LENGTH / 2 + Car.WHEEL_DIAMETER * 0.6;
-	static readonly AXLES_Y = -Car.BODY_HEIGHT / 2 - Car.WHEEL_DIAMETER * 0.8;
+	static readonly WHEEL_X = Car.LOWER_BODY_WIDTH / 2;
+	static readonly FRONT_AXLE_Z = Car.LOWER_BODY_LENGTH / 2 - Car.WHEEL_DIAMETER * 0.6;
+	static readonly REAR_AXLE_Z = -Car.LOWER_BODY_LENGTH / 2 + Car.WHEEL_DIAMETER * 0.6;
+	static readonly AXLES_Y = -Car.LOWER_BODY_HEIGHT / 2 - Car.WHEEL_DIAMETER * 0.6;
 	static readonly WHEEL_POSTIONS = [
 		new Vector(-Car.WHEEL_X, Car.AXLES_Y, Car.FRONT_AXLE_Z), // front-left
 		new Vector(+Car.WHEEL_X, Car.AXLES_Y, Car.FRONT_AXLE_Z), // front-right
@@ -31,8 +35,11 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		new Vector(+Car.WHEEL_X, Car.AXLES_Y, Car.REAR_AXLE_Z), // rear-right
 	];
 	static readonly WHEEL_FRICTION = 0.9;
-	static readonly SPRING_STIFFNESS = 5000;
-	static readonly SPRING_DAMPING = 0.1;
+	static readonly SPRING_STIFFNESS = (Car.LOWER_BODY_MASS + Car.UPPER_BODY_MASS) * 12.5;
+	static readonly SPRING_DAMPING = 0.0001;
+	static readonly STEERING_STIFFNESS = 50000;
+	static readonly STEERING_DAMPING = 0.01;
+	static readonly STEERING_MAX_ANGLE = Math.PI / 8;
 
 	constructor(position: Vector, orientation: Quat) {
 		super();
@@ -40,6 +47,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		for (let i = 0; i < 4; i++) {
 			this.createWheel(position, orientation, i);
 		}
+		// this.createSteeringConstraint(position);
 	}
 
 	getType(): string {
@@ -56,6 +64,11 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 			this.chassisBody.body.getCollisionShape(),
 			new Ammo.btVector3(1, 0, 1),
 		);
+		// physWorld.debugDrawObject(
+		// 	this.chassisBody.body.getWorldTransform(),
+		// 	(this.chassisBody.body.getCollisionShape() as Ammo.btCompoundShape).getChildShape(1),
+		// 	new Ammo.btVector3(1, 0, 1),
+		// );
 		for (let i = 0; i < 4; i++) {
 			physWorld.debugDrawObject(
 				this.wheelBodies[i].body.getWorldTransform(),
@@ -100,9 +113,17 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		this.chassisBody.body.applyCentralLocalForce(new Ammo.btVector3(0, 0, -1000));
 	}
 
-	steerLeft(): void {}
+	steerLeft(): void {
+		const torque = new Ammo.btVector3(0, -100, 0);
+		this.wheelBodies[0].body.applyTorque(torque);
+		this.wheelBodies[1].body.applyTorque(torque);
+	}
 
-	steerRight(): void {}
+	steerRight(): void {
+		const torque = new Ammo.btVector3(0, +100, 0);
+		this.wheelBodies[0].body.applyTorque(torque);
+		this.wheelBodies[1].body.applyTorque(torque);
+	}
 
 	update(dt: number): void {
 		this.chassisBody.getTransform(this.transform);
@@ -112,25 +133,35 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	private chassisBody: PhysBodyProxy;
 	private wheelBodies: PhysBodyProxy[] = []; // 0: front-left, 1: front-right, 2: rear-left, 3: rear-right
 
-	createChassis(position: Vector, orientation: Quat): void {
-		const bodyShape = new Ammo.btBoxShape(
-			new Ammo.btVector3(Car.BODY_WIDTH * 0.5, Car.BODY_HEIGHT * 0.5, Car.BODY_LENGTH * 0.5),
+	private createChassis(position: Vector, orientation: Quat): void {
+		const upperChassisShape = new Ammo.btBoxShape(
+			new Ammo.btVector3(Car.UPPER_BODY_WIDTH * 0.5, Car.UPPER_BODY_HEIGHT * 0.5, Car.UPPER_BODY_LENGTH * 0.5),
 		);
+		const lowerChassisShape = new Ammo.btBoxShape(
+			new Ammo.btVector3(Car.LOWER_BODY_WIDTH * 0.5, Car.LOWER_BODY_HEIGHT * 0.5, Car.LOWER_BODY_LENGTH * 0.5),
+		);
+		const inertia = new Ammo.btVector3();
+		lowerChassisShape.calculateLocalInertia(Car.LOWER_BODY_MASS + Car.UPPER_BODY_MASS, inertia);
+		const compoundShape = new Ammo.btCompoundShape();
+		compoundShape.addChildShape(new Ammo.btTransform(), lowerChassisShape);
+		// compoundShape.addChildShape(new Ammo.btTransform(), upperChassisShape);
 		this.chassisBody = new PhysBodyProxy(this);
 		this.chassisBody.createBody(
 			new PhysBodyConfig({
 				position,
-				shape: bodyShape,
-				mass: Car.BODY_MASS,
+				// shape: compoundShape,
+				shape: lowerChassisShape,
+				mass: Car.LOWER_BODY_MASS + Car.UPPER_BODY_MASS,
 				friction: 0.5,
 				orientation,
 				collisionGroup: CollisionGroups.CAR_BODY,
 				collisionMask: CollisionGroups.STATIC | CollisionGroups.CAR_BODY,
+				customInertia: inertia,
 			}),
 		);
 	}
 
-	createWheel(chassisPos: Vector, chassisOrient: Quat, i: number): void {
+	private createWheel(chassisPos: Vector, chassisOrient: Quat, i: number): void {
 		const wheelShape = new Ammo.btCylinderShapeX(
 			new Ammo.btVector3(Car.WHEEL_WIDTH * 0.5, Car.WHEEL_DIAMETER * 0.5, Car.WHEEL_DIAMETER * 0.5),
 		);
@@ -157,11 +188,49 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		spring.enableSpring(1, true);
 		spring.setStiffness(1, Car.SPRING_STIFFNESS);
 		spring.setDamping(1, Car.SPRING_DAMPING);
-		spring.setAngularLowerLimit(new Ammo.btVector3(0, 0, 0));
-		spring.setAngularUpperLimit(new Ammo.btVector3(-1, 0, 0));
+		let steerAngle = 0;
+		if (i < 2) {
+			spring.enableSpring(2, true);
+			spring.setStiffness(2, Car.STEERING_STIFFNESS);
+			spring.setDamping(2, Car.STEERING_DAMPING);
+			steerAngle = Car.STEERING_MAX_ANGLE;
+		}
+		spring.setAngularLowerLimit(new Ammo.btVector3(0, -steerAngle, 0));
+		spring.setAngularUpperLimit(new Ammo.btVector3(-1, +steerAngle, 0));
 		spring.setLinearLowerLimit(new Ammo.btVector3(0, 0, 0));
-		spring.setLinearUpperLimit(new Ammo.btVector3(0, 0.6, 0));
+		spring.setLinearUpperLimit(new Ammo.btVector3(0, Car.WHEEL_DIAMETER, 0));
 		spring.setEquilibriumPoint();
 		physWorld.addConstraint(spring);
+	}
+
+	/** Constrains the two front wheels to only steer together at the same angle */
+	private createSteeringConstraint(chassisPos: Vector): void {
+		const conrodWidth = Car.WHEEL_POSTIONS[1].x - Car.WHEEL_POSTIONS[0].x;
+		const conrodBody = new PhysBodyProxy(this);
+		conrodBody.createBody(
+			new PhysBodyConfig({
+				mass: 1,
+				position: chassisPos.add(new Vector(0, Car.AXLES_Y, Car.FRONT_AXLE_Z + Car.WHEEL_DIAMETER * 0.5)),
+				shape: new Ammo.btBoxShape(new Ammo.btVector3(conrodWidth * 0.5, 0.01, 0.01)),
+				collisionGroup: CollisionGroups.CAR_WHEEL,
+			}),
+		);
+		const wheelPoint = new Ammo.btVector3(0, 0, Car.WHEEL_DIAMETER * 0.5);
+		physWorld.addConstraint(
+			new Ammo.btPoint2PointConstraint(
+				this.wheelBodies[0].body,
+				conrodBody.body,
+				wheelPoint,
+				new Ammo.btVector3(-conrodWidth * 0.5, 0, 0),
+			),
+		);
+		physWorld.addConstraint(
+			new Ammo.btPoint2PointConstraint(
+				this.wheelBodies[1].body,
+				conrodBody.body,
+				wheelPoint,
+				new Ammo.btVector3(+conrodWidth * 0.5, 0, 0),
+			),
+		);
 	}
 }
