@@ -13,8 +13,8 @@ import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
 
 export class Car extends Entity implements IUpdatable, IRenderable {
-	static readonly UPPER_BODY_WIDTH = 1.2;
-	static readonly UPPER_BODY_LENGTH = 2.5;
+	static readonly UPPER_BODY_WIDTH = 1.0;
+	static readonly UPPER_BODY_LENGTH = 2.0;
 	static readonly UPPER_BODY_HEIGHT = 0.9;
 	static readonly UPPER_BODY_MASS = 100;
 	static readonly LOWER_BODY_WIDTH = 1.4;
@@ -61,14 +61,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	render(ctx: RenderContext): void {
 		physWorld.debugDrawObject(
 			this.chassisBody.body.getWorldTransform(),
-			this.chassisBody.body.getCollisionShape(),
+			this.bodyShapes[0],
 			new Ammo.btVector3(1, 0, 1),
 		);
-		// physWorld.debugDrawObject(
-		// 	this.chassisBody.body.getWorldTransform(),
-		// 	(this.chassisBody.body.getCollisionShape() as Ammo.btCompoundShape).getChildShape(1),
-		// 	new Ammo.btVector3(1, 0, 1),
-		// );
 		for (let i = 0; i < 4; i++) {
 			physWorld.debugDrawObject(
 				this.wheelBodies[i].body.getWorldTransform(),
@@ -132,25 +127,36 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	// ----------------------------- PRIVATE AREA ----------------------------- //
 	private chassisBody: PhysBodyProxy;
 	private wheelBodies: PhysBodyProxy[] = []; // 0: front-left, 1: front-right, 2: rear-left, 3: rear-right
+	private bodyShapes: Ammo.btBoxShape[] = [];
 
 	private createChassis(position: Vector, orientation: Quat): void {
-		const upperChassisShape = new Ammo.btBoxShape(
-			new Ammo.btVector3(Car.UPPER_BODY_WIDTH * 0.5, Car.UPPER_BODY_HEIGHT * 0.5, Car.UPPER_BODY_LENGTH * 0.5),
-		);
 		const lowerChassisShape = new Ammo.btBoxShape(
 			new Ammo.btVector3(Car.LOWER_BODY_WIDTH * 0.5, Car.LOWER_BODY_HEIGHT * 0.5, Car.LOWER_BODY_LENGTH * 0.5),
 		);
+		this.bodyShapes[0] = lowerChassisShape;
 		const inertia = new Ammo.btVector3();
 		lowerChassisShape.calculateLocalInertia(Car.LOWER_BODY_MASS + Car.UPPER_BODY_MASS, inertia);
+
+		const upperChassisShape = new Ammo.btBoxShape(
+			new Ammo.btVector3(Car.UPPER_BODY_WIDTH * 0.5, Car.UPPER_BODY_HEIGHT * 0.5, Car.UPPER_BODY_LENGTH * 0.5),
+		);
+		this.bodyShapes[1] = upperChassisShape;
+
 		const compoundShape = new Ammo.btCompoundShape();
 		compoundShape.addChildShape(new Ammo.btTransform(), lowerChassisShape);
-		// compoundShape.addChildShape(new Ammo.btTransform(), upperChassisShape);
+		compoundShape.addChildShape(
+			new Ammo.btTransform(
+				new Ammo.btQuaternion(0, 0, 0, 1),
+				new Ammo.btVector3(0, (Car.LOWER_BODY_HEIGHT + Car.UPPER_BODY_HEIGHT) * 0.5, 0),
+			),
+			upperChassisShape,
+		);
 		this.chassisBody = new PhysBodyProxy(this);
 		this.chassisBody.createBody(
 			new PhysBodyConfig({
 				position,
-				// shape: compoundShape,
-				shape: lowerChassisShape,
+				shape: compoundShape,
+				// shape: lowerChassisShape,
 				mass: Car.LOWER_BODY_MASS + Car.UPPER_BODY_MASS,
 				friction: 0.5,
 				orientation,
@@ -205,6 +211,8 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 	/** Constrains the two front wheels to only steer together at the same angle */
 	private createSteeringConstraint(chassisPos: Vector): void {
+		// TODO cannot constrain points on tire because they rotate differently.
+		// TODO must find another solution
 		const conrodWidth = Car.WHEEL_POSTIONS[1].x - Car.WHEEL_POSTIONS[0].x;
 		const conrodBody = new PhysBodyProxy(this);
 		conrodBody.createBody(
