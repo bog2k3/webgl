@@ -24,7 +24,7 @@ export class PlayerController implements IUserControllable {
 				this.car.steerRight();
 				break;
 			case Direction.BACKWARD:
-				this.car.break();
+				this.car.brake();
 				break;
 		}
 	}

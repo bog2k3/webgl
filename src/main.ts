@@ -15,6 +15,7 @@ let renderData: RenderData;
 let world: World;
 let game: Game;
 let inputHandler: HtmlInputHandler;
+let isPaused = false;
 
 window.onload = main;
 async function main(): Promise<void> {
@@ -61,7 +62,9 @@ function update(dt: number): void {
 	for (let event of inputHandler.getEvents()) {
 		handleInputEvent(event);
 	}
-	game.update(dt);
+	if (!isPaused) {
+		game.update(dt);
+	}
 	renderData.renderCtx.time += dt;
 }
 
@@ -119,6 +122,9 @@ function handleDebugKeys(ev: InputEvent) {
 		case "Tab":
 			game.toggleCamera();
 			break;
+		case "Space":
+			togglePause();
+			break;
 		default:
 			return; // return without consuming the event if it's not handled
 	}
@@ -144,4 +150,8 @@ function initWorld(): void {
 	// World::getGlobal<GuiSystem>()->onMousePointerDisplayRequest.add([](bool show) {
 	// 	setMouseCapture(!show);
 	// });
+}
+
+function togglePause() {
+	isPaused = !isPaused;
 }

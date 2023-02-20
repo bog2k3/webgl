@@ -19,7 +19,7 @@ export class CollisionEvent {
 	otherObj: Ammo.btCollisionObject;
 	thisMeta: PhysBodyProxy;
 	otherMeta: PhysBodyProxy;
-	readonly maxNumberContacts = 4;
+	static readonly maxNumberContacts = 4;
 	contacts: ContactPoint[];
 }
 
@@ -34,6 +34,11 @@ export class PhysBodyConfig {
 	initialVelocity = new Vector(0);
 	/** initial angular velocity in rad/s expressed in world space */
 	initialAngularVelocity = Quat.identity();
+
+	/** The group to which this shape belongs */
+	collisionGroup = 0;
+	/** A mask to enable collisions only for overlapping groups. Zero enables for all */
+	collisionMask = 0xffffffff;
 
 	constructor(data?: Partial<PhysBodyConfig>) {
 		if (data) {
@@ -64,8 +69,10 @@ export class PhysBodyProxy {
 		}
 	}
 
-	// helper function to create the physics body.
-	// This will automatically add the body to the physics world.
+	/**
+	 * Helper function to create the physics body.
+	 * This will automatically add the body to the physics world.
+	 */
 	createBody(cfg: PhysBodyConfig): void {
 		assert(cfg.shape != null);
 		assert(cfg.mass >= 0);
@@ -83,7 +90,7 @@ export class PhysBodyProxy {
 		this.body.setLinearVelocity(vec2Bullet(cfg.initialVelocity));
 		this.body.setAngularVelocity(vec2Bullet(cfg.initialAngularVelocity.toEulerAngles()));
 
-		physWorld.addRigidBody(this.body);
+		physWorld.addRigidBody(this.body, cfg.collisionGroup, cfg.collisionMask);
 	}
 
 	/** updates the given transform from the physics body's interpolated transform. */
@@ -113,8 +120,6 @@ export class PhysBodyProxy {
 	 * this event is triggered when the associated body collides with another body.
 	 * the event is only triggered for those other entity types that have been configured
 	 * via collisionCfg (where generateEvent is true).
-	 * The event is deferred until all physics have finished updating, then all events are being emitted in a separate step.
-	 * The event is *ALWAYS* emitted on the main thread.
 	 */
 	readonly onCollision = new Event<(ev: CollisionEvent) => void>();
 

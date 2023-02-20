@@ -51,8 +51,8 @@ export class Game {
 
 		this.freeCam = new FreeCamera(
 			// new Vector(tc.width / 1.8, tc.maxElevation + 20, tc.length / 1.8),
-			new Vector(tc.width / 3.8, tc.maxElevation + 10, tc.length / 3.8),
-			new Vector(-1, -0.45, -1),
+			new Vector(5, tc.maxElevation + 3, 5),
+			new Vector(-1, -0.15, -1),
 		);
 		World.getInstance().addEntity(this.freeCam);
 

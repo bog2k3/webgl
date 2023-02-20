@@ -16,6 +16,7 @@ import { TextureInfo, TextureLoader } from "../../joglfw/texture-loader";
 import { assert } from "../../joglfw/utils/assert";
 import { rand, randSeed, srand } from "../../joglfw/utils/random";
 import { Entity } from "../../joglfw/world/entity";
+import { CollisionGroups } from "../../physics/collision-groups";
 import { PhysBodyConfig, PhysBodyProxy } from "../../physics/phys-body-proxy";
 import { Progress } from "../../progress";
 import { CustomRenderContext, RenderPass } from "../../render/custom-render-context";
@@ -663,10 +664,12 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		} else {
 			this.physicsBodyMeta = new PhysBodyProxy(this);
 		}
-		const bodyCfg = new PhysBodyConfig();
-		bodyCfg.position = new Vector(0, (this.config.maxElevation + this.config.minElevation) * 0.5, 0);
-		bodyCfg.mass = 0;
-		bodyCfg.friction = 0.5;
+		const bodyCfg = new PhysBodyConfig({
+			position: new Vector(0, (this.config.maxElevation + this.config.minElevation) * 0.5, 0),
+			mass: 0,
+			friction: 0.5,
+			collisionGroup: CollisionGroups.STATIC,
+		});
 		bodyCfg.shape = new Ammo.btHeightfieldTerrainShape(
 			this.rows,
 			this.cols,
