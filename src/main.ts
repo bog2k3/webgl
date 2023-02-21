@@ -1,6 +1,10 @@
 import { Game } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
+import { Matrix } from "./joglfw/math/matrix";
+import { Quat } from "./joglfw/math/quat";
+import { matrixToQuat, quatToMatrix } from "./joglfw/math/quat-functions";
+import { Vector } from "./joglfw/math/vector";
 import { Shaders } from "./joglfw/render/shaders";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
@@ -16,6 +20,50 @@ let world: World;
 let game: Game;
 let inputHandler: HtmlInputHandler;
 let isPaused = false;
+
+function runDebug(): void {
+	const v = new Vector(0, 0, 1);
+	const qx = Quat.axisAngle(new Vector(1, 0, 0), -Math.PI / 4);
+	const qy = Quat.axisAngle(new Vector(0, 1, 0), -Math.PI / 2);
+	const qz = Quat.axisAngle(new Vector(0, 0, 1), Math.PI / 6);
+	console.log("v*qx", v.mulQ(qx));
+	console.log("v*qy", v.mulQ(qy));
+	console.log("v*qz", v.mulQ(qz));
+	console.log("v*qx*qy", v.mulQ(qx).mulQ(qy));
+	console.log("v*qy*qx", v.mulQ(qy).mulQ(qx));
+	const qxy = qx.combine(qy);
+	console.log("qxy", qxy);
+	console.log("v*qxy", v.mulQ(qxy));
+	const qyx = qy.combine(qx);
+	console.log("qyx", qyx);
+	console.log("v*qyx", v.mulQ(qyx));
+
+	console.log("-------------------------------");
+
+	const qxm = quatToMatrix(qx);
+	console.log("qx_mat", qxm["m"]);
+	console.log("rotx mat", Matrix.pitch(-Math.PI / 4)["m"]);
+
+	const qym = quatToMatrix(qy);
+	console.log("qy_mat", qym["m"]);
+	console.log("roty mat", Matrix.yaw(-Math.PI / 2)["m"]);
+
+	const qzm = quatToMatrix(qz);
+	console.log("qz_mat", qzm["m"]);
+	console.log("rotz mat", Matrix.roll(Math.PI / 6)["m"]);
+
+	console.log("-------------------------------");
+
+	const mxq = matrixToQuat(Matrix.pitch(-Math.PI / 4));
+	console.log("qx", qx);
+	console.log("matx -> q", mxq);
+	const myq = matrixToQuat(Matrix.yaw(-Math.PI / 2));
+	console.log("qy", qy);
+	console.log("maty -> q", myq);
+	const mzq = matrixToQuat(Matrix.roll(Math.PI / 6));
+	console.log("qz", qz);
+	console.log("matz -> q", mzq);
+}
 
 window.onload = main;
 async function main(): Promise<void> {

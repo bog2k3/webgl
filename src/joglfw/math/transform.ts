@@ -9,14 +9,19 @@ export class Transform {
 		this.orient_ = orientation ?? new Quat(0, 0, 0, 1);
 	}
 
-	/** get world position */
-	position(): Vector {
-		return this.pos_;
+	copyFrom(tr: Transform): void {
+		this.pos_ = tr.pos_.copy();
+		this.orient_ = tr.orient_.copy();
 	}
 
-	/** get world orientation */
+	/** get a copy of the world position */
+	position(): Vector {
+		return this.pos_.copy();
+	}
+
+	/** get a copy of the world orientation */
 	orientation(): Quat {
-		return this.orient_;
+		return this.orient_.copy();
 	}
 
 	/** get 4x4 openGL transformation matrix */
@@ -48,7 +53,7 @@ export class Transform {
 
 	/** set a new world orientation for the transform */
 	setOrientation(orient: Quat): void {
-		this.orient_ = orient.normalize();
+		this.orient_ = orient.copy().normalizeInPlace();
 		this.matDirty_ = true;
 	}
 
@@ -68,14 +73,13 @@ export class Transform {
 
 	/** move the transform by an amount expressed in *WORLD* coordinates */
 	moveWorld(delta: Vector): void {
-		this.pos_ = this.pos_.add(delta);
+		this.pos_.addInPlace(delta);
 		this.matDirty_ = true;
 	}
 
 	/** move the transform by an amount expressed in *LOCAL* coordinates */
 	moveLocal(delta: Vector): void {
-		const wDelta = delta.mulQ(this.orient_);
-		this.pos_ = this.pos_.add(wDelta);
+		this.pos_.addInPlace(delta.mulQ(this.orient_));
 		this.matDirty_ = true;
 	}
 
@@ -87,19 +91,32 @@ export class Transform {
 
 	/** rotate the transform by a quaternion expressed in *WORLD* coordinates */
 	rotateWorld(rot: Quat): void {
-		this.orient_ = rot.combine(this.orient_);
+		this.orient_.combineInPlace(rot);
 		this.matDirty_ = true;
 	}
 
 	/** rotate the transform by a quaternion expressed in *LOCAL* coordinates */
 	rotateLocal(rot: Quat): void {
-		this.orient_ = this.orient_.combine(rot);
+		this.orient_ = rot.combine(this.orient_);
 		this.matDirty_ = true;
 	}
 
-	/** combine two transforms */
+	/**
+	 * Returns a new transform that is the result of this (as left) combined with the argument (as right)
+	 * The resulting transform will apply "this" before "right"
+	 */
 	combine(right: Transform): Transform {
-		return new Transform(this.pos_.add(right.pos_.mulQ(this.orient_)), this.orient_.combine(right.orient_));
+		return new Transform(this.pos_.mulQ(right.orient_).add(right.pos_), this.orient_.combine(right.orient_));
+	}
+
+	/**
+	 * Alters this transform by combining it (to the right) with the argument.
+	 * The "right" transform behaves as if it comes into effect *after* this one when applying it to a vector
+	 */
+	combineInPlace(right: Transform): this {
+		this.pos_ = this.pos_.mulQ(right.orient_).addInPlace(right.pos_);
+		this.orient_ = right.orient_.combineInPlace(this.orient_);
+		return this;
 	}
 
 	// -------------------- PRIVATE AREA ----------------------------- //

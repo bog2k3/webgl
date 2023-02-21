@@ -1,6 +1,7 @@
 import Ammo from "ammojs-typed";
 import { AABB } from "../joglfw/math/aabb";
 import { Quat } from "../joglfw/math/quat";
+import { Transform } from "../joglfw/math/transform";
 import { Vector } from "../joglfw/math/vector";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
@@ -11,6 +12,7 @@ import { quat2Bullet, vec2Bullet } from "../physics/functions";
 import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
+import { VirtualFrame } from "./virtual-frame";
 
 export class Car extends Entity implements IUpdatable, IRenderable {
 	static readonly UPPER_BODY_WIDTH = 1.0;
@@ -48,6 +50,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 			this.createWheel(position, orientation, i);
 		}
 		// this.createSteeringConstraint(position);
+		this.cameraFrame = new VirtualFrame(this.chassisBody);
+		this.cameraFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5));
+		this.frames["camera-attachment"] = this.cameraFrame;
 	}
 
 	getType(): string {
@@ -121,13 +126,24 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	}
 
 	update(dt: number): void {
-		this.chassisBody.getTransform(this.transform);
+		this.chassisBody.getTransform(this.rootTransform);
+	}
+
+	override getFrameTransform(frameName: string): Transform {
+		if (!this.frames[frameName]) {
+			throw new Error(`Non-existent frame "${frameName}" in Car entity`);
+		}
+		const tr = new Transform();
+		this.frames[frameName].getTransform(tr);
+		return tr;
 	}
 
 	// ----------------------------- PRIVATE AREA ----------------------------- //
 	private chassisBody: PhysBodyProxy;
 	private wheelBodies: PhysBodyProxy[] = []; // 0: front-left, 1: front-right, 2: rear-left, 3: rear-right
 	private bodyShapes: Ammo.btBoxShape[] = [];
+	private frames: { [name: string]: PhysBodyProxy | VirtualFrame } = {};
+	private cameraFrame: VirtualFrame;
 
 	private createChassis(position: Vector, orientation: Quat): void {
 		const lowerChassisShape = new Ammo.btBoxShape(
@@ -165,6 +181,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 				customInertia: inertia,
 			}),
 		);
+		this.frames["root"] = this.chassisBody;
 	}
 
 	private createWheel(chassisPos: Vector, chassisOrient: Quat, i: number): void {
@@ -207,6 +224,8 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		spring.setLinearUpperLimit(new Ammo.btVector3(0, Car.WHEEL_DIAMETER, 0));
 		spring.setEquilibriumPoint();
 		physWorld.addConstraint(spring);
+
+		this.frames[`wheel${i}`] = this.wheelBodies[i];
 	}
 
 	/** Constrains the two front wheels to only steer together at the same angle */

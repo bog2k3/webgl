@@ -41,11 +41,11 @@ export class RigidObject extends Entity implements IRenderable, IUpdatable {
 	}
 
 	render(context: RenderContext): void {
-		MeshRenderer.get().render(this.mesh, this.transform.glMatrix(), context);
+		MeshRenderer.get().render(this.mesh, this.rootTransform.glMatrix(), context);
 	}
 
 	update(dt: number): void {
-		this.physBodyProxy.getTransform(this.transform);
+		this.physBodyProxy.getTransform(this.rootTransform);
 	}
 
 	// -------------------- PRIVATE AREA ---------------------------- //

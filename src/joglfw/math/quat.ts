@@ -14,21 +14,27 @@ export class Quat extends Vector {
 		return quatRotation(axis, angle);
 	}
 
+	override copy(): Quat {
+		return new Quat(this.x, this.y, this.z, this.w);
+	}
+
 	/** Combines the rotations of two quaternions.
 	 * Equivalent to this * other
 	 */
 	combine(other: Quat): Quat {
-		return new Quat(
-			this.w * other.x + this.x * other.w + this.y * other.z - this.z * other.y, // i
-			this.w * other.y - this.x * other.z + this.y * other.w + this.z * other.x, // j
-			this.w * other.z + this.x * other.y - this.y * other.x + this.z * other.w, // k
-			this.w * other.w - this.x * other.x - this.y * other.y - this.z * other.z, // 1
-		);
+		return this.copy().combineInPlace(other);
 	}
 
-	override normalize(): Quat {
-		const normVec: Vector = super.normalize();
-		return new Quat(normVec.x, normVec.y, normVec.z, normVec.w);
+	/** Combines this quaternion with another, altering "this"
+	 * Equivalent to this *= other
+	 */
+	combineInPlace(other: Quat): this {
+		const newX = other.w * this.x + other.x * this.w + other.y * this.z - other.z * this.y; // i
+		const newY = other.w * this.y - other.x * this.z + other.y * this.w + other.z * this.x; // j
+		const newZ = other.w * this.z + other.x * this.y - other.y * this.x + other.z * this.w; // k
+		const newW = other.w * this.w - other.x * this.x - other.y * this.y - other.z * this.z; // 1
+		[this.x, this.y, this.z, this.w] = [newX, newY, newZ, newW];
+		return this.normalizeInPlace();
 	}
 
 	/** Returns the Euler angles (around each of X,Y,Z axes) equivalent to this quaternion */

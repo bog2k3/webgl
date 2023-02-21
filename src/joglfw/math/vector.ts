@@ -14,7 +14,7 @@ export class Vector {
 	}
 
 	add(v: Vector): Vector {
-		return new Vector(this.x + v.x, this.y + v.y, this.z + v.z, this.w + v.w);
+		return this.copy().addInPlace(v);
 	}
 
 	addInPlace(v: Vector): this {
@@ -26,7 +26,7 @@ export class Vector {
 	}
 
 	sub(v: Vector): Vector {
-		return new Vector(this.x - v.x, this.y - v.y, this.z - v.z, this.w - v.w);
+		return this.copy().subInPlace(v);
 	}
 
 	subInPlace(v: Vector): this {
@@ -38,7 +38,7 @@ export class Vector {
 	}
 
 	scale(f: number): Vector {
-		return new Vector(this.x * f, this.y * f, this.z * f, this.w * f);
+		return this.copy().scaleInPlace(f);
 	}
 
 	scaleInPlace(f: number): this {
@@ -62,8 +62,7 @@ export class Vector {
 	}
 
 	normalize(): Vector {
-		const invLen = 1.0 / this.length();
-		return new Vector(this.x * invLen, this.y * invLen, this.z * invLen, this.w * invLen);
+		return this.copy().normalizeInPlace();
 	}
 
 	normalizeInPlace(): this {
@@ -113,29 +112,28 @@ export class Vector {
 
 	/** Transforms the vector by a matrix in the order V * M, returning a new vector */
 	mul(m: Matrix): Vector {
-		// prettier-ignore
-		return new Vector(
-			this.dot(m.col(0)), this.dot(m.col(1)), this.dot(m.col(2)), this.dot(m.col(3))
-		);
+		return this.copy().mulInPlace(m);
 	}
 
 	/** Transforms this vector by a matrix in the order V * M */
 	mulInPlace(m: Matrix): this {
 		// prettier-ignore
-		this.x = this.dot(m.col(0));
-		this.y = this.dot(m.col(1));
-		this.z = this.dot(m.col(2));
-		this.w = this.dot(m.col(3));
+		const newX = this.dot(m.col(0));
+		const newY = this.dot(m.col(1));
+		const newZ = this.dot(m.col(2));
+		const newW = this.dot(m.col(3));
+		[this.x, this.y, this.z, this.w] = [newX, newY, newZ, newW];
 		return this;
 	}
 
 	/** rotates this vector by a quaternion, returning a new vector
-	 * Equivalent to V * Q
+	 * Equivalent to V' = Q * V * Q'
 	 */
 	mulQ(q: Quat): Vector {
-		const u: Vector = q.xyz();
-		const uv: Vector = u.cross(this);
-		const uuv: Vector = u.cross(uv);
-		return this.add(uv.scale(q.w).add(uuv).scale(2));
+		// See https://www.johndcook.com/blog/2021/06/16/faster-quaternion-rotations/
+
+		const qxyz: Vector = q.xyz();
+		const t: Vector = qxyz.cross(this).scaleInPlace(2);
+		return this.add(t.scale(q.w)).add(qxyz.cross(t));
 	}
 }

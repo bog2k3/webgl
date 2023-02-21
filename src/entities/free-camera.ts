@@ -1,6 +1,7 @@
 import { AABB } from "../joglfw/math/aabb";
 import { matrixFromPositionDirection, clamp } from "../joglfw/math/functions";
 import { Matrix } from "../joglfw/math/matrix";
+import { Quat } from "../joglfw/math/quat";
 import { matrixToQuat, quatRotation } from "../joglfw/math/quat-functions";
 import { Vector } from "../joglfw/math/vector";
 import { Entity } from "../joglfw/world/entity";
@@ -11,10 +12,10 @@ import { Direction, IUserControllable } from "./user-controllable";
 export class FreeCamera extends Entity implements IUserControllable, IUpdatable {
 	constructor(position: Vector, direction: Vector) {
 		super();
-		this.transform.setPosition(position);
+		this.rootTransform.setPosition(position);
 		const up = new Vector(0, 1, 0);
 		const mRot: Matrix = matrixFromPositionDirection(new Vector(0), direction, up);
-		this.transform.setOrientation(matrixToQuat(mRot));
+		this.rootTransform.setOrientation(matrixToQuat(mRot));
 	}
 
 	override getType(): string {
@@ -22,7 +23,7 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 	}
 
 	override getAABB(): AABB {
-		return AABB.empty().expandInPlace(this.transform.position());
+		return AABB.empty().expandInPlace(this.rootTransform.position());
 	}
 
 	update(dt: number) {
@@ -34,18 +35,18 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 		if (fmv_len > 0) this.frameMoveValues_ = this.frameMoveValues_.scale(1.0 / fmv_len); // normalize direction vector
 		this.frameMoveValues_ = this.frameMoveValues_.scale(maxMoveSpeed); // this vector now represents our target speed in camera space
 		// transform it into world space:
-		this.frameMoveValues_ = this.frameMoveValues_.mulQ(this.transform.orientation());
+		this.frameMoveValues_ = this.frameMoveValues_.mulQ(this.rootTransform.orientation());
 		// how much ground we have to cover to reach that speed
 		const delta: Vector = this.frameMoveValues_.sub(this.speed_);
 		const factor: number = clamp(linearAcceleration * dt, 0, 1);
 		this.speed_ = this.speed_.add(delta.scale(factor));
-		this.transform.moveWorld(this.speed_.scale(dt));
+		this.rootTransform.moveWorld(this.speed_.scale(dt));
 		this.frameMoveValues_ = new Vector(0);
 
 		// compute rotation alteration based on inputs
 		const deltaRot: Vector = this.frameRotateValues_;
-		this.transform.rotateLocal(quatRotation(new Vector(1, 0, 0), deltaRot.x));
-		this.transform.rotateWorld(quatRotation(new Vector(0, 1, 0), deltaRot.y));
+		this.rootTransform.rotateLocal(quatRotation(new Vector(1, 0, 0), deltaRot.x));
+		this.rootTransform.rotateWorld(quatRotation(new Vector(0, 1, 0), deltaRot.y));
 		this.frameRotateValues_ = new Vector(0);
 	}
 

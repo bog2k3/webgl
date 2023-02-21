@@ -15,11 +15,19 @@ export abstract class Entity {
 
 	abstract getAABB(): AABB;
 
-	getTransform(): Transform {
-		return this.transform;
+	getFrameTransform(frameName: string): Transform {
+		throw new Error("This method must be overridden.");
 	}
 
-	protected transform = new Transform();
+	getTransform(frameName = "root"): Transform {
+		if (frameName === "root") {
+			return this.rootTransform;
+		} else {
+			return this.getFrameTransform(frameName);
+		}
+	}
+
+	protected rootTransform = new Transform();
 
 	private isDestroyed_ = false;
 }

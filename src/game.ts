@@ -59,7 +59,7 @@ export class Game {
 		// camera controller (this one moves the render camera to the position of the target entity)
 		this.cameraCtrl = new CameraController(null);
 		World.getInstance().addEntity(this.cameraCtrl);
-		this.cameraCtrl.attachToEntity(this.freeCam, new Vector(0, 0, 0));
+		this.cameraCtrl.attachToEntity(this.freeCam);
 
 		this.skyBox = new SkyBox();
 		await this.skyBox.load("data/textures/sky/1");
@@ -114,11 +114,11 @@ export class Game {
 	toggleCamera(): void {
 		if (this.cameraCtrl.getAttachedEntity() === this.freeCam) {
 			// switch to car
-			this.cameraCtrl.attachToEntity(this.playerCar, new Vector(0, 1.5, -4.5));
+			this.cameraCtrl.attachToEntity(this.playerCar, "camera-attachment", new Vector(0, 1.5, -4.5));
 			this.playerInputHandler.setTargetObject(this.playerController);
 		} else {
 			// switch to free-camera
-			this.cameraCtrl.attachToEntity(this.freeCam, new Vector(0));
+			this.cameraCtrl.attachToEntity(this.freeCam);
 			this.playerInputHandler.setTargetObject(this.freeCam);
 		}
 	}

@@ -6,10 +6,15 @@ import { Entity } from "./entity";
 import { StockEntityTypes } from "./stock-entity-types";
 import { IUpdatable } from "./updateable";
 
+export enum UpVectorMode {
+	FIXED,
+	FREE,
+	FLOATING,
+}
 export class CameraController extends Entity implements IUpdatable {
 	constructor(target: Camera) {
 		super();
-		this.camera_ = target;
+		this.camera = target;
 	}
 
 	override getType(): string {
@@ -21,40 +26,65 @@ export class CameraController extends Entity implements IUpdatable {
 	}
 
 	setTargetCamera(target: Camera): void {
-		this.camera_ = target;
+		this.camera = target;
 		this.update(0);
 	}
 
 	update(dt: number): void {
-		if (!this.camera_) {
+		if (!this.camera || !this.attachedEntity) {
 			return;
 		}
-		if (this.attachedEntity_) {
-			const tr: Transform = this.attachedEntity_.getTransform();
-			const pos: Vector = this.attachOffset_.mulQ(tr.orientation()).add(tr.position());
-			this.camera_.moveTo(pos);
-			const dir: Vector = tr.axisZ();
-			const up: Vector = tr.axisY();
-			this.camera_.lookAt(pos.add(dir), up);
-		}
+		const tr: Transform = this.attachedEntity.getTransform(this.attachedFrame);
+		const pos: Vector = this.attachOffset.mulQ(tr.orientation()).add(tr.position());
+		this.camera.moveTo(pos);
+		const dir: Vector = tr.axisZ();
+		const up: Vector = this.getUpVector(tr.axisY(), dt);
+		this.camera.lookAt(pos.add(dir), up);
 	}
 
 	/**
-	 * Attaches the controller to the given entity; camera will follow this entity precisely, both in position and orientation.
-	 * the camera is attached at <offset> from the entity's origin; <offset> is expressed in entity's local space.
-	 * To detach the controller from the entity, call this again with null; the camera will remain in its last position
+	 * Attaches the controller to the given entity's frame.
+	 * The camera will follow this entity's frame in terms of position and orientation.
+	 * the camera is attached at <offset> from the frame's origin; <offset> is expressed in the frame's local space.
+	 * To detach the controller from the entity, call this again with null; the camera will remain in its last position.
 	 */
-	attachToEntity(ent: Entity, offset: Vector): void {
-		this.attachedEntity_ = ent;
-		this.attachOffset_ = offset;
+	attachToEntity(ent: Entity | null, frameName = "root", offset = new Vector(0)): void {
+		this.attachedEntity = ent;
+		this.attachedFrame = frameName;
+		this.attachOffset = offset;
 	}
 
 	getAttachedEntity(): Entity {
-		return this.attachedEntity_;
+		return this.attachedEntity;
+	}
+
+	/**
+	 * Sets the way the camer's up-vector will be affected by the attached frame.
+	 * *FIXED* will set the camera's up-vector the same as the attached frame's in a rigid way.
+	 * *FREE* the camera's up-vector is the same as the world's, and not affected by the attachment.
+	 * *FLOATING* the camera behaves like a floating compass - quick jolts of the attachment will produce
+	 * some roll but the camera eventually returns to the world's up-vector.
+	 */
+	setUpVectorMode(mode: UpVectorMode): void {
+		this.upVectorMode = mode;
 	}
 
 	// -------------------- PRIVATE AREA ----------------------------- //
-	private camera_: Camera;
-	private attachedEntity_: Entity;
-	private attachOffset_: Vector;
+	private camera: Camera;
+	private attachedEntity: Entity;
+	private attachedFrame: string;
+	private attachOffset: Vector;
+	private upVectorMode = UpVectorMode.FIXED;
+
+	private getUpVector(localUp: Vector, dt: number): Vector {
+		if (this.upVectorMode === UpVectorMode.FIXED) {
+			return localUp;
+		}
+		if (this.upVectorMode === UpVectorMode.FREE) {
+			return new Vector(0, 1, 0);
+		}
+		if (this.upVectorMode === UpVectorMode.FLOATING) {
+			return localUp; // TODO
+		}
+	}
 }

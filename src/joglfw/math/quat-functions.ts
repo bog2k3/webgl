@@ -47,6 +47,16 @@ export function matrixToQuat(mat: Matrix): Quat {
 	const m21 = m[9];
 	const m22 = m[10];
 
+	// const m00 = m[0];
+	// const m01 = m[4];
+	// const m02 = m[8];
+	// const m10 = m[1];
+	// const m11 = m[5];
+	// const m12 = m[9];
+	// const m20 = m[2];
+	// const m21 = m[5];
+	// const m22 = m[10];
+
 	const tr = m00 + m11 + m22;
 	let qw, qx, qy, qz;
 
