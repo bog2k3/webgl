@@ -13,7 +13,7 @@ import { Mesh } from "./joglfw/mesh";
 import { assert } from "./joglfw/utils/assert";
 import { Event } from "./joglfw/utils/event";
 import { rand } from "./joglfw/utils/random";
-import { CameraController } from "./joglfw/world/camera-controller";
+import { CameraController, UpVectorMode } from "./joglfw/world/camera-controller";
 import { World } from "./joglfw/world/world";
 import { PlayerInputHandler } from "./player-input-handler";
 
@@ -115,10 +115,12 @@ export class Game {
 		if (this.cameraCtrl.getAttachedEntity() === this.freeCam) {
 			// switch to car
 			this.cameraCtrl.attachToEntity(this.playerCar, "camera-attachment", new Vector(0, 1.5, -4.5));
+			this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING);
 			this.playerInputHandler.setTargetObject(this.playerController);
 		} else {
 			// switch to free-camera
 			this.cameraCtrl.attachToEntity(this.freeCam);
+			this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
 			this.playerInputHandler.setTargetObject(this.freeCam);
 		}
 	}

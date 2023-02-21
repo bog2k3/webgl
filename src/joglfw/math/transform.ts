@@ -9,9 +9,14 @@ export class Transform {
 		this.orient_ = orientation ?? new Quat(0, 0, 0, 1);
 	}
 
-	copyFrom(tr: Transform): void {
+	copy(): Transform {
+		return new Transform(this.pos_.copy(), this.orient_.copy());
+	}
+
+	copyFrom(tr: Transform): this {
 		this.pos_ = tr.pos_.copy();
 		this.orient_ = tr.orient_.copy();
+		return this;
 	}
 
 	/** get a copy of the world position */
@@ -106,7 +111,8 @@ export class Transform {
 	 * The resulting transform will apply "this" before "right"
 	 */
 	combine(right: Transform): Transform {
-		return new Transform(this.pos_.mulQ(right.orient_).add(right.pos_), this.orient_.combine(right.orient_));
+		// return new Transform(this.pos_.mulQ(right.orient_).add(right.pos_), this.orient_.combine(right.orient_));
+		return this.copy().combineInPlace(right);
 	}
 
 	/**
@@ -115,7 +121,7 @@ export class Transform {
 	 */
 	combineInPlace(right: Transform): this {
 		this.pos_ = this.pos_.mulQ(right.orient_).addInPlace(right.pos_);
-		this.orient_ = right.orient_.combineInPlace(this.orient_);
+		this.orient_ = this.orient_.combineInPlace(right.orient_);
 		return this;
 	}
 

@@ -95,6 +95,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 			this.wheelBodies[i].body.setAngularVelocity(zero);
 			this.wheelBodies[i].body.activate();
 		}
+		this.cameraFrame.localTransform.setOrientation(Quat.identity());
 	}
 
 	accelerate(): void {
@@ -123,6 +124,13 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		const torque = new Ammo.btVector3(0, +100, 0);
 		this.wheelBodies[0].body.applyTorque(torque);
 		this.wheelBodies[1].body.applyTorque(torque);
+	}
+
+	rotateTurret(yaw: number, pitch: number): void {
+		const chassisTransform = new Transform();
+		this.chassisBody.getTransform(chassisTransform);
+		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), pitch));
+		this.cameraFrame.localTransform.rotateWorld(Quat.axisAngle(chassisTransform.axisY(), yaw));
 	}
 
 	update(dt: number): void {

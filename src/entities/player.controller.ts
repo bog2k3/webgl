@@ -41,6 +41,8 @@ export class PlayerController implements IUserControllable {
 			console.warn(`No car assigned to player, ignoring input.`);
 			return;
 		}
+		// angle is positive when rotating right or down
+		this.car.rotateTurret(dir === Direction.RIGHT ? angle : 0, dir === Direction.DOWN ? angle : 0);
 	}
 
 	/**
