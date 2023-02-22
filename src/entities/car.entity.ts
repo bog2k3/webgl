@@ -129,7 +129,6 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	rotateTurret(yaw: number, pitch: number): void {
 		const chassisTransform = new Transform();
 		this.chassisBody.getTransform(chassisTransform);
-		// TODO fix these - must rotate around actual WORLD axes (not parent), obtained by inverse transformation
 		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), pitch));
 		this.cameraFrame.localTransform.rotateWorld(Quat.axisAngle(new Vector(0, 1, 0), yaw));
 	}
