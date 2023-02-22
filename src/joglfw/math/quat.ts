@@ -14,8 +14,32 @@ export class Quat extends Vector {
 		return quatRotation(axis, angle);
 	}
 
+	/**
+	 * Computes the quaternion that, if applied to a normal vector A, would transform it into the normal vector B.
+	 * The vectors are assumed to be normalized.
+	 */
+	static fromA_to_B(A: Vector, B: Vector): Quat {
+		const axis: Vector = A.cross(B);
+		const angle = Math.acos(A.dot(B));
+		return Quat.axisAngle(axis, angle);
+	}
+
 	override copy(): Quat {
 		return new Quat(this.x, this.y, this.z, this.w);
+	}
+
+	/** "Scales" the rotation represented by this quaternion by doing a slerp between identity and this */
+	scaleAngle(f: number): Quat {
+		return this.copy().scaleAngleInPlace(f);
+	}
+
+	/** "Scales" the rotation represented by this quaternion by doing a slerp between identity and this */
+	scaleAngleInPlace(f: number): this {
+		return this.slerpInPlace(Quat.identity(), 1 - f);
+	}
+
+	getAngle(): number {
+		return Math.acos(this.w) * 2;
 	}
 
 	/** Combines the rotations of two quaternions.
@@ -23,6 +47,32 @@ export class Quat extends Vector {
 	 */
 	combine(other: Quat): Quat {
 		return this.copy().combineInPlace(other);
+	}
+
+	/**
+	 * Performs spherical interpolation between this quaternion and another, returning a new quat.
+	 * @param t must be between 0.0 (this) and 1.0 (other)
+	 */
+	slerp(other: Quat, t: number): Quat {
+		return this.copy().slerpInPlace(other, t);
+	}
+
+	/**
+	 * Performs spherical interpolation between this quaternion and another, overwriting this with the result.
+	 * @param t must be between 0.0 (this) and 1.0 (other)
+	 */
+	slerpInPlace(other: Quat, t: number): this {
+		// See https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/index.htm
+		const cosHalfTheta = this.dot(other);
+		if (cosHalfTheta >= 1) {
+			return this; // nothing to do, both are identical
+		}
+		const halfTheta = Math.acos(cosHalfTheta);
+		// prettier-ignore
+		return this
+			.scaleInPlace(Math.sin(halfTheta * (1 - t)))
+			.addInPlace(other.copy().scaleInPlace(Math.sin(halfTheta * t)))
+			.scaleInPlace(1.0 / Math.sin(halfTheta));
 	}
 
 	/** Combines this quaternion with another, altering "this"

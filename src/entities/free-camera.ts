@@ -1,7 +1,6 @@
 import { AABB } from "../joglfw/math/aabb";
-import { matrixFromPositionDirection, clamp } from "../joglfw/math/functions";
+import { clamp, matrixFromPositionDirection } from "../joglfw/math/functions";
 import { Matrix } from "../joglfw/math/matrix";
-import { Quat } from "../joglfw/math/quat";
 import { matrixToQuat, quatRotation } from "../joglfw/math/quat-functions";
 import { Vector } from "../joglfw/math/vector";
 import { Entity } from "../joglfw/world/entity";

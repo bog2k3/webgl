@@ -236,8 +236,7 @@ export namespace Shaders {
 		}
 		gl.validateProgram(prog);
 		if (!gl.getProgramParameter(prog, gl.VALIDATE_STATUS) || checkGLError("validating shader program")) {
-			console.error("Failed to validate shader program: " + gl.getProgramInfoLog(prog));
-			return null;
+			console.warn("Failed to validate shader program: " + gl.getProgramInfoLog(prog));
 		}
 		return prog;
 	}

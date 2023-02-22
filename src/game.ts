@@ -109,6 +109,9 @@ export class Game {
 	resetPlayer(): void {
 		const y = 3 + this.terrain.getHeightValue(new Vector(0, 0, 0));
 		this.playerCar.teleport(new Vector(0, y, 0), Quat.identity());
+		if (this.cameraCtrl.getAttachedEntity() === this.playerCar) {
+			this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING); // reset the orientation
+		}
 	}
 
 	toggleCamera(): void {
@@ -116,6 +119,7 @@ export class Game {
 			// switch to car
 			this.cameraCtrl.attachToEntity(this.playerCar, "camera-attachment", new Vector(0, 1.5, -4.5));
 			this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING);
+			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
 			this.playerInputHandler.setTargetObject(this.playerController);
 		} else {
 			// switch to free-camera

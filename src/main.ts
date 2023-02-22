@@ -22,7 +22,7 @@ let inputHandler: HtmlInputHandler;
 let isPaused = false;
 
 function runDebug(): void {
-	const v = new Vector(0, 0, 1);
+	let v = new Vector(0, 0, 1);
 	const qx = Quat.axisAngle(new Vector(1, 0, 0), -Math.PI / 4);
 	const qy = Quat.axisAngle(new Vector(0, 1, 0), -Math.PI / 2);
 	const qz = Quat.axisAngle(new Vector(0, 0, 1), Math.PI / 6);
@@ -39,7 +39,6 @@ function runDebug(): void {
 	console.log("v*qyx", v.mulQ(qyx));
 
 	console.log("-------------------------------");
-
 	const qxm = quatToMatrix(qx);
 	console.log("qx_mat", qxm["m"]);
 	console.log("rotx mat", Matrix.pitch(-Math.PI / 4)["m"]);
@@ -53,7 +52,6 @@ function runDebug(): void {
 	console.log("rotz mat", Matrix.roll(Math.PI / 6)["m"]);
 
 	console.log("-------------------------------");
-
 	const mxq = matrixToQuat(Matrix.pitch(-Math.PI / 4));
 	console.log("qx", qx);
 	console.log("matx -> q", mxq);
@@ -63,10 +61,26 @@ function runDebug(): void {
 	const mzq = matrixToQuat(Matrix.roll(Math.PI / 6));
 	console.log("qz", qz);
 	console.log("matz -> q", mzq);
+
+	console.log("-------------------------------");
+	const q1 = Quat.axisAngle(new Vector(0, 0, 1), Math.PI / 8);
+	v = new Vector(1, 0, 0);
+	console.log("v", v);
+	console.log("q1", q1);
+	console.log("q1/2", q1.scaleAngle(0.5));
+	console.log("v * q1", v.mulQ(q1));
+	console.log("v * q1/2", v.mulQ(q1.scaleAngle(0.5)));
+
+	console.log("-------------------------------");
+	const q2 = Quat.axisAngle(new Vector(0, 0, 1), (Math.PI / 4) * 3);
+	console.log("q2", q2);
+	console.log("slerp(0.5) q1->q2", q1.slerp(q2, 0.5));
 }
 
 window.onload = main;
 async function main(): Promise<void> {
+	// return runDebug();
+
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	await initGraphics(canvas);
 	initInput(canvas);

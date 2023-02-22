@@ -2,9 +2,11 @@ import { Matrix } from "./matrix";
 import { Quat } from "./quat";
 import { Vector } from "./vector";
 
-/** Creates a rotation quaternion around an axis. The axis is normalized automatically. */
+/**
+ * Creates a rotation quaternion around an axis.
+ * The axis is assumed to be normalized.
+ */
 export function quatRotation(axis: Vector, angle: number): Quat {
-	axis = axis.normalize();
 	const sina2 = Math.sin(angle / 2);
 	const qx = axis.x * sina2;
 	const qy = axis.y * sina2;

@@ -1,3 +1,4 @@
+import { assert } from "../utils/assert";
 import { lerp, sqr } from "./functions";
 import { Matrix } from "./matrix";
 import { Quat } from "./quat";
@@ -66,7 +67,9 @@ export class Vector {
 	}
 
 	normalizeInPlace(): this {
-		return this.scaleInPlace(1.0 / this.length());
+		const len = this.length();
+		assert(len > Number.EPSILON, "Attempting to normalize vector with zero-length");
+		return this.scaleInPlace(1.0 / len);
 	}
 
 	/**
@@ -126,14 +129,25 @@ export class Vector {
 		return this;
 	}
 
-	/** rotates this vector by a quaternion, returning a new vector
+	/**
+	 * Rotates this vector by a quaternion, returning a new vector
 	 * Equivalent to V' = Q * V * Q'
 	 */
 	mulQ(q: Quat): Vector {
-		// See https://www.johndcook.com/blog/2021/06/16/faster-quaternion-rotations/
+		return this.copy().mulQInPlace(q);
+	}
 
+	/**
+	 * Rotates this vector by a quaternion.
+	 * Equivalent to this = Q * this * Q'
+	 */
+	mulQInPlace(q: Quat): this {
+		// See https://www.johndcook.com/blog/2021/06/16/faster-quaternion-rotations/
 		const qxyz: Vector = q.xyz();
 		const t: Vector = qxyz.cross(this).scaleInPlace(2);
-		return this.add(t.scale(q.w)).add(qxyz.cross(t));
+		// prettier-ignore
+		return this
+			.addInPlace(t.scale(q.w))
+			.addInPlace(qxyz.cross(t));
 	}
 }

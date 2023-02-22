@@ -15,7 +15,7 @@ export abstract class Entity {
 
 	abstract getAABB(): AABB;
 
-	getFrameTransform(frameName: string): Transform {
+	protected getFrameTransform(frameName: string): Transform {
 		throw new Error("This method must be overridden.");
 	}
 

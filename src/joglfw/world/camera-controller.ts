@@ -1,7 +1,9 @@
 import { Camera } from "../camera";
 import { AABB } from "../math/aabb";
+import { Quat } from "../math/quat";
 import { Transform } from "../math/transform";
 import { Vector } from "../math/vector";
+import { assert } from "../utils/assert";
 import { Entity } from "./entity";
 import { StockEntityTypes } from "./stock-entity-types";
 import { IUpdatable } from "./updateable";
@@ -38,8 +40,12 @@ export class CameraController extends Entity implements IUpdatable {
 		const pos: Vector = this.attachOffset.mulQ(tr.orientation()).add(tr.position());
 		this.camera.moveTo(pos);
 		const dir: Vector = tr.axisZ();
-		const up: Vector = this.getUpVector(tr.axisY(), dt);
+		const up: Vector = this.getUpVector(tr.axisY());
 		this.camera.lookAt(pos.add(dir), up);
+
+		if (this.upVectorMode === UpVectorMode.FLOATING) {
+			this.updateFloatingVector(dt, tr.axisY());
+		}
 	}
 
 	/**
@@ -67,6 +73,12 @@ export class CameraController extends Entity implements IUpdatable {
 	 */
 	setUpVectorMode(mode: UpVectorMode): void {
 		this.upVectorMode = mode;
+		if (mode === UpVectorMode.FLOATING) {
+			assert(this.attachedEntity != null, "Must attach to an entity first");
+			this.floatingUpVec = this.attachedEntity.getTransform(this.attachedFrame).axisY();
+			this.lastFrameUpVector = this.floatingUpVec;
+			this.floatingAngVelocity = Quat.identity();
+		}
 	}
 
 	// -------------------- PRIVATE AREA ----------------------------- //
@@ -75,8 +87,11 @@ export class CameraController extends Entity implements IUpdatable {
 	private attachedFrame: string;
 	private attachOffset: Vector;
 	private upVectorMode = UpVectorMode.FIXED;
+	private floatingUpVec: Vector;
+	private floatingAngVelocity: Quat;
+	private lastFrameUpVector: Vector;
 
-	private getUpVector(localUp: Vector, dt: number): Vector {
+	private getUpVector(localUp: Vector): Vector {
 		if (this.upVectorMode === UpVectorMode.FIXED) {
 			return localUp;
 		}
@@ -84,7 +99,58 @@ export class CameraController extends Entity implements IUpdatable {
 			return new Vector(0, 1, 0);
 		}
 		if (this.upVectorMode === UpVectorMode.FLOATING) {
-			return localUp; // TODO
+			return this.floatingUpVec;
 		}
+	}
+
+	private updateFloatingVector(dt: number, newFrameUpVector: Vector): void {
+		// sudden changes in the attached frame's up-vector will induce some angular velocity in our up-vector.
+		// when the attached frame stabilizes, our up-vector will slowly drift back to world's up.
+		const joltAxis = this.lastFrameUpVector.cross(newFrameUpVector);
+		this.lastFrameUpVector = newFrameUpVector;
+		const axisLen = joltAxis.length();
+		const angleDelta = Math.asin(axisLen);
+
+		// angular acceleration due to jolts:
+		const angVelocity = angleDelta / dt;
+		const angAccel = this.computeAngularFriction(angVelocity); // this is an angular acceleration imparted by the jolt
+		let qAccel = Quat.identity();
+		if (axisLen > Number.EPSILON) {
+			joltAxis.scaleInPlace(1.0 / axisLen); // normalize
+			qAccel = Quat.axisAngle(joltAxis, angAccel);
+		}
+
+		// angular acceleration due to gravity:
+		// gravity imparts an acceleration proportional to the sine of the angle between the local and world up-vectors
+		const GRAVITY_FACTOR = 10;
+		const tiltAngle = Math.acos(this.floatingUpVec.y);
+		const tiltAccelSign = tiltAngle < Math.PI / 2 ? +1 : -1;
+		const qTiltAccel = Quat.axisAngle(
+			this.floatingUpVec.cross(new Vector(0, 1, 0)),
+			Math.sin(tiltAngle) * tiltAccelSign * GRAVITY_FACTOR,
+		);
+		qAccel.combineInPlace(qTiltAccel);
+
+		// angular acceleration due to internal friction - this is always in the opposite direction of rotation
+		const frictionAccel = this.computeAngularFriction(this.floatingAngVelocity.getAngle());
+
+		// now update parameters:
+		// angle += angSpeed * dt + angAccel * dt^2/2
+		// angSpeed += angAccel * dt
+		this.floatingUpVec.mulQInPlace(
+			this.floatingAngVelocity.scaleAngle(dt).combineInPlace(qAccel.scaleAngle((dt * dt) / 2)),
+		);
+		this.floatingAngVelocity.combineInPlace(qAccel.scaleAngle(dt));
+
+		// apply internal friction:
+		const crtAngSpeed = this.floatingAngVelocity.getAngle();
+		const frictionAngularLoss = Math.min(frictionAccel * dt, crtAngSpeed);
+		this.floatingAngVelocity.scaleAngleInPlace((crtAngSpeed - frictionAngularLoss) / crtAngSpeed);
+	}
+
+	private computeAngularFriction(angVelocity: number): number {
+		const LINEAR_FACTOR = 5; //0.8;
+		const SQUARE_FACTOR = 0; //0.5;
+		return angVelocity * LINEAR_FACTOR + angVelocity * angVelocity * SQUARE_FACTOR;
 	}
 }
