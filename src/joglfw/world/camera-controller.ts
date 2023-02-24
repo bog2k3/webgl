@@ -52,7 +52,13 @@ export class CameraController extends Entity implements IUpdatable {
 		}
 		if (this.attachMode & AttachMode.ORIENTATION_ONLY) {
 			const dir: Vector = tr.axisZ();
-			const up: Vector = this.getUpVector(tr.axisY());
+			const up: Vector = tr.axisY();
+			this.camera.lookAt(pos.add(dir), up);
+		}
+		if (this.attachMode & AttachMode.ORBIT) {
+			this.camera.moveTo(pos);
+			const dir: Vector = tr.axisZ();
+			const up: Vector = tr.axisY(); //this.getUpVector(tr.axisY());
 			this.camera.lookAt(pos.add(dir), up);
 		}
 

@@ -1,19 +1,16 @@
-import Ammo from "ammojs-typed";
 import { Car } from "./entities/car.entity";
 import { FreeCamera } from "./entities/free-camera";
 import { PlayerController } from "./entities/player.controller";
-import { RigidObject } from "./entities/rigid-object.entity";
 import { SkyBox } from "./entities/skybox";
 import { TerrainConfig } from "./entities/terrain/config";
 import { Terrain } from "./entities/terrain/terrain.entity";
 import { logprefix } from "./joglfw/log";
 import { Quat } from "./joglfw/math/quat";
 import { Vector } from "./joglfw/math/vector";
-import { Mesh } from "./joglfw/mesh";
 import { assert } from "./joglfw/utils/assert";
 import { Event } from "./joglfw/utils/event";
 import { rand } from "./joglfw/utils/random";
-import { CameraController, UpVectorMode } from "./joglfw/world/camera-controller";
+import { AttachMode, CameraController } from "./joglfw/world/camera-controller";
 import { World } from "./joglfw/world/world";
 import { PlayerInputHandler } from "./player-input-handler";
 
@@ -110,21 +107,26 @@ export class Game {
 		const y = 3 + this.terrain.getHeightValue(new Vector(0, 0, 0));
 		this.playerCar.teleport(new Vector(0, y, 0), Quat.identity());
 		if (this.cameraCtrl.getAttachedEntity() === this.playerCar) {
-			this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING); // reset the orientation
+			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING); // reset the orientation
 		}
 	}
 
 	toggleCamera(): void {
 		if (this.cameraCtrl.getAttachedEntity() === this.freeCam) {
 			// switch to car
-			this.cameraCtrl.attachToEntity(this.playerCar, "camera-attachment", new Vector(0, 1.5, -4.5));
+			this.cameraCtrl.attachToEntity(
+				this.playerCar,
+				AttachMode.ORBIT,
+				"camera-attachment",
+				new Vector(0, 1.5, -4.5),
+			);
 			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING);
-			this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
+			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
 			this.playerInputHandler.setTargetObject(this.playerController);
 		} else {
 			// switch to free-camera
-			this.cameraCtrl.attachToEntity(this.freeCam);
-			this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
+			this.cameraCtrl.attachToEntity(this.freeCam, AttachMode.FIXED);
+			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
 			this.playerInputHandler.setTargetObject(this.freeCam);
 		}
 	}
