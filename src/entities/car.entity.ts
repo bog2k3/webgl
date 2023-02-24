@@ -3,8 +3,11 @@ import { AABB } from "../joglfw/math/aabb";
 import { Quat } from "../joglfw/math/quat";
 import { Transform } from "../joglfw/math/transform";
 import { Vector } from "../joglfw/math/vector";
+import { Mesh } from "../joglfw/mesh";
+import { MeshRenderer } from "../joglfw/render/mesh-renderer";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
+import { ShapeRenderer } from "../joglfw/render/shape-renderer";
 import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
 import { CollisionGroups } from "../physics/collision-groups";
@@ -42,6 +45,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	static readonly STEERING_STIFFNESS = 50000;
 	static readonly STEERING_DAMPING = 0.01;
 	static readonly STEERING_MAX_ANGLE = Math.PI / 8;
+	static readonly TURRET_MAX_ANGULAR_SPEED = Math.PI / 4;
+	static readonly TURRET_MIN_PITCH = 0;
+	static readonly TURRET_MAX_PITCH = Math.PI / 2.5;
 
 	constructor(position: Vector, orientation: Quat) {
 		super();
@@ -53,6 +59,10 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		this.cameraFrame = new VirtualFrame(this.chassisBody);
 		this.cameraFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5));
 		this.frames["camera-attachment"] = this.cameraFrame;
+		this.turretFrame = new VirtualFrame(this.chassisBody);
+		this.turretFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5 + Car.UPPER_BODY_HEIGHT));
+		this.frames["turret"] = this.turretFrame;
+		this.turretMesh = Mesh.makeGizmo();
 	}
 
 	getType(): string {
@@ -76,6 +86,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 				new Ammo.btVector3(1, 1, 0),
 			);
 		}
+		const turretTransform = new Transform();
+		this.turretFrame.getTransform(turretTransform);
+		MeshRenderer.get().render(this.turretMesh, turretTransform.glMatrix(), ctx);
 	}
 
 	teleport(where: Vector, orientation: Quat): void {
@@ -126,7 +139,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		this.wheelBodies[1].body.applyTorque(torque);
 	}
 
-	rotateTurret(yaw: number, pitch: number): void {
+	rotateTarget(yaw: number, pitch: number): void {
 		const chassisTransform = new Transform();
 		this.chassisBody.getTransform(chassisTransform);
 		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), pitch));
@@ -135,6 +148,23 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 	update(dt: number): void {
 		this.chassisBody.getTransform(this.rootTransform);
+		// the turret must rotate more slowly toward the current camera orientation
+		const cameraDir: Vector = this.cameraFrame.localTransform.axisZ();
+		const turretDir: Vector = this.turretFrame.localTransform.axisZ();
+		const rotationDiff: Quat = Quat.fromA_to_B(cameraDir, turretDir);
+		const turretEulerAngles: Vector = this.turretFrame.localTransform.orientation().toEulerAngles();
+		const diffEulerAngles: Vector = rotationDiff.toEulerAngles();
+		if (turretEulerAngles.x + diffEulerAngles.x < Car.TURRET_MIN_PITCH) {
+			diffEulerAngles.x = Car.TURRET_MIN_PITCH - turretEulerAngles.x;
+		}
+		if (turretEulerAngles.x + diffEulerAngles.x > Car.TURRET_MAX_PITCH) {
+			diffEulerAngles.x = Car.TURRET_MAX_PITCH - turretEulerAngles.x;
+		}
+		const diffRotation = Quat.fromEulerAngles(diffEulerAngles.y, diffEulerAngles.x, diffEulerAngles.z);
+		if (diffRotation.getAngle() > Car.TURRET_MAX_ANGULAR_SPEED) {
+			diffRotation.scaleAngleInPlace(Car.TURRET_MAX_ANGULAR_SPEED / diffRotation.getAngle());
+		}
+		this.turretFrame.localTransform.rotateLocal(diffRotation.scaleAngleInPlace(dt));
 	}
 
 	protected override getFrameTransform(frameName: string): Transform {
@@ -152,6 +182,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	private bodyShapes: Ammo.btBoxShape[] = [];
 	private frames: { [name: string]: PhysBodyProxy | VirtualFrame } = {};
 	private cameraFrame: VirtualFrame;
+
+	private turretFrame: VirtualFrame;
+	private turretMesh: Mesh;
 
 	private createChassis(position: Vector, orientation: Quat): void {
 		const lowerChassisShape = new Ammo.btBoxShape(

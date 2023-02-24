@@ -337,7 +337,21 @@ export class Mesh implements IGLResource {
 	}
 
 	static makeGizmo(): Mesh {
-		throw new Error("not implemented");
+		const red = new Vector(1, 0, 0, 1);
+		const green = new Vector(0, 1, 0, 1);
+		const blue = new Vector(0, 0, 1, 1);
+		const verts: MeshVertex[] = [
+			new MeshVertex({ position: new Vector(0, 0, 0), color: red }),
+			new MeshVertex({ position: new Vector(1, 0, 0), color: red }),
+			new MeshVertex({ position: new Vector(0, 0, 0), color: green }),
+			new MeshVertex({ position: new Vector(0, 1, 0), color: green }),
+			new MeshVertex({ position: new Vector(0, 0, 0), color: blue }),
+			new MeshVertex({ position: new Vector(0, 0, 1), color: blue }),
+		];
+		const indexes = new Uint16Array([0, 1, 2, 3, 4, 5]);
+		const m = Mesh.makeMesh(verts, indexes);
+		m.mode = MeshRenderModes.Lines;
+		return m;
 	}
 
 	static makeSphere(): Mesh {

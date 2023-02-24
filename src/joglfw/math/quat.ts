@@ -24,6 +24,21 @@ export class Quat extends Vector {
 		return Quat.axisAngle(axis, angle);
 	}
 
+	static fromEulerAngles(yaw: number, pitch: number, roll: number): Quat {
+		const sinx = Math.sin(pitch * 0.5);
+		const cosx = Math.cos(pitch * 0.5);
+		const siny = Math.sin(yaw * 0.5);
+		const cosy = Math.cos(yaw * 0.5);
+		const sinz = Math.sin(roll * 0.5);
+		const cosz = Math.cos(roll * 0.5);
+		return new Quat(
+			cosx * cosy * cosz + sinx * siny * sinz,
+			sinx * cosy * cosz - cosx * siny * sinz,
+			cosx * siny * cosz + sinx * cosy * sinz,
+			cosx * cosy * sinz - sinx * siny * cosz,
+		);
+	}
+
 	override copy(): Quat {
 		return new Quat(this.x, this.y, this.z, this.w);
 	}
