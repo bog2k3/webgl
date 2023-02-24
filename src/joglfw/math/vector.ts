@@ -14,6 +14,26 @@ export class Vector {
 		return this.x === v.x && this.y === v.y && this.z === v.z && this.w === v.w;
 	}
 
+	setX(x: number): this {
+		this.x = x;
+		return this;
+	}
+
+	setY(y: number): this {
+		this.y = y;
+		return this;
+	}
+
+	setZ(z: number): this {
+		this.z = z;
+		return this;
+	}
+
+	setW(w: number): this {
+		this.w = w;
+		return this;
+	}
+
 	add(v: Vector): Vector {
 		return this.copy().addInPlace(v);
 	}

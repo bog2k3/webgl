@@ -23,6 +23,16 @@ export enum AttachMode {
 	ORBIT = 4,
 }
 export class CameraController extends Entity implements IUpdatable {
+	/**
+	 * Overwrite this to check for collisions.
+	 * Before the camera position is updated, this function is invoked with the previous and next positions of
+	 * the camera.
+	 * The function must return the allowed position to be set next.
+	 */
+	checkCollision = (prevPos: Vector, nextPos: Vector): Vector => {
+		return nextPos; // allow any position by default
+	};
+
 	constructor(target: Camera) {
 		super();
 		this.camera = target;
@@ -46,20 +56,19 @@ export class CameraController extends Entity implements IUpdatable {
 			return;
 		}
 		const tr: Transform = this.attachedEntity.getTransform(this.attachedFrame);
-		const pos: Vector = this.attachOffset.mulQ(tr.orientation()).add(tr.position());
+		let nextPos: Vector = this.attachOffset.mulQ(tr.orientation()).add(tr.position());
+		nextPos = this.checkCollision(this.camera.position(), nextPos);
+
 		if (this.attachMode & AttachMode.POSITION_ONLY) {
-			this.camera.moveTo(pos);
+			this.camera.moveTo(nextPos);
 		}
 		if (this.attachMode & AttachMode.ORIENTATION_ONLY) {
 			const dir: Vector = tr.axisZ();
 			const up: Vector = tr.axisY();
-			this.camera.lookAt(pos.add(dir), up);
+			this.camera.lookAt(nextPos.add(dir), up);
 		}
 		if (this.attachMode & AttachMode.ORBIT) {
-			this.camera.moveTo(pos);
-			const dir: Vector = tr.axisZ();
-			const up: Vector = tr.axisY(); //this.getUpVector(tr.axisY());
-			this.camera.lookAt(pos.add(dir), up);
+			// TODO
 		}
 
 		// if (this.upVectorMode === UpVectorMode.FLOATING) {

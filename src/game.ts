@@ -69,13 +69,7 @@ export class Game {
 		this.playerController = new PlayerController();
 		this.playerController.setTargetCar(this.playerCar);
 
-		// DEBUG---
-		// const m: Mesh = Mesh.makeBox(new Vector(0, 0, 0), new Vector(1, 1, 1));
-		// const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(0.5, 0.5, 0.5));
-		// const boxMass = 50;
-		// const box = new RigidObject(m, new Vector(0, tc.maxElevation + 5, 0), boxShape, boxMass);
-		// World.getInstance().addEntity(box);
-		//---DEBUG
+		this.cameraCtrl.checkCollision = this.checkCameraCollision.bind(this);
 
 		console.log("Ready");
 	}
@@ -116,7 +110,8 @@ export class Game {
 			// switch to car
 			this.cameraCtrl.attachToEntity(
 				this.playerCar,
-				AttachMode.ORBIT,
+				// AttachMode.ORBIT,
+				AttachMode.FIXED,
 				"camera-attachment",
 				new Vector(0, 1.5, -4.5),
 			);
@@ -129,5 +124,20 @@ export class Game {
 			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
 			this.playerInputHandler.setTargetObject(this.freeCam);
 		}
+	}
+
+	// -------------------------- PRIVATE AREA ------------------------------- //
+
+	private checkCameraCollision(prevPos: Vector, nextPos: Vector): Vector {
+		if (!this.terrain) {
+			return nextPos;
+		}
+		const terrainY = this.terrain.getHeightValue(nextPos);
+		const MARGIN = 0.25;
+		let nextY = nextPos.y;
+		if (nextY < terrainY + MARGIN) {
+			nextY = terrainY + MARGIN;
+		}
+		return nextPos.copy().setY(nextY);
 	}
 }
