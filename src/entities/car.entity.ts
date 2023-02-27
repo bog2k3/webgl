@@ -1,5 +1,6 @@
 import Ammo from "ammojs-typed";
 import { AABB } from "../joglfw/math/aabb";
+import { clamp } from "../joglfw/math/functions";
 import { Quat } from "../joglfw/math/quat";
 import { Transform } from "../joglfw/math/transform";
 import { Vector } from "../joglfw/math/vector";
@@ -45,9 +46,11 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	static readonly STEERING_STIFFNESS = 50000;
 	static readonly STEERING_DAMPING = 0.01;
 	static readonly STEERING_MAX_ANGLE = Math.PI / 8;
-	static readonly TURRET_MAX_ANGULAR_SPEED = Math.PI / 4;
+	static readonly TURRET_MAX_ANGULAR_SPEED = Math.PI / 2;
 	static readonly TURRET_MIN_PITCH = 0;
 	static readonly TURRET_MAX_PITCH = Math.PI / 2.5;
+	static readonly TURRET_MAX_XOZ_ERROR = 0.01; // meters at 1m distance from pivot
+	static readonly TURRET_MAX_PITCH_ERROR = 0.01; // meters at 1m distance from pivot
 
 	constructor(position: Vector, orientation: Quat) {
 		super();
@@ -147,24 +150,10 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	}
 
 	update(dt: number): void {
+		// update entity transform:
 		this.chassisBody.getTransform(this.rootTransform);
-		// the turret must rotate more slowly toward the current camera orientation
-		const cameraDir: Vector = this.cameraFrame.localTransform.axisZ();
-		const turretDir: Vector = this.turretFrame.localTransform.axisZ();
-		const rotationDiff: Quat = Quat.fromA_to_B(cameraDir, turretDir);
-		const turretEulerAngles: Vector = this.turretFrame.localTransform.orientation().toEulerAngles();
-		const diffEulerAngles: Vector = rotationDiff.toEulerAngles();
-		if (turretEulerAngles.x + diffEulerAngles.x < Car.TURRET_MIN_PITCH) {
-			diffEulerAngles.x = Car.TURRET_MIN_PITCH - turretEulerAngles.x;
-		}
-		if (turretEulerAngles.x + diffEulerAngles.x > Car.TURRET_MAX_PITCH) {
-			diffEulerAngles.x = Car.TURRET_MAX_PITCH - turretEulerAngles.x;
-		}
-		const diffRotation = Quat.fromEulerAngles(diffEulerAngles.y, diffEulerAngles.x, diffEulerAngles.z);
-		if (diffRotation.getAngle() > Car.TURRET_MAX_ANGULAR_SPEED) {
-			diffRotation.scaleAngleInPlace(Car.TURRET_MAX_ANGULAR_SPEED / diffRotation.getAngle());
-		}
-		this.turretFrame.localTransform.rotateLocal(diffRotation.scaleAngleInPlace(dt));
+
+		this.updateTurret(dt);
 	}
 
 	protected override getFrameTransform(frameName: string): Transform {
@@ -300,5 +289,37 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 				new Ammo.btVector3(+conrodWidth * 0.5, 0, 0),
 			),
 		);
+	}
+
+	private updateTurret(dt: number): void {
+		// the turret must rotate more slowly toward the current camera orientation
+		const turretDir: Vector = this.turretFrame.localTransform.axisZ();
+		const cameraDir: Vector = this.cameraFrame.localTransform.axisZ();
+
+		const cameraDirProjected = turretDir.scale(cameraDir.dot(turretDir));
+		const cameraDirDiff = cameraDir.sub(cameraDirProjected);
+		if (cameraDirDiff.lengthSq() <= Number.EPSILON) {
+			return; // already perfect
+		}
+		const yDiff: number = cameraDirDiff.y;
+		const xozDiff: number = cameraDirDiff.setY(0).length();
+		const yawSign: number = Math.sign(turretDir.cross(cameraDir).y);
+
+		if (xozDiff > Car.TURRET_MAX_XOZ_ERROR) {
+			this.turretFrame.localTransform.rotateWorld(
+				Quat.axisAngle(new Vector(0, 1, 0), Car.TURRET_MAX_ANGULAR_SPEED * yawSign * dt),
+			);
+		}
+		if (Math.abs(yDiff) > Car.TURRET_MAX_PITCH_ERROR) {
+			const turretPitch = Math.asin(turretDir.y);
+			const targetPitch = clamp(
+				turretPitch + Car.TURRET_MAX_ANGULAR_SPEED * Math.sign(yDiff) * dt,
+				Car.TURRET_MIN_PITCH,
+				Car.TURRET_MAX_PITCH,
+			);
+			this.turretFrame.localTransform.rotateLocal(
+				Quat.axisAngle(new Vector(1, 0, 0), -(targetPitch - turretPitch)),
+			);
+		}
 	}
 }

@@ -21,66 +21,8 @@ let game: Game;
 let inputHandler: HtmlInputHandler;
 let isPaused = false;
 
-function runDebug(): void {
-	let v = new Vector(0, 0, 1);
-	const qx = Quat.axisAngle(new Vector(1, 0, 0), -Math.PI / 4);
-	const qy = Quat.axisAngle(new Vector(0, 1, 0), -Math.PI / 2);
-	const qz = Quat.axisAngle(new Vector(0, 0, 1), Math.PI / 6);
-	console.log("v*qx", v.mulQ(qx));
-	console.log("v*qy", v.mulQ(qy));
-	console.log("v*qz", v.mulQ(qz));
-	console.log("v*qx*qy", v.mulQ(qx).mulQ(qy));
-	console.log("v*qy*qx", v.mulQ(qy).mulQ(qx));
-	const qxy = qx.combine(qy);
-	console.log("qxy", qxy);
-	console.log("v*qxy", v.mulQ(qxy));
-	const qyx = qy.combine(qx);
-	console.log("qyx", qyx);
-	console.log("v*qyx", v.mulQ(qyx));
-
-	console.log("-------------------------------");
-	const qxm = quatToMatrix(qx);
-	console.log("qx_mat", qxm["m"]);
-	console.log("rotx mat", Matrix.pitch(-Math.PI / 4)["m"]);
-
-	const qym = quatToMatrix(qy);
-	console.log("qy_mat", qym["m"]);
-	console.log("roty mat", Matrix.yaw(-Math.PI / 2)["m"]);
-
-	const qzm = quatToMatrix(qz);
-	console.log("qz_mat", qzm["m"]);
-	console.log("rotz mat", Matrix.roll(Math.PI / 6)["m"]);
-
-	console.log("-------------------------------");
-	const mxq = matrixToQuat(Matrix.pitch(-Math.PI / 4));
-	console.log("qx", qx);
-	console.log("matx -> q", mxq);
-	const myq = matrixToQuat(Matrix.yaw(-Math.PI / 2));
-	console.log("qy", qy);
-	console.log("maty -> q", myq);
-	const mzq = matrixToQuat(Matrix.roll(Math.PI / 6));
-	console.log("qz", qz);
-	console.log("matz -> q", mzq);
-
-	console.log("-------------------------------");
-	const q1 = Quat.axisAngle(new Vector(0, 0, 1), Math.PI / 8);
-	v = new Vector(1, 0, 0);
-	console.log("v", v);
-	console.log("q1", q1);
-	console.log("q1/2", q1.scaleAngle(0.5));
-	console.log("v * q1", v.mulQ(q1));
-	console.log("v * q1/2", v.mulQ(q1.scaleAngle(0.5)));
-
-	console.log("-------------------------------");
-	const q2 = Quat.axisAngle(new Vector(0, 0, 1), (Math.PI / 4) * 3);
-	console.log("q2", q2);
-	console.log("slerp(0.5) q1->q2", q1.slerp(q2, 0.5));
-}
-
 window.onload = main;
 async function main(): Promise<void> {
-	// return runDebug();
-
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 	await initGraphics(canvas);
 	initInput(canvas);

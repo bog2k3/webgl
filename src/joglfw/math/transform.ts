@@ -16,6 +16,7 @@ export class Transform {
 	copyFrom(tr: Transform): this {
 		this.pos_ = tr.pos_.copy();
 		this.orient_ = tr.orient_.copy();
+		this.matDirty_ = true;
 		return this;
 	}
 
@@ -29,7 +30,7 @@ export class Transform {
 		return this.orient_.copy();
 	}
 
-	/** get 4x4 openGL transformation matrix */
+	/** returns a 4x4 openGL transformation matrix */
 	glMatrix(): Matrix {
 		if (this.matDirty_) {
 			this.updateGLMat();

@@ -32,10 +32,10 @@ export class Quat extends Vector {
 		const sinz = Math.sin(roll * 0.5);
 		const cosz = Math.cos(roll * 0.5);
 		return new Quat(
-			cosx * cosy * cosz + sinx * siny * sinz,
 			sinx * cosy * cosz - cosx * siny * sinz,
 			cosx * siny * cosz + sinx * cosy * sinz,
 			cosx * cosy * sinz - sinx * siny * cosz,
+			cosx * cosy * cosz + sinx * siny * sinz,
 		);
 	}
 

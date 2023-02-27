@@ -14,16 +14,19 @@ export class Vector {
 		return this.x === v.x && this.y === v.y && this.z === v.z && this.w === v.w;
 	}
 
+	/** modifies the x component and returns this vector */
 	setX(x: number): this {
 		this.x = x;
 		return this;
 	}
 
+	/** modifies the y component and returns this vector */
 	setY(y: number): this {
 		this.y = y;
 		return this;
 	}
 
+	/** modifies the z component and returns this vector */
 	setZ(z: number): this {
 		this.z = z;
 		return this;
