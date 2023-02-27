@@ -45,6 +45,7 @@ export class Game {
 		this.terrain.finishGenerate();
 
 		World.getInstance().addEntity(this.terrain);
+		World.getInstance().setGlobal(Terrain, this.terrain);
 
 		this.freeCam = new FreeCamera(
 			// new Vector(tc.width / 1.8, tc.maxElevation + 20, tc.length / 1.8),

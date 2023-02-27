@@ -182,6 +182,14 @@ export class World implements IRenderable, IUpdatable {
 		if (!this.config_.disableUserEvents) this.mapUserEvents_[eventName].trigger(param);
 	}
 
+	setGlobal<T>(className: new (...args) => T, instance: T): void {
+		this.globals[className.constructor.name] = instance;
+	}
+
+	getGlobal<T>(className: new (...args) => T): T | null {
+		return this.globals[className.constructor.name] as T;
+	}
+
 	// --------------------- PRIVATE AREA --------------------- //
 
 	static instance_: World = null;
@@ -191,6 +199,7 @@ export class World implements IRenderable, IUpdatable {
 	entsToRender_: IRenderable[] = [];
 	frameNumber_ = 0;
 	resetting_ = false;
+	globals: { [className: string]: unknown } = {};
 
 	mapUserEvents_: Record<string, Event<(param: number) => void>> = {};
 	// std::unordered_map<std::type_index, void*> userGlobals_;

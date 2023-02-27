@@ -20,17 +20,17 @@ export class Transform {
 		return this;
 	}
 
-	/** get a copy of the world position */
+	/** get a copy of the position expressed in parent's coordinate space */
 	position(): Vector {
 		return this.pos_.copy();
 	}
 
-	/** get a copy of the world orientation */
+	/** get a copy of the orientation expressed in parent's coordinate space*/
 	orientation(): Quat {
 		return this.orient_.copy();
 	}
 
-	/** returns a 4x4 openGL transformation matrix */
+	/** returns a 4x4 openGL transformation matrix from local space into parent space */
 	glMatrix(): Matrix {
 		if (this.matDirty_) {
 			this.updateGLMat();
@@ -38,34 +38,34 @@ export class Transform {
 		return this.glMat_;
 	}
 
-	/** returns the local X axis expressed in world coordinates */
+	/** returns the local X axis expressed in parent's coordinate space */
 	axisX(): Vector {
 		return new Vector(1, 0, 0).mulQ(this.orient_);
 	}
-	/** returns the local Y axis expressed in world coordinates */
+	/** returns the local Y axis expressed in parent's coordinate space */
 	axisY(): Vector {
 		return new Vector(0, 1, 0).mulQ(this.orient_);
 	}
-	/** returns the local Z axis expressed in world coordinates */
+	/** returns the local Z axis expressed in parent's coordinate space */
 	axisZ(): Vector {
 		return new Vector(0, 0, 1).mulQ(this.orient_);
 	}
 
-	/** set a new world position for the transform */
+	/** set a new position for the transform, expressed in parent's coordinate space */
 	setPosition(pos: Vector): void {
 		this.pos_ = pos;
 		this.matDirty_ = true;
 	}
 
-	/** set a new world orientation for the transform */
+	/** set a new orientation for the transform, expressed in parent's coordinate space */
 	setOrientation(orient: Quat): void {
 		this.orient_ = orient.copy().normalizeInPlace();
 		this.matDirty_ = true;
 	}
 
-	/** set the orientation such that the transform will point toward the specified point in world space, given an up vector */
-	lookAt(wPos: Vector, up = new Vector(0, 1, 0)): void {
-		const direction: Vector = wPos.sub(this.pos_).normalize();
+	/** set the orientation such that the transform will point toward the specified point in parent space, given an up vector */
+	lookAt(refPos: Vector, refUp = new Vector(0, 1, 0)): void {
+		const direction: Vector = refPos.sub(this.pos_).normalize();
 		const z = new Vector(0, 0, 1);
 		if (direction.equals(z)) {
 			this.orient_ = new Quat(0, 0, 0, 1);
@@ -77,8 +77,8 @@ export class Transform {
 		this.matDirty_ = true;
 	}
 
-	/** move the transform by an amount expressed in *WORLD* coordinates */
-	moveWorld(delta: Vector): void {
+	/** move the transform by an amount expressed in *PARENT* (reference) coordinates */
+	moveRef(delta: Vector): void {
 		this.pos_.addInPlace(delta);
 		this.matDirty_ = true;
 	}
@@ -89,14 +89,14 @@ export class Transform {
 		this.matDirty_ = true;
 	}
 
-	/** move to a position in *WORLD* space */
-	moveTo(wPos: Vector): void {
-		this.pos_ = wPos;
+	/** move to a position in *PARENT* space */
+	moveTo(refPos: Vector): void {
+		this.pos_ = refPos;
 		this.matDirty_ = true;
 	}
 
-	/** rotate the transform by a quaternion expressed in *WORLD* coordinates */
-	rotateWorld(rot: Quat): void {
+	/** rotate the transform by a quaternion expressed in *PARENT* (reference) coordinates */
+	rotateRef(rot: Quat): void {
 		this.orient_.combineInPlace(rot);
 		this.matDirty_ = true;
 	}

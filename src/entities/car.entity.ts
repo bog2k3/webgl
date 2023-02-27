@@ -11,11 +11,13 @@ import { IRenderable } from "../joglfw/render/renderable";
 import { ShapeRenderer } from "../joglfw/render/shape-renderer";
 import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
+import { World } from "../joglfw/world/world";
 import { CollisionGroups } from "../physics/collision-groups";
-import { quat2Bullet, vec2Bullet } from "../physics/functions";
+import { bullet2Vec, quat2Bullet, vec2Bullet } from "../physics/functions";
 import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
+import { Terrain } from "./terrain/terrain.entity";
 import { VirtualFrame } from "./virtual-frame";
 
 export class Car extends Entity implements IUpdatable, IRenderable {
@@ -77,21 +79,8 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	}
 
 	render(ctx: RenderContext): void {
-		physWorld.debugDrawObject(
-			this.chassisBody.body.getWorldTransform(),
-			this.bodyShapes[0],
-			new Ammo.btVector3(1, 0, 1),
-		);
-		for (let i = 0; i < 4; i++) {
-			physWorld.debugDrawObject(
-				this.wheelBodies[i].body.getWorldTransform(),
-				this.wheelBodies[i].body.getCollisionShape(),
-				new Ammo.btVector3(1, 1, 0),
-			);
-		}
-		const turretTransform = new Transform();
-		this.turretFrame.getTransform(turretTransform);
-		MeshRenderer.get().render(this.turretMesh, turretTransform.glMatrix(), ctx);
+		this.renderPlaceholders(ctx);
+		this.renderCannonTrajectory(ctx);
 	}
 
 	teleport(where: Vector, orientation: Quat): void {
@@ -112,6 +101,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 			this.wheelBodies[i].body.activate();
 		}
 		this.cameraFrame.localTransform.setOrientation(Quat.identity());
+		this.turretFrame.localTransform.setOrientation(Quat.identity());
 	}
 
 	accelerate(): void {
@@ -146,7 +136,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		const chassisTransform = new Transform();
 		this.chassisBody.getTransform(chassisTransform);
 		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), pitch));
-		this.cameraFrame.localTransform.rotateWorld(Quat.axisAngle(new Vector(0, 1, 0), yaw));
+		this.cameraFrame.localTransform.rotateRef(Quat.axisAngle(new Vector(0, 1, 0), yaw));
 	}
 
 	update(dt: number): void {
@@ -202,7 +192,6 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 			new PhysBodyConfig({
 				position,
 				shape: compoundShape,
-				// shape: lowerChassisShape,
 				mass: Car.LOWER_BODY_MASS + Car.UPPER_BODY_MASS,
 				friction: 0.5,
 				orientation,
@@ -306,7 +295,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		const yawSign: number = Math.sign(turretDir.cross(cameraDir).y);
 
 		if (xozDiff > Car.TURRET_MAX_XOZ_ERROR) {
-			this.turretFrame.localTransform.rotateWorld(
+			this.turretFrame.localTransform.rotateRef(
 				Quat.axisAngle(new Vector(0, 1, 0), Car.TURRET_MAX_ANGULAR_SPEED * yawSign * dt),
 			);
 		}
@@ -320,6 +309,55 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 			this.turretFrame.localTransform.rotateLocal(
 				Quat.axisAngle(new Vector(1, 0, 0), -(targetPitch - turretPitch)),
 			);
+		}
+	}
+
+	private renderPlaceholders(ctx: RenderContext): void {
+		physWorld.debugDrawObject(
+			this.chassisBody.body.getWorldTransform(),
+			this.bodyShapes[0],
+			new Ammo.btVector3(1, 0, 1),
+		);
+		for (let i = 0; i < 4; i++) {
+			physWorld.debugDrawObject(
+				this.wheelBodies[i].body.getWorldTransform(),
+				this.wheelBodies[i].body.getCollisionShape(),
+				new Ammo.btVector3(1, 1, 0),
+			);
+		}
+		const turretTransform = new Transform();
+		this.turretFrame.getTransform(turretTransform);
+		MeshRenderer.get().render(this.turretMesh, turretTransform.glMatrix(), ctx);
+	}
+
+	private renderCannonTrajectory(ctx: RenderContext): void {
+		const timeStep = 0.1; // seconds
+		const v0 = 20; // initial projectile velocity, m/s
+		const terrain: Terrain = World.getInstance().getGlobal<Terrain>(Terrain);
+		const gravity: Vector = bullet2Vec(physWorld.getGravity());
+		const turretTransform = new Transform();
+		this.turretFrame.getTransform(turretTransform);
+		const p0 = turretTransform.position(); // initial starting point
+		const points: Vector[] = [p0];
+		const v: Vector = turretTransform.axisZ().scaleInPlace(v0);
+		let p: Vector = p0;
+		let hitGround = false;
+		while (!hitGround) {
+			const nextP = p.add(v.scale(timeStep)).add(gravity.scale(timeStep * timeStep));
+			const terrainHeight: number = terrain.getHeightValue(nextP);
+			hitGround = terrainHeight > nextP.y;
+			if (hitGround) {
+				nextP.y = terrainHeight; // not 100% accurate, but not too bad and it's fast
+			}
+			points.push(nextP);
+			v.addInPlace(gravity.scale(timeStep));
+			p = nextP;
+		}
+		const startColor = new Vector(0, 1, 0);
+		const endColor = new Vector(1, 0, 0);
+		for (let i = 0; i < points.length - 1; i++) {
+			const color = startColor.lerp(endColor, i / (points.length - 2));
+			ShapeRenderer.get().queueLine(points[i], points[i + 1], color);
 		}
 	}
 }
