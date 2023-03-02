@@ -13,13 +13,9 @@ export enum PlayerActions {
 	ROTATE_YAW,
 	ROTATE_PITCH,
 
-	CUSTOM_ACTION_1,
-	CUSTOM_ACTION_2,
-	CUSTOM_ACTION_3,
-	CUSTOM_ACTION_4,
-	CUSTOM_ACTION_5,
-
-	CUSTOM_ACTION_LAST,
+	TOGGLE_ACTIONS_FIRST,
+	TOGGLE_FIRE,
+	TOGGLE_ACTIONS_LAST,
 
 	ALL_ACTIONS,
 }
@@ -107,7 +103,7 @@ export class PlayerInputHandler implements IUpdatable {
 			analog: true,
 		});
 
-		this.bindings[PlayerActions.CUSTOM_ACTION_1] = new KeyBindingDescriptor({
+		this.bindings[PlayerActions.TOGGLE_FIRE] = new KeyBindingDescriptor({
 			device: InputDeviceType.Mouse,
 			code: MouseButton.Left,
 			analog: false,
@@ -214,9 +210,9 @@ export class PlayerInputHandler implements IUpdatable {
 			this.inputStates_[PlayerActions.ROTATE_PITCH].value = 0;
 		}
 
-		for (let a = PlayerActions.CUSTOM_ACTION_1; a < PlayerActions.CUSTOM_ACTION_LAST; a++) {
+		for (let a = PlayerActions.TOGGLE_ACTIONS_FIRST; a < PlayerActions.TOGGLE_ACTIONS_LAST; a++) {
 			if (this.inputStates_[a].isChanged) {
-				this.targetObj_.setActionState(a - PlayerActions.CUSTOM_ACTION_1, this.inputStates_[a].value != 0);
+				this.targetObj_.setActionState(a, this.inputStates_[a].value != 0);
 				this.inputStates_[a].isChanged = false;
 			}
 		}

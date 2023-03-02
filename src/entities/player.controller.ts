@@ -1,3 +1,4 @@
+import { PlayerActions } from "../player-input-handler";
 import { Car } from "./car.entity";
 import { Direction, IUserControllable } from "./user-controllable";
 
@@ -48,9 +49,18 @@ export class PlayerController implements IUserControllable {
 	/**
 	 * Sets an action state to ON or OFF as the user presses or releases the associated key/button.
 	 * the meaning of the action is defined by the implementation.
-	 * the values of [actionId] start from 0.
+	 * the values of [actionId] is between PlayerActions.TOGGLE_ACTION_FIRST and TOGGLE_ACTION_LAST.
 	 */
-	setActionState(actionId: number, on: boolean): void {}
+	setActionState(actionId: number, on: boolean): void {
+		if (!this.car) {
+			console.warn(`No car assigned to player, ignoring input.`);
+			return;
+		}
+		switch (actionId) {
+			case PlayerActions.TOGGLE_FIRE:
+				this.car.toggleFire(on);
+		}
+	}
 
 	// ------------------------ PRIVATE AREA ---------------------------- //
 	private car: Car;

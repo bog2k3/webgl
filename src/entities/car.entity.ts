@@ -17,6 +17,7 @@ import { bullet2Vec, quat2Bullet, vec2Bullet } from "../physics/functions";
 import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
+import { Projectile } from "./projectile.entity";
 import { Terrain } from "./terrain/terrain.entity";
 import { VirtualFrame } from "./virtual-frame";
 
@@ -29,6 +30,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	static readonly LOWER_BODY_LENGTH = 3.0;
 	static readonly LOWER_BODY_HEIGHT = 0.5;
 	static readonly LOWER_BODY_MASS = 300;
+
 	static readonly WHEEL_DIAMETER = 0.625;
 	static readonly WHEEL_WIDTH = 0.25;
 	static readonly WHEEL_MASS = 20;
@@ -48,12 +50,15 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	static readonly STEERING_STIFFNESS = 50000;
 	static readonly STEERING_DAMPING = 0.01;
 	static readonly STEERING_MAX_ANGLE = Math.PI / 8;
+
 	static readonly TURRET_MAX_ANGULAR_SPEED = Math.PI / 2;
 	static readonly TURRET_MIN_PITCH = 0;
 	static readonly TURRET_MAX_PITCH = Math.PI / 2.5;
 	static readonly TURRET_PITCH_OFFSET = Math.PI / 4; // how higher than the camera the turret aims
 	static readonly TURRET_MAX_YAW_ERROR = 0.05; // radians
 	static readonly TURRET_MAX_PITCH_ERROR = 0.05; // radians
+
+	static readonly INITIAL_PROJECTILE_VELOCITY = 20;
 
 	constructor(position: Vector, orientation: Quat) {
 		super();
@@ -138,6 +143,23 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		this.chassisBody.getTransform(chassisTransform);
 		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), pitch));
 		this.cameraFrame.localTransform.rotateRef(Quat.axisAngle(new Vector(0, 1, 0), yaw));
+	}
+
+	toggleFire(on: boolean): void {
+		// TODO as long as fire is on, we should fire continuously at an interval
+		if (on) {
+			this.fire();
+		}
+	}
+
+	fire(): void {
+		const turretTransform = new Transform();
+		this.turretFrame.getTransform(turretTransform);
+		const direction: Vector = turretTransform.axisZ();
+		const position: Vector = turretTransform.position().add(direction.scale(Projectile.COLLISION_RADIUS * 1.2));
+		World.getInstance().addEntity(
+			new Projectile(position, direction.scaleInPlace(Car.INITIAL_PROJECTILE_VELOCITY)),
+		);
 	}
 
 	update(dt: number): void {
@@ -339,7 +361,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 	private renderCannonTrajectory(ctx: RenderContext): void {
 		const timeStep = 0.1; // seconds
-		const v0 = 20; // initial projectile velocity, m/s
+		const v0 = Car.INITIAL_PROJECTILE_VELOCITY; // initial projectile velocity, m/s
 		const terrain: Terrain = World.getInstance().getGlobal<Terrain>(Terrain);
 		const gravity: Vector = bullet2Vec(physWorld.getGravity());
 		const turretTransform = new Transform();
