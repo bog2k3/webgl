@@ -51,8 +51,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	static readonly TURRET_MAX_ANGULAR_SPEED = Math.PI / 2;
 	static readonly TURRET_MIN_PITCH = 0;
 	static readonly TURRET_MAX_PITCH = Math.PI / 2.5;
-	static readonly TURRET_MAX_XOZ_ERROR = 0.01; // meters at 1m distance from pivot
-	static readonly TURRET_MAX_PITCH_ERROR = 0.01; // meters at 1m distance from pivot
+	static readonly TURRET_PITCH_OFFSET = Math.PI / 4; // how higher than the camera the turret aims
+	static readonly TURRET_MAX_YAW_ERROR = 0.05; // radians
+	static readonly TURRET_MAX_PITCH_ERROR = 0.05; // radians
 
 	constructor(position: Vector, orientation: Quat) {
 		super();
@@ -290,25 +291,29 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		if (cameraDirDiff.lengthSq() <= Number.EPSILON) {
 			return; // already perfect
 		}
-		const yDiff: number = cameraDirDiff.y;
-		const xozDiff: number = cameraDirDiff.setY(0).length();
+		const yawDifference = Math.acos(
+			turretDir.copy().setY(0).normalizeInPlace().dot(cameraDir.copy().setY(0).normalizeInPlace()),
+		);
 		const yawSign: number = Math.sign(turretDir.cross(cameraDir).y);
 
-		if (xozDiff > Car.TURRET_MAX_XOZ_ERROR) {
-			this.turretFrame.localTransform.rotateRef(
-				Quat.axisAngle(new Vector(0, 1, 0), Car.TURRET_MAX_ANGULAR_SPEED * yawSign * dt),
-			);
+		if (yawDifference > Car.TURRET_MAX_YAW_ERROR) {
+			const deltaYaw = yawSign * Math.min(yawDifference, Car.TURRET_MAX_ANGULAR_SPEED * dt);
+			this.turretFrame.localTransform.rotateRef(Quat.axisAngle(new Vector(0, 1, 0), deltaYaw));
 		}
-		if (Math.abs(yDiff) > Car.TURRET_MAX_PITCH_ERROR) {
-			const turretPitch = Math.asin(turretDir.y);
-			const targetPitch = clamp(
-				turretPitch + Car.TURRET_MAX_ANGULAR_SPEED * Math.sign(yDiff) * dt,
-				Car.TURRET_MIN_PITCH,
-				Car.TURRET_MAX_PITCH,
+		const cameraPitch: number = Math.asin(cameraDir.y);
+		const targetPitch: number = clamp(
+			cameraPitch + Car.TURRET_PITCH_OFFSET,
+			Car.TURRET_MIN_PITCH,
+			Car.TURRET_MAX_PITCH,
+		);
+		const turretPitch = Math.asin(turretDir.y);
+		if (Math.abs(turretPitch - targetPitch) > Car.TURRET_MAX_PITCH_ERROR) {
+			const deltaPitch: number = clamp(
+				Math.sign(targetPitch - turretPitch) * Car.TURRET_MAX_ANGULAR_SPEED * dt,
+				Car.TURRET_MIN_PITCH - turretPitch,
+				Car.TURRET_MAX_PITCH - turretPitch,
 			);
-			this.turretFrame.localTransform.rotateLocal(
-				Quat.axisAngle(new Vector(1, 0, 0), -(targetPitch - turretPitch)),
-			);
+			this.turretFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), -deltaPitch));
 		}
 	}
 
