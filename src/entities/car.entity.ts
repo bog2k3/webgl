@@ -291,8 +291,10 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		if (cameraDirDiff.lengthSq() <= Number.EPSILON) {
 			return; // already perfect
 		}
+		// prettier-ignore
 		const yawDifference = Math.acos(
-			turretDir.copy().setY(0).normalizeInPlace().dot(cameraDir.copy().setY(0).normalizeInPlace()),
+			turretDir.copy().setY(0).normalizeInPlace()
+				.dot(cameraDir.copy().setY(0).normalizeInPlace())
 		);
 		const yawSign: number = Math.sign(turretDir.cross(cameraDir).y);
 
