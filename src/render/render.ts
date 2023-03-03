@@ -117,7 +117,7 @@ export function unloadRender(renderData: RenderData): void {
 	Water.unloadAllResources();
 }
 
-export function render(renderData: RenderData, world: World): void {
+export function render3D(renderData: RenderData, world: World): void {
 	renderData.defaultFrameBuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 	if (renderData.renderCtx.enableWaterRender) {
 		renderData.renderCtx.cameraUnderwater = renderData.viewport.camera().position().y < 0;

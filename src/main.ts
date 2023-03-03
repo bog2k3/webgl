@@ -1,15 +1,12 @@
 import { Game } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
-import { Matrix } from "./joglfw/math/matrix";
-import { Quat } from "./joglfw/math/quat";
-import { matrixToQuat, quatToMatrix } from "./joglfw/math/quat-functions";
-import { Vector } from "./joglfw/math/vector";
 import { Shaders } from "./joglfw/render/shaders";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
-import { initRender, render } from "./render/render";
+import { initRender, render3D } from "./render/render";
 import { RenderData } from "./render/render-data";
+import { render2D, setContext2d } from "./render/render2d";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -23,9 +20,10 @@ let isPaused = false;
 
 window.onload = main;
 async function main(): Promise<void> {
-	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-	await initGraphics(canvas);
-	initInput(canvas);
+	const canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
+	const canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
+	await initGraphics(canvas2D, canvas3D);
+	initInput(canvas2D);
 	await initPhysics();
 
 	initWorld();
@@ -39,21 +37,24 @@ async function main(): Promise<void> {
 	requestAnimationFrame(step);
 }
 
-async function initGraphics(canvas: HTMLCanvasElement): Promise<void> {
+async function initGraphics(canvas2d: HTMLCanvasElement, canvas3d: HTMLCanvasElement): Promise<void> {
 	const contextOptions: WebGLContextAttributes = {
 		alpha: true,
 		depth: true,
 		preserveDrawingBuffer: true,
 	};
-	initGL(canvas, contextOptions);
+	initGL(canvas3d, contextOptions);
 
-	renderData = new RenderData(canvas.width, canvas.height);
+	renderData = new RenderData(canvas3d.width, canvas3d.height);
 	// renderData.config.renderPhysicsDebug = true;
 	await initRender(renderData);
+
+	setContext2d(canvas2d.getContext("2d"));
 }
 
 function step(): void {
-	render(renderData, world);
+	render3D(renderData, world);
+	render2D();
 	const now = new Date();
 	const dt = Math.min(100, now.getTime() - lastTime.getTime()) / 1000;
 	lastTime = now;
