@@ -126,7 +126,7 @@ export class CameraController extends Entity implements IUpdatable {
 	// 		return localUp;
 	// 	}
 	// 	if (this.upVectorMode === UpVectorMode.FREE) {
-	// 		return new Vector(0, 1, 0);
+	// 		return Vector.axisY();
 	// 	}
 	// 	if (this.upVectorMode === UpVectorMode.FLOATING) {
 	// 		return this.floatingUpVec;
@@ -156,7 +156,7 @@ export class CameraController extends Entity implements IUpdatable {
 	// 	const tiltAngle = Math.acos(this.floatingUpVec.y);
 	// 	const tiltAccelSign = tiltAngle < Math.PI / 2 ? +1 : -1;
 	// 	const qTiltAccel = Quat.axisAngle(
-	// 		this.floatingUpVec.cross(new Vector(0, 1, 0)),
+	// 		this.floatingUpVec.cross(Vector.axisY()),
 	// 		Math.sin(tiltAngle) * tiltAccelSign * GRAVITY_FACTOR,
 	// 	);
 	// 	qAccel.combineInPlace(qTiltAccel);

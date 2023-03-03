@@ -20,8 +20,8 @@ export class Camera {
 	private matProj_ = Matrix.identity();
 	private matViewProj_ = Matrix.identity();
 	private position_ = new Vector(0, 0, 0);
-	private direction_ = new Vector(0, 0, 1);
-	private up_ = new Vector(0, 1, 0);
+	private direction_ = Vector.axisZ();
+	private up_ = Vector.axisY();
 	private orthoSize_: Vector; // in world units
 
 	matView(): Matrix {
@@ -62,7 +62,7 @@ export class Camera {
 		this.updateView();
 	}
 
-	lookAt(where: Vector, up = new Vector(0, 1, 0)): void {
+	lookAt(where: Vector, up = Vector.axisY()): void {
 		this.direction_ = where.sub(this.position_).normalize();
 		this.up_ = up;
 		this.updateView();

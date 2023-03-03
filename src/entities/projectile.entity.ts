@@ -7,6 +7,7 @@ import { IRenderable } from "../joglfw/render/renderable";
 import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
 import { CollisionGroups } from "../physics/collision-groups";
+import { bullet2Vec, quat2Bullet } from "../physics/functions";
 import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
@@ -30,6 +31,9 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 
 	update(dt: number): void {
 		this.physBody.getTransform(this.rootTransform);
+		const velocityDir: Vector = bullet2Vec(this.physBody.body.getLinearVelocity()).normalizeInPlace();
+		// orient the graphics transform to follow the direction of movement:
+		this.rootTransform.setOrientation(Quat.fromA_to_B(Vector.axisZ(), velocityDir));
 	}
 
 	render(ctx: RenderContext): void {
@@ -54,7 +58,7 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 				initialVelocity: velocity,
 				position: position,
 				shape: this.physShape,
-				orientation: Quat.fromA_to_B(new Vector(0, 0, 1), velocity.normalize()),
+				orientation: Quat.fromA_to_B(Vector.axisZ(), velocity.normalize()),
 				collisionGroup: CollisionGroups.PROJECTILE,
 				collisionMask:
 					CollisionGroups.STATIC |

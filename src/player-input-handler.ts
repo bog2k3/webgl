@@ -223,6 +223,10 @@ export class PlayerInputHandler implements IUpdatable {
 		this.targetObj_ = target;
 	}
 
+	getTargetObject(): IUserControllable {
+		return this.targetObj_;
+	}
+
 	// ------------------- PRIVATE AREA ---------------------- //
 	private inputStates_: Record<PlayerActions, InputState> = {} as any;
 	private targetObj_: IUserControllable;

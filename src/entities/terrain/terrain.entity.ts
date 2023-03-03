@@ -545,7 +545,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 				i % this.cols == 0 ||
 				i % this.cols == this.cols - 1
 			) {
-				this.vertices[i].normal = new Vector(0, 1, 0); // we leave the edge vertices at zero to avoid artifacts with the skirt
+				this.vertices[i].normal = Vector.axisY(); // we leave the edge vertices at zero to avoid artifacts with the skirt
 			} else {
 				this.vertices[i].normal.normalizeInPlace();
 			}

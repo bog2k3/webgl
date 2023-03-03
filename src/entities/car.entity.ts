@@ -141,8 +141,8 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	rotateTarget(yaw: number, pitch: number): void {
 		const chassisTransform = new Transform();
 		this.chassisBody.getTransform(chassisTransform);
-		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), pitch));
-		this.cameraFrame.localTransform.rotateRef(Quat.axisAngle(new Vector(0, 1, 0), yaw));
+		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(Vector.axisX(), pitch));
+		this.cameraFrame.localTransform.rotateRef(Quat.axisAngle(Vector.axisY(), yaw));
 	}
 
 	toggleFire(on: boolean): void {
@@ -322,7 +322,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 		if (yawDifference > Car.TURRET_MAX_YAW_ERROR) {
 			const deltaYaw = yawSign * Math.min(yawDifference, Car.TURRET_MAX_ANGULAR_SPEED * dt);
-			this.turretFrame.localTransform.rotateRef(Quat.axisAngle(new Vector(0, 1, 0), deltaYaw));
+			this.turretFrame.localTransform.rotateRef(Quat.axisAngle(Vector.axisY(), deltaYaw));
 		}
 		const cameraPitch: number = Math.asin(cameraDir.y);
 		const targetPitch: number = clamp(
@@ -337,7 +337,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 				Car.TURRET_MIN_PITCH - turretPitch,
 				Car.TURRET_MAX_PITCH - turretPitch,
 			);
-			this.turretFrame.localTransform.rotateLocal(Quat.axisAngle(new Vector(1, 0, 0), -deltaPitch));
+			this.turretFrame.localTransform.rotateLocal(Quat.axisAngle(Vector.axisX(), -deltaPitch));
 		}
 	}
 

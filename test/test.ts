@@ -3,11 +3,11 @@ import { Vector } from "../src/joglfw/math/vector";
 
 const ang = Math.PI / 8;
 console.log(`angle: ${ang}`);
-const qYaw = Quat.axisAngle(new Vector(0, 1, 0), ang);
+const qYaw = Quat.axisAngle(Vector.axisY(), ang);
 console.log(`yaw: `, qYaw.toEulerAngles(), qYaw);
-const qPitch = Quat.axisAngle(new Vector(1, 0, 0), ang);
+const qPitch = Quat.axisAngle(Vector.axisX(), ang);
 console.log(`pitch: `, qPitch.toEulerAngles(), qPitch);
-const qRoll = Quat.axisAngle(new Vector(0, 0, 1), ang);
+const qRoll = Quat.axisAngle(Vector.axisZ(), ang);
 console.log(`roll: `, qRoll.toEulerAngles(), qRoll);
 
 console.log(`qFromYaw: `, Quat.fromEulerAngles(ang, 0, 0));

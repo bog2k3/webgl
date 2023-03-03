@@ -121,12 +121,12 @@ export class Mesh implements IGLResource {
 		const top: number = center.y + size.y * 0.5;
 		const back: number = center.z - size.z * 0.5;
 		const front: number = center.z + size.z * 0.5;
-		const nBack = new Vector(0, 0, -1);
-		const nFront = new Vector(0, 0, 1);
-		const nLeft = new Vector(-1, 0, 0);
-		const nRight = new Vector(1, 0, 0);
-		const nTop = new Vector(0, 1, 0);
-		const nBottom = new Vector(0, -1, 0);
+		const nBack = Vector.axisZ(-1);
+		const nFront = Vector.axisZ();
+		const nLeft = Vector.axisX(-1);
+		const nRight = Vector.axisX();
+		const nTop = Vector.axisY();
+		const nBottom = Vector.axisY(-1);
 		const white = new Vector(1, 1, 1, 1);
 		const vertices: MeshVertex[] = [
 			// back face

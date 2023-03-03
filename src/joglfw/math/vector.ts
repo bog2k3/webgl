@@ -6,6 +6,18 @@ import { Quat } from "./quat";
 export class Vector {
 	constructor(public x = 0, public y = 0, public z = 0, public w = 0) {}
 
+	static axisX(sign = +1): Vector {
+		return new Vector(Math.sign(sign), 0, 0);
+	}
+
+	static axisY(sign = +1): Vector {
+		return new Vector(0, Math.sign(sign), 0);
+	}
+
+	static axisZ(sign = +1): Vector {
+		return new Vector(0, 0, Math.sign(sign));
+	}
+
 	copy(): Vector {
 		return new Vector(this.x, this.y, this.z, this.w);
 	}

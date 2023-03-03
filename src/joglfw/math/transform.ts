@@ -40,15 +40,15 @@ export class Transform {
 
 	/** returns the local X axis expressed in parent's coordinate space */
 	axisX(): Vector {
-		return new Vector(1, 0, 0).mulQ(this.orient_);
+		return Vector.axisX().mulQ(this.orient_);
 	}
 	/** returns the local Y axis expressed in parent's coordinate space */
 	axisY(): Vector {
-		return new Vector(0, 1, 0).mulQ(this.orient_);
+		return Vector.axisY().mulQ(this.orient_);
 	}
 	/** returns the local Z axis expressed in parent's coordinate space */
 	axisZ(): Vector {
-		return new Vector(0, 0, 1).mulQ(this.orient_);
+		return Vector.axisZ().mulQ(this.orient_);
 	}
 
 	/** set a new position for the transform, expressed in parent's coordinate space */
@@ -64,9 +64,9 @@ export class Transform {
 	}
 
 	/** set the orientation such that the transform will point toward the specified point in parent space, given an up vector */
-	lookAt(refPos: Vector, refUp = new Vector(0, 1, 0)): void {
+	lookAt(refPos: Vector, refUp = Vector.axisY()): void {
 		const direction: Vector = refPos.sub(this.pos_).normalize();
-		const z = new Vector(0, 0, 1);
+		const z = Vector.axisZ();
 		if (direction.equals(z)) {
 			this.orient_ = new Quat(0, 0, 0, 1);
 		} else {

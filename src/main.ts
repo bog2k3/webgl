@@ -68,8 +68,13 @@ function update(dt: number): void {
 	}
 	if (!isPaused) {
 		game.update(dt);
+		renderData.renderCtx.time += dt;
+	} else if (game.playerInputHandler.getTargetObject() == game.freeCam) {
+		// allow the free camera to move even when paused
+		game.playerInputHandler.update(dt);
+		game.freeCam.update(dt);
+		game.cameraCtrl.update(dt);
 	}
-	renderData.renderCtx.time += dt;
 }
 
 function onGameStarted(): void {

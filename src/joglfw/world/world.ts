@@ -59,9 +59,9 @@ export class World implements IRenderable, IUpdatable {
 		// draw extent lines:
 		if (this.config_.drawBoundaries) {
 			// draw the world origin:
-			ShapeRenderer.get().queueLine(new Vector(), new Vector(1, 0, 0), new Vector(1, 0, 0));
-			ShapeRenderer.get().queueLine(new Vector(), new Vector(0, 1, 0), new Vector(0, 1, 0));
-			ShapeRenderer.get().queueLine(new Vector(), new Vector(0, 0, 1), new Vector(0, 0, 1));
+			ShapeRenderer.get().queueLine(new Vector(), Vector.axisX(), Vector.axisX());
+			ShapeRenderer.get().queueLine(new Vector(), Vector.axisY(), Vector.axisY());
+			ShapeRenderer.get().queueLine(new Vector(), Vector.axisZ(), Vector.axisZ());
 			// draw the world boundaries:
 			const lineColor = new Vector(1, 0, 1);
 			const overflow = 1.1;

@@ -12,7 +12,7 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 	constructor(position: Vector, direction: Vector) {
 		super();
 		this.rootTransform.setPosition(position);
-		const up = new Vector(0, 1, 0);
+		const up = Vector.axisY();
 		const mRot: Matrix = matrixFromPositionDirection(new Vector(0), direction, up);
 		this.rootTransform.setOrientation(matrixToQuat(mRot));
 	}
@@ -44,8 +44,8 @@ export class FreeCamera extends Entity implements IUserControllable, IUpdatable 
 
 		// compute rotation alteration based on inputs
 		const deltaRot: Vector = this.frameRotateValues_;
-		this.rootTransform.rotateLocal(quatRotation(new Vector(1, 0, 0), deltaRot.x));
-		this.rootTransform.rotateRef(quatRotation(new Vector(0, 1, 0), deltaRot.y));
+		this.rootTransform.rotateLocal(quatRotation(Vector.axisX(), deltaRot.x));
+		this.rootTransform.rotateRef(quatRotation(Vector.axisY(), deltaRot.y));
 		this.frameRotateValues_ = new Vector(0);
 	}
 

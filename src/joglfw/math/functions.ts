@@ -91,7 +91,7 @@ export function buildViewMatrix(cameraPosition: Vector, cameraDirection: Vector,
  * and forward direction of the object space, expressed in world space
  * The function normalizes vectors automatically.
  */
-export function matrixFromPositionDirection(position: Vector, direction: Vector, up = new Vector(0, 1, 0)): Matrix {
+export function matrixFromPositionDirection(position: Vector, direction: Vector, up = Vector.axisY()): Matrix {
 	direction = direction.normalize();
 	const right: Vector = up.cross(direction).normalize();
 	up = direction.cross(right);
