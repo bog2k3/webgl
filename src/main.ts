@@ -10,6 +10,9 @@ import { render2D, setContext2d } from "./render/render2d";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
+let canvas3D: HTMLCanvasElement;
+let canvas2D: HTMLCanvasElement;
+
 let lastTime = new Date();
 
 let renderData: RenderData;
@@ -20,8 +23,10 @@ let isPaused = false;
 
 window.onload = main;
 async function main(): Promise<void> {
-	const canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
-	const canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
+	canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
+	canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
+	adjustCanvasSize();
+	window.onresize = adjustCanvasSize;
 	await initGraphics(canvas2D, canvas3D);
 	initInput(canvas2D);
 	await initPhysics();
@@ -162,6 +167,19 @@ function initWorld(): void {
 	// });
 }
 
-function togglePause() {
+function togglePause(): void {
 	isPaused = !isPaused;
+}
+
+function adjustCanvasSize(): void {
+	const width: number = document.getElementById("canvas-container").clientWidth;
+	const height: number = document.getElementById("canvas-container").clientHeight;
+	canvas2D.width = width;
+	canvas2D.height = height;
+	canvas3D.width = width;
+	canvas3D.height = height;
+
+	if (renderData?.viewport) {
+		renderData.viewport.setArea(0, 0, width, height);
+	}
 }
