@@ -148,7 +148,7 @@ export class ShapeRenderer implements IGLResource {
 
 		gl.useProgram(this.shapeShaderProgram);
 		this.VAO.bind();
-		const mPV: Matrix = ctx.viewport.camera().matViewProj();
+		const mPV: Matrix = ctx.activeCamera().matViewProj();
 		gl.uniformMatrix4fv(this.indexMatViewProj, false, mPV.getColumnMajorValues());
 		checkGLError("ShapeRenderer.setupVAOandUnif");
 

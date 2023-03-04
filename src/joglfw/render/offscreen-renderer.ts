@@ -4,6 +4,7 @@ import { IRenderable } from "./renderable";
 import { IGLResource } from "./../glresource";
 import { FrameBuffer, FrameBufferDescriptor } from "./frame-buffer";
 import { assert } from "../utils/assert";
+import { checkGLError } from "../glcontext";
 /*
 	Use this convenience class to render to off-screen buffers/textures.
 	Do all the rendering as usual, between begin() and end() methods.
@@ -45,12 +46,18 @@ export class OffscreenRenderer implements IGLResource {
 	// render some stuff into the offscreen buffer (call this only between begin() and end())
 	renderList(list: IRenderable[]): void {
 		assert(this.data_.offscreenActive, "OffscreenRenderer not active (forgot to call begin()?)");
-		this.data_.viewport.renderList(list, this.data_.renderContext);
+		this.data_.viewport.activate();
+		for (const item of list) {
+			item.render(this.data_.renderContext);
+			checkGLError("After item render");
+		}
 	}
 
 	renderElement(element: IRenderable): void {
 		assert(this.data_.offscreenActive, "OffscreenRenderer not active (forgot to call begin()?)");
-		this.data_.viewport.renderList([element], this.data_.renderContext);
+		this.data_.viewport.activate();
+		element.render(this.data_.renderContext);
+		checkGLError("After item render");
 	}
 
 	viewport(): Viewport {
@@ -81,7 +88,7 @@ class OffscreenRendererData implements IGLResource {
 	constructor(bufW: number, bufH: number, renderContext: RenderContext) {
 		this.renderContext = renderContext;
 		this.viewport = new Viewport(0, 0, bufW, bufH);
-		this.renderContext.viewport = this.viewport;
+		this.renderContext.setActiveViewport(this.viewport);
 	}
 
 	release(): void {

@@ -54,25 +54,23 @@ export class RenderData implements IGLResource {
 
 	shaderPreprocessor = defaultShaderPreprocessor;
 
-	skyBox: SkyBox = null; // TODO
+	skyBox: SkyBox = null;
 	terrain: Terrain = null;
 
 	constructor(winW: number, winH: number) {
 		this.viewport = new Viewport(0, 0, winW, winH);
 		this.windowW = winW;
 		this.windowH = winH;
-		this.renderCtx.viewport = this.viewport;
+		this.renderCtx.setActiveViewport(this.viewport);
 	}
 
 	release() {
 		Shaders.useShaderPreprocessor(null);
 		this.renderCtx.meshRenderer = null;
-		// this.renderCtx.physDebugDraw = null; // TODO
 	}
 
-	private setupDependencies(): void {
+	public setupDependencies(): void {
 		Shaders.useShaderPreprocessor(this.shaderPreprocessor);
 		this.renderCtx.meshRenderer = new CustomMeshRenderer();
-		// this.renderCtx.physDebugDraw = new physics::DebugDrawer(); // TODO
 	}
 }

@@ -53,7 +53,7 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 		gl.depthMask(false); // disable depth buffer writing
 
 		this.renderData.shaderProgram.uniforms().setSkyboxSampler(0);
-		this.renderData.shaderProgram.uniforms().setMatVPInverse(context.viewport.camera().matViewProj().inverse());
+		this.renderData.shaderProgram.uniforms().setMatVPInverse(context.activeCamera().matViewProj().inverse());
 		this.renderData.shaderProgram.begin();
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.renderData.texture);

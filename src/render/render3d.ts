@@ -4,13 +4,14 @@ import { checkGLError } from "../joglfw/glcontext";
 import { Vector } from "../joglfw/math/vector";
 import { Mesh } from "../joglfw/mesh";
 import { MeshRenderer } from "../joglfw/render/mesh-renderer";
+import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
 import { ShapeRenderer } from "../joglfw/render/shape-renderer";
 import { assert } from "../joglfw/utils/assert";
 import { Entity } from "../joglfw/world/entity";
 import { World } from "../joglfw/world/world";
 import { physWorld } from "../physics/physics";
-import { gl } from "./../joglfw/glcontext";
+import { gl } from "../joglfw/glcontext";
 import { RenderPass } from "./custom-render-context";
 import { ShaderSkybox } from "./programs/shader-skybox";
 import { ShaderTerrain } from "./programs/shader-terrain";
@@ -20,9 +21,11 @@ import { SharedUniformPacks } from "./programs/shared-uniform-packs";
 import { PostProcessData, RenderData } from "./render-data";
 import { ShaderProgramManager } from "./shader-program-manager";
 
+const WATER_FRAMEBUFFER_REDUCTION = 2; // how much smaller the water offscreen framebuffers are than the main framebuffer
+
 export async function initRender(renderData: RenderData): Promise<boolean> {
 	SharedUniformPacks.initialize();
-	renderData["setupDependencies"]();
+	renderData.setupDependencies();
 
 	// configure backface culling
 	gl.enable(gl.CULL_FACE);
@@ -44,8 +47,8 @@ export async function initRender(renderData: RenderData): Promise<boolean> {
 	// }
 
 	// set up water refraction framebuffer
-	renderData.waterRenderData.refractionFBDesc.width = renderData.windowW / 2;
-	renderData.waterRenderData.refractionFBDesc.height = renderData.windowH / 2;
+	renderData.waterRenderData.refractionFBDesc.width = Math.floor(renderData.windowW / WATER_FRAMEBUFFER_REDUCTION);
+	renderData.waterRenderData.refractionFBDesc.height = Math.floor(renderData.windowH / WATER_FRAMEBUFFER_REDUCTION);
 	renderData.waterRenderData.refractionFBDesc.format = gl.RGBA;
 	renderData.waterRenderData.refractionFBDesc.multisamples = 0;
 	renderData.waterRenderData.refractionFBDesc.requireDepthBuffer = true;
@@ -59,8 +62,8 @@ export async function initRender(renderData: RenderData): Promise<boolean> {
 	gl.bindTexture(gl.TEXTURE_2D, null);
 
 	// set up water reflection framebuffer
-	renderData.waterRenderData.reflectionFBDesc.width = renderData.windowW / 2;
-	renderData.waterRenderData.reflectionFBDesc.height = renderData.windowH / 2;
+	renderData.waterRenderData.reflectionFBDesc.width = Math.floor(renderData.windowW / WATER_FRAMEBUFFER_REDUCTION);
+	renderData.waterRenderData.reflectionFBDesc.height = Math.floor(renderData.windowH / WATER_FRAMEBUFFER_REDUCTION);
 	renderData.waterRenderData.reflectionFBDesc.format = gl.RGBA;
 	renderData.waterRenderData.reflectionFBDesc.multisamples = 0;
 	renderData.waterRenderData.reflectionFBDesc.requireDepthBuffer = true;
@@ -117,6 +120,18 @@ export function unloadRender(renderData: RenderData): void {
 	Water.unloadAllResources();
 }
 
+export function resetRenderSize(renderData: RenderData, newWidth: number, newHeight: number): void {
+	renderData.windowW = newWidth;
+	renderData.windowH = newHeight;
+	renderData.viewport.setArea(0, 0, newWidth, newHeight);
+	renderData.waterRenderData.reflectionFBDesc.width = Math.floor(newWidth / WATER_FRAMEBUFFER_REDUCTION);
+	renderData.waterRenderData.reflectionFBDesc.height = Math.floor(newHeight / WATER_FRAMEBUFFER_REDUCTION);
+	renderData.waterRenderData.reflectionFramebuffer.reset(renderData.waterRenderData.reflectionFBDesc);
+	renderData.waterRenderData.refractionFBDesc.width = Math.floor(newWidth / WATER_FRAMEBUFFER_REDUCTION);
+	renderData.waterRenderData.refractionFBDesc.height = Math.floor(newHeight / WATER_FRAMEBUFFER_REDUCTION);
+	renderData.waterRenderData.refractionFramebuffer.reset(renderData.waterRenderData.refractionFBDesc);
+}
+
 export function render3D(renderData: RenderData, world: World): void {
 	renderData.defaultFrameBuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 	if (renderData.renderCtx.enableWaterRender) {
@@ -141,28 +156,19 @@ export function render3D(renderData: RenderData, world: World): void {
 
 		// 1st pass - reflection
 		setupRenderPass(renderData, RenderPass.WaterReflection);
-		renderData.viewport.renderList(
-			renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw,
-			renderData.renderCtx,
-		);
+		renderList(renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw, renderData.renderCtx);
 		resetRenderPass(renderData, RenderPass.WaterReflection);
 		checkGLError("render() pass #1");
 
 		// 2nd pass - refraction
 		setupRenderPass(renderData, RenderPass.WaterRefraction);
-		renderData.viewport.renderList(
-			renderData.renderCtx.cameraUnderwater ? aboveDraw : underDraw,
-			renderData.renderCtx,
-		);
+		renderList(renderData.renderCtx.cameraUnderwater ? aboveDraw : underDraw, renderData.renderCtx);
 		resetRenderPass(renderData, RenderPass.WaterRefraction);
 		checkGLError("render() pass #2");
 
 		// 3rd pass - standard rendering of scene
 		setupRenderPass(renderData, RenderPass.Standard);
-		renderData.viewport.renderList(
-			renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw,
-			renderData.renderCtx,
-		);
+		renderList(renderData.renderCtx.cameraUnderwater ? underDraw : aboveDraw, renderData.renderCtx);
 		resetRenderPass(renderData, RenderPass.Standard);
 		checkGLError("render() pass #3");
 	} else {
@@ -170,7 +176,7 @@ export function render3D(renderData: RenderData, world: World): void {
 		renderData.viewport.clear();
 		// no water, just render everything in one pass:
 		setupRenderPass(renderData, RenderPass.Standard);
-		renderData.viewport.renderList([world], renderData.renderCtx);
+		renderList([world], renderData.renderCtx);
 		resetRenderPass(renderData, RenderPass.Standard);
 	}
 
@@ -186,7 +192,7 @@ export function render3D(renderData: RenderData, world: World): void {
 	if (renderData.renderCtx.enableWaterRender) {
 		assert(renderData.terrain !== null, "terrain pointer not set!");
 		setupRenderPass(renderData, RenderPass.WaterSurface);
-		renderData.viewport.renderList([renderData.terrain], renderData.renderCtx);
+		renderList([renderData.terrain], renderData.renderCtx);
 		resetRenderPass(renderData, RenderPass.WaterSurface);
 
 		checkGLError("render() pass #4");
@@ -220,6 +226,7 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 				renderData.waterRenderData.reflectionFBDesc.width,
 				renderData.waterRenderData.reflectionFBDesc.height,
 			);
+			renderData.viewport.activate();
 			renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
 			renderData.viewport.clear();
 			renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? -1.0 : +1.0;
@@ -235,6 +242,7 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 				renderData.waterRenderData.refractionFBDesc.width,
 				renderData.waterRenderData.refractionFBDesc.height,
 			);
+			renderData.viewport.activate();
 			renderData.viewport.setBkColor(new Vector(0.07, 0.16, 0.2, 1.0)); // TODO hardcoded value
 			renderData.viewport.clear();
 			renderData.renderCtx.subspace = renderData.renderCtx.cameraUnderwater ? +1.0 : -1.0;
@@ -294,12 +302,14 @@ function resetRenderPass(renderData: RenderData, pass: RenderPass): void {
 		case RenderPass.WaterReflection:
 			renderData.waterRenderData.reflectionFramebuffer.unbind();
 			renderData.viewport.setArea(0, 0, renderData.windowW, renderData.windowH);
+			renderData.viewport.activate();
 			renderData.viewport.camera().mirror(new Vector(0, renderData.renderCtx.subspace, 0, 0));
 			renderData.viewport.setBkColor(new Vector(0, 0, 0));
 			break;
 		case RenderPass.WaterRefraction:
 			renderData.waterRenderData.refractionFramebuffer.unbind();
 			renderData.viewport.setArea(0, 0, renderData.windowW, renderData.windowH);
+			renderData.viewport.activate();
 			renderData.viewport.setBkColor(new Vector(0, 0, 0));
 			break;
 		case RenderPass.WaterSurface:
@@ -369,4 +379,11 @@ function deletePostProcessData(postProcessData: PostProcessData): void {
 	gl.deleteBuffer(postProcessData.VBO);
 	gl.deleteBuffer(postProcessData.IBO);
 	postProcessData.VAO.release();
+}
+
+function renderList(list: IRenderable[], context: RenderContext): void {
+	for (let r of list) {
+		r.render(context);
+		checkGLError("After object render");
+	}
 }

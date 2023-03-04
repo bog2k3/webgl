@@ -1,9 +1,7 @@
-import { IRenderable } from "./renderable";
 import { Camera } from "../camera";
 import { checkGLError, gl } from "../glcontext";
 import { Matrix } from "../math/matrix";
 import { Vector } from "../math/vector";
-import { RenderContext } from "./render-context";
 
 export class Viewport {
 	constructor(x: number, y: number, w: number, h: number) {
@@ -104,52 +102,25 @@ export class Viewport {
 	}
 
 	clear(): void {
-		gl.clearColor(this.backgroundColor_.x, this.backgroundColor_.y, this.backgroundColor_.z, 1);
 		gl.clearDepth(1);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		// TODO this will clear the whole screen instead of the viewport, fix
-		/*
-		SSDescriptor ssDesc;
-		bool ssEnabled = gltGetSuperSampleInfo(ssDesc);
+		// SSDescriptor ssDesc;
+		const ssEnabled = false; // gltGetSuperSampleInfo(ssDesc);
 		// when super sample is enabled we must adjust the viewport accordingly
-		unsigned vpfx = ssEnabled ? ssDesc.getLinearSampleFactor() : 1;
-		unsigned vpfy = ssEnabled ? ssDesc.getLinearSampleFactor() : 1;
-		auto vpp = position();
-		glScissor(vpp.x * vpfx, vpp.y * vpfy, width() * vpfx, height() * vpfy);
-		glEnable(GL_SCISSOR_TEST);
-		glClearColor(backgroundColor_.r, backgroundColor_.g, backgroundColor_.b, backgroundColor_.a);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glDisable(GL_SCISSOR_TEST);
+		const vpfx = ssEnabled ? 0 /*ssDesc.getLinearSampleFactor()*/ : 1;
+		const vpfy = ssEnabled ? 0 /*ssDesc.getLinearSampleFactor()*/ : 1;
+		const vpp = this.position();
+		gl.scissor(vpp.x * vpfx, vpp.y * vpfy, this.width() * vpfx, this.height() * vpfy);
+		gl.enable(gl.SCISSOR_TEST);
+		gl.clearColor(this.backgroundColor_.x, this.backgroundColor_.y, this.backgroundColor_.z, 1);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+		gl.disable(gl.SCISSOR_TEST);
 		checkGLError("viewport clear");
-		*/
 	}
 
-	renderList(list: IRenderable[], ctx: RenderContext): void {
-		if (!this.isEnabled()) return;
-
-		checkGLError("Viewport.render before prepare");
-		this.prepareForRender(ctx);
-		checkGLError("Viewport::render after prepare, before element.draw()");
-
-		// render objects from list:
-		for (let x of list) {
-			x.render(ctx);
-			checkGLError("Viewport::render after element.draw()");
-		}
-		// flush all render helpers' pending commands
-		// RenderHelpers::flushAll(); // TODO implement
-		checkGLError("Viewport::render after flushAll()");
-
-		this.resetAfterRender();
-		checkGLError("Viewport::render end.");
-	}
-
-	public prepareForRender(ctx: RenderContext) {
+	public activate() {
 		// set up viewport:
-		// assert(RenderHelpers::pActiveViewport == nullptr && "Another viewport is already rendering");
-		// RenderHelpers::pActiveViewport = this;
-		// TODO do we need this?
-
 		// ssDesc: SSDescriptor;
 		// bool ssEnabled = gltGetSuperSampleInfo(ssDesc);
 		// TODO when super sample is enabled we must adjust the viewport accordingly
@@ -158,13 +129,6 @@ export class Viewport {
 		const vpfy = ssEnabled ? 1 /*ssDesc.getLinearSampleFactor()*/ : 1;
 		const vpp = this.position();
 		gl.viewport(vpp.x * vpfx, vpp.y * vpfy, this.width() * vpfx, this.height() * vpfy);
-
-		// make sure the context is refering to this viewport:
-		ctx.viewport = this;
-	}
-
-	public resetAfterRender() {
-		// RenderHelpers::pActiveViewport = nullptr; // TODO implement
 	}
 
 	// ----------------- PRIVATE AREA ---------------------------- //

@@ -4,7 +4,7 @@ import { initGL } from "./joglfw/glcontext";
 import { Shaders } from "./joglfw/render/shaders";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
-import { initRender, render3D } from "./render/render";
+import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import { RenderData } from "./render/render-data";
 import { render2D, setContext2d } from "./render/render2d";
 
@@ -16,6 +16,7 @@ let canvas2D: HTMLCanvasElement;
 let lastTime = new Date();
 
 let renderData: RenderData;
+let resetRenderSizeTimeout = null;
 let world: World;
 let game: Game;
 let inputHandler: HtmlInputHandler;
@@ -85,8 +86,7 @@ function update(dt: number): void {
 
 function onGameStarted(): void {
 	game.cameraCtrl.setTargetCamera(renderData.viewport.camera());
-	game.terrain?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
-	// TODO activate these
+	game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	game.terrain.setWaterRefractionTex(
 		renderData.waterRenderData.refractionFramebuffer.fbTexture(),
 		game.skyBox.getCubeMapTexture(),
@@ -178,8 +178,21 @@ function adjustCanvasSize(): void {
 	canvas2D.height = height;
 	canvas3D.width = width;
 	canvas3D.height = height;
-
-	if (renderData?.viewport) {
-		renderData.viewport.setArea(0, 0, width, height);
+	if (renderData) {
+		scheduleResetRenderSize(width, height);
 	}
+}
+
+function scheduleResetRenderSize(newWidth: number, newHeight: number): void {
+	if (resetRenderSizeTimeout) {
+		clearTimeout(resetRenderSizeTimeout);
+	}
+	resetRenderSizeTimeout = setTimeout(() => {
+		resetRenderSize(renderData, newWidth, newHeight);
+		game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
+		game.terrain.setWaterRefractionTex(
+			renderData.waterRenderData.refractionFramebuffer.fbTexture(),
+			game.skyBox.getCubeMapTexture(),
+		);
+	}, 500);
 }
