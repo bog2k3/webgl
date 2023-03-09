@@ -38,12 +38,12 @@ export class CustomRenderContext extends RenderContext {
 		const unifCommon = SharedUniformPacks.upCommon;
 		unifCommon.setbReflection(this.renderPass == RenderPass.WaterReflection);
 		unifCommon.setbRefraction(this.renderPass == RenderPass.WaterRefraction);
-		unifCommon.setEyePos(this.viewport.camera().position());
-		unifCommon.setMatViewProj(this.viewport.camera().matViewProj());
+		unifCommon.setEyePos(this.activeCamera().position());
+		unifCommon.setMatViewProj(this.activeCamera().matViewProj());
 		unifCommon.setEnableClipping(this.enableClipPlane);
 		unifCommon.setSubspace(this.subspace);
 		unifCommon.setTime(this.time);
-		unifCommon.setFOV(this.viewport.camera().FOV(), this.viewport.aspectRatio());
-		unifCommon.setMatView(this.viewport.camera().matView());
+		unifCommon.setFOV(this.activeCamera().FOV(), this.activeViewport.aspectRatio());
+		unifCommon.setMatView(this.activeCamera().matView());
 	}
 }

@@ -4,15 +4,19 @@ import { initGL } from "./joglfw/glcontext";
 import { Shaders } from "./joglfw/render/shaders";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
-import { initRender, render3D } from "./render/render";
+import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import { RenderData } from "./render/render-data";
 import { render2D, setContext2d } from "./render/render2d";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
+let canvas3D: HTMLCanvasElement;
+let canvas2D: HTMLCanvasElement;
+
 let lastTime = new Date();
 
 let renderData: RenderData;
+let resetRenderSizeTimeout = null;
 let world: World;
 let game: Game;
 let inputHandler: HtmlInputHandler;
@@ -20,8 +24,10 @@ let isPaused = false;
 
 window.onload = main;
 async function main(): Promise<void> {
-	const canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
-	const canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
+	canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
+	canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
+	adjustCanvasSize();
+	window.onresize = adjustCanvasSize;
 	await initGraphics(canvas2D, canvas3D);
 	initInput(canvas2D);
 	await initPhysics();
@@ -80,8 +86,7 @@ function update(dt: number): void {
 
 function onGameStarted(): void {
 	game.cameraCtrl.setTargetCamera(renderData.viewport.camera());
-	game.terrain?.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
-	// TODO activate these
+	game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	game.terrain.setWaterRefractionTex(
 		renderData.waterRenderData.refractionFramebuffer.fbTexture(),
 		game.skyBox.getCubeMapTexture(),
@@ -162,6 +167,32 @@ function initWorld(): void {
 	// });
 }
 
-function togglePause() {
+function togglePause(): void {
 	isPaused = !isPaused;
+}
+
+function adjustCanvasSize(): void {
+	const width: number = document.getElementById("canvas-container").clientWidth;
+	const height: number = document.getElementById("canvas-container").clientHeight;
+	canvas2D.width = width;
+	canvas2D.height = height;
+	canvas3D.width = width;
+	canvas3D.height = height;
+	if (renderData) {
+		scheduleResetRenderSize(width, height);
+	}
+}
+
+function scheduleResetRenderSize(newWidth: number, newHeight: number): void {
+	if (resetRenderSizeTimeout) {
+		clearTimeout(resetRenderSizeTimeout);
+	}
+	resetRenderSizeTimeout = setTimeout(() => {
+		resetRenderSize(renderData, newWidth, newHeight);
+		game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
+		game.terrain.setWaterRefractionTex(
+			renderData.waterRenderData.refractionFramebuffer.fbTexture(),
+			game.skyBox.getCubeMapTexture(),
+		);
+	}, 500);
 }

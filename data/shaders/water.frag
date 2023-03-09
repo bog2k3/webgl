@@ -185,6 +185,10 @@ void main() {
 	float foamFactor = pow(1.0 / (1.0 + transmitUWDist), 20.0);
 	vec3 foamColor = vec3(1.0, 0.95, 0.85);
 	float foamLight_gs = (foamLight.x + foamLight.y + foamLight.z) * 0.6;
+
+	// testing:
+	foamFactor = pow(foamFactor * 1.1, 3.0);
+
 	final.rgb = mix(final.rgb, foamColor * foamLight_gs, foamFactor * foamTransp);
 
 	// final.rgb = vec3(foamFactor * foamTransp);// * foamTransp;

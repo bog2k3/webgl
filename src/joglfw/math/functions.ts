@@ -52,6 +52,10 @@ export function buildViewportMatrix(viewportW: number, viewportH: number): Matri
  * as well as the near and far clipping planes
  */
 export function buildProjectionMatrix(vFOV: number, aspectRatio: number, zNear: number, zFar: number): Matrix {
+	const maxFOV = Math.PI / 1.2;
+	if (vFOV > maxFOV) {
+		vFOV = maxFOV;
+	}
 	// for info see http://www.3dcpptutorials.sk/index.php?id=2
 	const cotHalfFov = 1.0 / Math.tan(vFOV / 2);
 	// prettier-ignore

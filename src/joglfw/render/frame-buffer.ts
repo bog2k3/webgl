@@ -1,4 +1,4 @@
-import { IGLResource } from './../glresource';
+import { IGLResource } from "./../glresource";
 import { checkGLError, gl } from "../glcontext";
 import { assert } from "../utils/assert";
 
@@ -23,14 +23,10 @@ export class FrameBufferDescriptor {
 				formatCorrect = true;
 				break;
 			}
-		if (!formatCorrect)
-			return false;
-		if (this.height > 8192)
-			return false;
-		if (this.width > 8192)
-			return false;
-		if (this.multisamples > 16)
-			return false;
+		if (!formatCorrect) return false;
+		if (this.height > 8192) return false;
+		if (this.width > 8192) return false;
+		if (this.multisamples > 16) return false;
 
 		return true;
 	}
@@ -59,7 +55,7 @@ export class FrameBufferDescriptor {
 				return 0;
 		}
 	}
-};
+}
 
 // this object represents an OpenGL frame-buffer along with all its color (texture or renderbuffer) and depth (renderbuffer) attachments
 export class FrameBuffer implements IGLResource {
@@ -93,7 +89,6 @@ export class FrameBuffer implements IGLResource {
 		return this.depthRenderbuffer_;
 	}
 
-
 	// tries to create the OpenGL framebuffer resources; returns true on success and makes this object a valid framebuffer,
 	// or false on failure.
 	create(desc: FrameBufferDescriptor): boolean {
@@ -112,16 +107,32 @@ export class FrameBuffer implements IGLResource {
 			this.fbRenderbuffer_ = gl.createRenderbuffer();
 			gl.bindRenderbuffer(gl.RENDERBUFFER, this.fbRenderbuffer_);
 			if (gl instanceof WebGL2RenderingContext) {
-				gl.renderbufferStorageMultisample(gl.RENDERBUFFER, desc.multisamples, desc.format, desc.width, desc.height);
+				gl.renderbufferStorageMultisample(
+					gl.RENDERBUFFER,
+					desc.multisamples,
+					desc.format,
+					desc.width,
+					desc.height,
+				);
 			} else {
 				gl.renderbufferStorage(gl.RENDERBUFFER, desc.format, desc.width, desc.height);
 			}
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this.fbRenderbuffer_);
 		} else {
 			this.fbRenderbuffer_ = null;
-			this. fbTexture_ = gl.createTexture();
+			this.fbTexture_ = gl.createTexture();
 			gl.bindTexture(gl.TEXTURE_2D, this.fbTexture_);
-			gl.texImage2D(gl.TEXTURE_2D, 0, desc.format, desc.width, desc.height, 0, desc.textureChannels(), desc.textureDataType(), null);
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				desc.format,
+				desc.width,
+				desc.height,
+				0,
+				desc.textureChannels(),
+				desc.textureDataType(),
+				null,
+			);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.fbTexture_, 0);
@@ -131,19 +142,37 @@ export class FrameBuffer implements IGLResource {
 			this.depthRenderbuffer_ = gl.createRenderbuffer();
 			gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderbuffer_);
 			if (gl instanceof WebGL2RenderingContext) {
-				gl.renderbufferStorageMultisample(gl.RENDERBUFFER, desc.multisamples, gl.DEPTH24_STENCIL8, desc.width, desc.height);
+				gl.renderbufferStorageMultisample(
+					gl.RENDERBUFFER,
+					desc.multisamples,
+					gl.DEPTH24_STENCIL8,
+					desc.width,
+					desc.height,
+				);
 			} else {
 				gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, desc.width, desc.height);
 			}
-			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.depthRenderbuffer_);
-		} else
-			this.depthRenderbuffer_ = null;
+			gl.framebufferRenderbuffer(
+				gl.FRAMEBUFFER,
+				gl.DEPTH_STENCIL_ATTACHMENT,
+				gl.RENDERBUFFER,
+				this.depthRenderbuffer_,
+			);
+		} else this.depthRenderbuffer_ = null;
 
-		const result = !checkGLError("gltCreateFrameBuffer") && gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE;
+		const result =
+			!checkGLError("gltCreateFrameBuffer") &&
+			gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE;
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.previousFramebufferBinding_);
 		this.created_ = result;
 
 		return result;
+	}
+
+	reset(desc: FrameBufferDescriptor): boolean {
+		assert(!this.active_, "Cannot reset framebuffer while bound.");
+		this.release();
+		return this.create(desc);
 	}
 
 	// bind this framebuffer as the DRAW framebuffer
@@ -155,10 +184,8 @@ export class FrameBuffer implements IGLResource {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer_);
 
 		this.previousDepthMask_ = gl.getParameter(gl.DEPTH_WRITEMASK);
-		if (this.depthRenderbuffer_)
-			gl.depthMask(true);
-		else
-			gl.depthMask(false);
+		if (this.depthRenderbuffer_) gl.depthMask(true);
+		else gl.depthMask(false);
 
 		this.active_ = true;
 	}
@@ -174,7 +201,10 @@ export class FrameBuffer implements IGLResource {
 
 	// binds this framebuffer as the READ framebuffer
 	bindRead(): void {
-		assert(gl instanceof WebGL2RenderingContext, "Framebuffer.bindRead() is not available in WebGL 1 render context");
+		assert(
+			gl instanceof WebGL2RenderingContext,
+			"Framebuffer.bindRead() is not available in WebGL 1 render context",
+		);
 		assert(this.created_, "Attempting to bind an invalid framebuffer (forgot to call create()?)");
 		assert(!this.activeRead_, "Attempting to bind a framebuffer which is already bound.");
 
@@ -187,7 +217,10 @@ export class FrameBuffer implements IGLResource {
 
 	// unbinds this framebuffer and restores the previously bound READ framebuffer
 	unbindRead(): void {
-		assert(gl instanceof WebGL2RenderingContext, "Framebuffer.unbindRead() is not available in WebGL 1 render context");
+		assert(
+			gl instanceof WebGL2RenderingContext,
+			"Framebuffer.unbindRead() is not available in WebGL 1 render context",
+		);
 		assert(this.activeRead_, "Attempting to unbind a framebuffer which is not bound.");
 
 		if (gl instanceof WebGL2RenderingContext) {
@@ -200,15 +233,12 @@ export class FrameBuffer implements IGLResource {
 	// This is automatically called on the destructor as well, but is provided as user callable as well.
 	release(): void {
 		assert(this.created_, "Framebuffer::destroy(): Attempting to destroy already destroyed Framebuffer");
-		assert(!this.active_ , "Attempting to destroy a framebuffer which is currently active. Unbind it first");
+		assert(!this.active_, "Attempting to destroy a framebuffer which is currently active. Unbind it first");
 
-		if (this.fbTexture_ > 0)
-			gl.deleteTexture(this.fbTexture_);
-		if (this.fbRenderbuffer_)
-			gl.deleteRenderbuffer(this.fbRenderbuffer_);
-		if (this.depthRenderbuffer_)
-			gl.deleteRenderbuffer(this.depthRenderbuffer_);
-		gl.deleteRenderbuffer(this.framebuffer_);
+		if (this.fbTexture_ > 0) gl.deleteTexture(this.fbTexture_);
+		if (this.fbRenderbuffer_) gl.deleteRenderbuffer(this.fbRenderbuffer_);
+		if (this.depthRenderbuffer_) gl.deleteRenderbuffer(this.depthRenderbuffer_);
+		gl.deleteFramebuffer(this.framebuffer_);
 
 		this.depthRenderbuffer_ = 0;
 		this.fbRenderbuffer_ = 0;
@@ -229,4 +259,4 @@ export class FrameBuffer implements IGLResource {
 	private previousFramebufferBinding_ = 0;
 	private previousFramebufferBindingRead_ = 0;
 	private previousDepthMask_ = false;
-};
+}
