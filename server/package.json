@@ -1,0 +1,25 @@
+{
+	"name": "webmageddon-server",
+	"version": "1.0.0",
+	"description": "A WebGL-based multiplayer game (inspired by Carmageddon)",
+	"main": "dist/main.js",
+	"scripts": {
+		"build": "npx tsc --project tsconfig.json",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "npx nodemon ./dist/main.js",
+		"start-dev": "npx nodemon ./src/main.ts"
+	},
+	"author": "bogdan",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/express": "^4.17.17",
+		"@types/node": "^18.14.6",
+		"nodemon": "^2.0.21",
+		"ts-node": "^10.9.1",
+		"typescript": "^4.9.5"
+	},
+	"dependencies": {
+		"express": "^4.18.2",
+		"socket.io": "^4.6.1"
+	}
+}
