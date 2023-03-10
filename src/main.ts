@@ -7,6 +7,7 @@ import { initPhysics } from "./physics/physics";
 import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import { RenderData } from "./render/render-data";
 import { render2D, setContext2d } from "./render/render2d";
+import { initWebSocket } from "./websock";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -24,6 +25,7 @@ let isPaused = false;
 
 window.onload = main;
 async function main(): Promise<void> {
+	initWebSocket();
 	canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
 	canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
 	adjustCanvasSize();

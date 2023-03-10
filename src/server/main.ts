@@ -1,15 +1,21 @@
-const { Server } = require("socket.io");
-const express = require("express");
-const http = require("http");
-const cors = require("cors");
+// const { Server } = require("socket.io");
+import { Server } from "socket.io";
+import express from "express";
+import http from "http";
+import cors from "cors";
 
 (function main(): void {
 	const app = express();
 	app.use(cors({ origin: "*" }));
 	const server = http.createServer(app);
-	const socketIo = new Server(server);
+	const socketIo = new Server(server, {
+		allowEIO3: true,
+	});
 	socketIo.on("connection", (socket) => {
 		console.log("socket connected:", socket);
+	});
+	socketIo.on("hello", () => {
+		console.log("received hello");
 	});
 
 	const fileOptions = {
