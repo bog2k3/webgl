@@ -4,13 +4,20 @@
 		{
 			"type": "npm",
 			"script": "build",
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			"group": "build",
+			"path": "client",
 			"problemMatcher": [],
-			"label": "npm: build",
+			"label": "Build client",
 			"detail": "tsc --project tsconfig.json && npx webpack --config webpack.config.js"
 		},
+		{
+			"type": "npm",
+			"script": "build",
+			"group": "build",
+			"path": "server",
+			"problemMatcher": [],
+			"label": "Build Server",
+			"detail": "npx tsc --project tsconfig.json"
+		}
 	]
 }

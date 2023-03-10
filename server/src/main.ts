@@ -1,5 +1,4 @@
-// const { Server } = require("socket.io");
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import express from "express";
 import http from "http";
 import cors from "cors";
@@ -12,14 +11,12 @@ import cors from "cors";
 		allowEIO3: true,
 	});
 	socketIo.on("connection", (socket) => {
-		console.log("socket connected:", socket);
-	});
-	socketIo.on("hello", () => {
-		console.log("received hello");
+		console.log("socket connected:", socket.id);
+		setupSocket(socket);
 	});
 
 	const fileOptions = {
-		root: __dirname + "/../..",
+		root: "../www",
 	};
 
 	const allowedFiles = ["/favicon.ico", "/index.html"];
@@ -48,3 +45,12 @@ import cors from "cors";
 		console.log("Listening on HTTP *:3000");
 	});
 })();
+
+function setupSocket(socket: Socket): void {
+	socket.on("disconnect", (reason) => {
+		console.log(`socket Disconnected (${reason}):`, socket.id);
+	});
+	socket.on("message", (message) => {
+		console.log(`received message from ${socket.id}: `, message);
+	});
+}
