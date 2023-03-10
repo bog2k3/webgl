@@ -1,7 +1,9 @@
 import { Server, Socket } from "socket.io";
-import express from "express";
-import http from "http";
-import cors from "cors";
+import * as express from "express";
+import * as http from "http";
+import * as cors from "cors";
+import { Client } from "./client";
+import { SocketMessage } from "./common/socket-message";
 
 (function main(): void {
 	const app = express();
@@ -46,11 +48,35 @@ import cors from "cors";
 	});
 })();
 
+const clients: { [id: string]: Client } = {};
+
 function setupSocket(socket: Socket): void {
 	socket.on("disconnect", (reason) => {
 		console.log(`socket Disconnected (${reason}):`, socket.id);
+		removeClient(socket.id);
 	});
-	socket.on("message", (message) => {
-		console.log(`received message from ${socket.id}: `, message);
+	socket.on("message", (message: string, payload: any) => {
+		if (!handleClientMessage(socket, message, payload)) {
+			console.warn(`Ignoring message from unknown client ${socket.id}:`, message, payload);
+		}
 	});
+}
+
+function removeClient(id: string): void {
+	delete clients[id];
+}
+
+function handleClientMessage(socket: Socket, message: string, payload: any): boolean {
+	if (message === SocketMessage.IDENTIFY) {
+		if (clients[socket.id]) {
+			console.warn(`Client ${socket.id} is already identified, ignoring IDENTIFY message.`);
+			return true;
+		}
+		clients[socket.id] = new Client(socket, payload["name"]);
+		console.log(`Client ${socket.id} identified as "${payload["name"]}.`);
+		return true;
+	}
+	if (!clients[socket.id]) {
+		return false;
+	}
 }

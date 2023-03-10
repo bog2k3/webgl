@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"module": "ES2022",
+		"module": "CommonJS",
 		"declaration": true,
 		"removeComments": true,
 		"emitDecoratorMetadata": true,
@@ -9,12 +9,10 @@
 		"target": "ES2021",
 		"sourceMap": true,
 		"outDir": "./dist",
-		"rootDir": "./src",
-		"baseUrl": "./node_modules",
+		"rootDir": "src/",
 		"moduleResolution": "node",
 		"incremental": true,
-		"types": ["node"],
-		"esModuleInterop": true
+		"types": ["node"]
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "test"]
