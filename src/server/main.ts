@@ -16,6 +16,8 @@ const cors = require("cors");
 		root: __dirname + "/../..",
 	};
 
+	const allowedFiles = ["/favicon.ico", "/index.html"];
+
 	app.get("/dist/*", (req, res) => {
 		res.sendFile(req.url, fileOptions);
 	});
@@ -26,6 +28,14 @@ const cors = require("cors");
 
 	app.get("/", (req, res) => {
 		res.sendFile("index.html", fileOptions);
+	});
+
+	app.get("*", (req, res) => {
+		if (allowedFiles.includes(req.url)) {
+			res.sendFile(req.url, fileOptions);
+		} else {
+			res.status(403).send("Not allowed.");
+		}
 	});
 
 	server.listen(3000, () => {
