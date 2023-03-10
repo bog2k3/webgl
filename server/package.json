@@ -3,11 +3,10 @@
 	"version": "1.0.0",
 	"description": "A WebGL-based multiplayer game (inspired by Carmageddon)",
 	"main": "dist/main.js",
-	"type": "module",
 	"scripts": {
 		"build": "npx tsc --project tsconfig.json",
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "npx nodemon --inspect ./dist/main.js",
+		"start": "npx nodemon ./dist/main.js",
 		"start-dev": "npx nodemon ./src/main.ts"
 	},
 	"author": "bogdan",
