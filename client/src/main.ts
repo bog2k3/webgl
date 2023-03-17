@@ -7,7 +7,8 @@ import { initPhysics } from "./physics/physics";
 import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import { RenderData } from "./render/render-data";
 import { render2D, setContext2d } from "./render/render2d";
-import { initWebSocket } from "./websock";
+import { WebSock } from "./websock";
+import { GUI } from "./gui";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -25,22 +26,23 @@ let isPaused = false;
 
 window.onload = main;
 async function main(): Promise<void> {
-	initWebSocket();
+	WebSock.init();
 	canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
 	canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
 	adjustCanvasSize();
 	window.onresize = adjustCanvasSize;
-	await initGraphics(canvas2D, canvas3D);
+	await Promise.all([initGraphics(canvas2D, canvas3D), initPhysics()]);
 	initInput(canvas2D);
-	await initPhysics();
 
 	initWorld();
 
 	game = new Game();
 	await game.initialize();
+	game.cameraCtrl.setTargetCamera(renderData.viewport.camera());
 	game.onStart.add(onGameStarted);
 	game.onStop.add(onGameEnded);
-	game.start();
+
+	GUI.init();
 
 	requestAnimationFrame(step);
 }
@@ -87,7 +89,6 @@ function update(dt: number): void {
 }
 
 function onGameStarted(): void {
-	game.cameraCtrl.setTargetCamera(renderData.viewport.camera());
 	game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	game.terrain.setWaterRefractionTex(
 		renderData.waterRenderData.refractionFramebuffer.fbTexture(),
@@ -148,7 +149,9 @@ function handleDebugKeys(ev: InputEvent) {
 	ev.consume();
 }
 
-function handleGUIInputs(ev: InputEvent): void {}
+function handleGUIInputs(ev: InputEvent): void {
+	GUI.handleInputEvent(ev);
+}
 
 function handlePlayerInputs(ev: InputEvent): void {
 	game.playerInputHandler.handleInputEvent(ev);
@@ -191,10 +194,10 @@ function scheduleResetRenderSize(newWidth: number, newHeight: number): void {
 	}
 	resetRenderSizeTimeout = setTimeout(() => {
 		resetRenderSize(renderData, newWidth, newHeight);
-		game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
+		game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer?.fbTexture());
 		game.terrain.setWaterRefractionTex(
-			renderData.waterRenderData.refractionFramebuffer.fbTexture(),
-			game.skyBox.getCubeMapTexture(),
+			renderData.waterRenderData.refractionFramebuffer?.fbTexture(),
+			game.skyBox?.getCubeMapTexture(),
 		);
 	}, 500);
 }

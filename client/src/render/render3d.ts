@@ -83,11 +83,13 @@ export async function initRender(renderData: RenderData): Promise<boolean> {
 	renderData.viewport.camera().moveTo(new Vector(0, 0, -1));
 
 	Mesh.ENABLE_COLOR_DEBUG = true;
-	await MeshRenderer.initialize();
-	await ShapeRenderer.initialize();
-
-	await loadShaders();
-	await loadTextures();
+	// prettier-ignore
+	await Promise.all([
+		MeshRenderer.initialize(),
+		ShapeRenderer.initialize(),
+		loadShaders(),
+		loadTextures()
+	]);
 
 	// done
 	return true;

@@ -40,7 +40,7 @@ export class Game {
 		tc.maxElevation = 2;
 		tc.seaFloorElevation = -10;
 		tc.roughness = 0.8;
-		this.terrain = new Terrain({ previewMode: false });
+		this.terrain = new Terrain({ previewMode: true });
 		this.terrain.generate(tc);
 		this.terrain.finishGenerate();
 
@@ -48,9 +48,9 @@ export class Game {
 		World.getInstance().setGlobal(Terrain, this.terrain);
 
 		this.freeCam = new FreeCamera(
-			// new Vector(tc.width / 1.8, tc.maxElevation + 20, tc.length / 1.8),
-			new Vector(5, tc.maxElevation + 3, 5),
-			new Vector(-1, -0.15, -1),
+			new Vector(tc.width / 1.4, tc.maxElevation + 45, tc.length / 1.4),
+			// new Vector(5, tc.maxElevation + 3, 5),
+			new Vector(-1, -0.7, -1),
 		);
 		World.getInstance().addEntity(this.freeCam);
 
@@ -59,16 +59,18 @@ export class Game {
 		World.getInstance().addEntity(this.cameraCtrl);
 		this.cameraCtrl.attachToEntity(this.freeCam);
 
-		this.skyBox = new SkyBox();
-		await this.skyBox.load("data/textures/sky/1");
-		World.getInstance().addEntity(this.skyBox);
+		if (false) {
+			this.skyBox = new SkyBox();
+			await this.skyBox.load("data/textures/sky/1");
+			World.getInstance().addEntity(this.skyBox);
 
-		this.playerCar = new Car(new Vector(0, tc.maxElevation + 3, 0), Quat.identity());
-		World.getInstance().addEntity(this.playerCar);
-		this.resetPlayer();
+			this.playerCar = new Car(new Vector(0, tc.maxElevation + 3, 0), Quat.identity());
+			World.getInstance().addEntity(this.playerCar);
+			this.resetPlayer();
 
-		this.playerController = new PlayerController();
-		this.playerController.setTargetCar(this.playerCar);
+			this.playerController = new PlayerController();
+			this.playerController.setTargetCar(this.playerCar);
+		}
 
 		this.cameraCtrl.checkCollision = this.checkCameraCollision.bind(this);
 

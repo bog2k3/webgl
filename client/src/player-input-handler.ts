@@ -177,6 +177,9 @@ export class PlayerInputHandler implements IUpdatable {
 	}
 
 	update(dt: number): void {
+		if (!this.targetObj_) {
+			return;
+		}
 		if (this.inputStates_[PlayerActions.MOVE_FORWARD].value) {
 			this.targetObj_.move(Direction.FORWARD);
 		}
