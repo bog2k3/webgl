@@ -1,13 +1,19 @@
 export let context2d: CanvasRenderingContext2D;
-export let nextTextY = 15;
+let nextTextY = 15;
+
+export type Render2dConfig = {
+	drawDebugText: boolean;
+};
 
 export function setContext2d(context: CanvasRenderingContext2D): void {
 	context2d = context;
 }
 
-export function render2D(): void {
+export function render2D(config: Render2dConfig): void {
 	nextTextY = 15; // reset
-	drawDebugInfo();
+	if (config.drawDebugText) {
+		drawDebugInfo();
+	}
 }
 
 function drawDebugInfo(): void {

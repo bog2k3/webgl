@@ -50,6 +50,8 @@ import { SocketMessage } from "./common/socket-message";
 
 const clients: { [id: string]: Client } = {};
 
+let mapConfig: any = null;
+
 function setupSocket(socket: Socket): void {
 	socket.on("disconnect", (reason) => {
 		console.log(`socket Disconnected (${reason}):`, socket.id);
@@ -73,7 +75,9 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 			return true;
 		}
 		clients[socket.id] = new Client(socket, payload["name"]);
-		console.log(`Client ${socket.id} identified as "${payload["name"]}.`);
+		console.log(`Client ${socket.id} identified as "${payload["name"]}".`);
+		// send the map config to this client
+		socket.send(SocketMessage.MAP_CONFIG, mapConfig);
 		return true;
 	}
 	if (!clients[socket.id]) {

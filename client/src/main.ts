@@ -6,9 +6,10 @@ import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
 import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import { RenderData } from "./render/render-data";
-import { render2D, setContext2d } from "./render/render2d";
+import { render2D, Render2dConfig, setContext2d } from "./render/render2d";
 import { WebSock } from "./websock";
 import { GUI } from "./gui";
+import { TerrainConfig } from "./entities/terrain/config";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -24,9 +25,13 @@ let game: Game;
 let inputHandler: HtmlInputHandler;
 let isPaused = false;
 
+const render2dConfig: Render2dConfig = {
+	drawDebugText: false,
+};
+
 window.onload = main;
 async function main(): Promise<void> {
-	WebSock.init();
+	initWebSocket();
 	canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
 	canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
 	adjustCanvasSize();
@@ -43,6 +48,8 @@ async function main(): Promise<void> {
 	game.onStop.add(onGameEnded);
 
 	GUI.init();
+	GUI.displayView(GUI.Views.PlayerNameDialog, true);
+	GUI.onPlayerName.add(joinGame);
 
 	requestAnimationFrame(step);
 }
@@ -64,7 +71,7 @@ async function initGraphics(canvas2d: HTMLCanvasElement, canvas3d: HTMLCanvasEle
 
 function step(): void {
 	render3D(renderData, world);
-	render2D();
+	render2D(render2dConfig);
 	const now = new Date();
 	const dt = Math.min(100, now.getTime() - lastTime.getTime()) / 1000;
 	lastTime = now;
@@ -118,9 +125,6 @@ function handleInputEvent(ev: InputEvent): void {
 		handleSystemKeys(ev);
 	}
 	if (!ev.isConsumed()) {
-		handleGUIInputs(ev);
-	}
-	if (!ev.isConsumed()) {
 		handlePlayerInputs(ev);
 	}
 }
@@ -147,10 +151,6 @@ function handleDebugKeys(ev: InputEvent) {
 			return; // return without consuming the event if it's not handled
 	}
 	ev.consume();
-}
-
-function handleGUIInputs(ev: InputEvent): void {
-	GUI.handleInputEvent(ev);
 }
 
 function handlePlayerInputs(ev: InputEvent): void {
@@ -200,4 +200,26 @@ function scheduleResetRenderSize(newWidth: number, newHeight: number): void {
 			game.skyBox?.getCubeMapTexture(),
 		);
 	}, 500);
+}
+
+function joinGame(playerName: string): void {
+	WebSock.authenticate(playerName);
+	GUI.displayView(GUI.Views.PlayerNameDialog, false);
+}
+
+async function changeTerrainConfig(cfg: TerrainConfig): Promise<void> {
+	if (cfg === null) {
+		// the server has no config, we must start creating one
+		cfg = new TerrainConfig();
+		if (await WebSock.startChangeConfig(cfg)) {
+			// we're now in master config mode
+		} else {
+			// someone else started before, we switch to slave config mode and follow them
+		}
+	}
+}
+
+function initWebSocket(): void {
+	WebSock.init();
+	WebSock.onMapConfigReceived.add(changeTerrainConfig);
 }

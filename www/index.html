@@ -9,6 +9,16 @@
 				Your browser must support Canvas
 			</canvas>
 			<canvas id="canvas2d" class="canvas" width="1280" height="720" tabindex="0"></canvas>
+			<div id="gui-container" class="canvas" style="z-index: 1;">
+				<div id="dialog-player-name" style="display:none;">
+					<div class="dialog-title">Baga-ti numele:</div>
+					<br>
+					<div class="dialog-input-wrapper">
+						<input id="player-name" class="dialog-input" type="text">
+						<button type="button" id="btn-confirm-name">OK</button>
+					</div>
+				</div>
+			</div>
 		</div>
 	</body>
 	<style>
@@ -32,6 +42,53 @@
 		}
 		#canvas2d {
 			z-index: 1;
+		}
+		#gui-container > div {
+			display: inline-block;
+			margin-top: 50vh;
+			transform: translate(0, -50%);
+			padding: 15px;
+			background: rgba(255,255,255,0.5);
+			backdrop-filter: blur(10px);
+			box-shadow: 0 0 10px 1px white;
+			border-radius: 10px;
+			border: 3px solid white;
+		}
+		.dialog-title {
+			color: white;
+			font-size: 3em;
+			font-family: "arial";
+			text-shadow: 1px 1px 5px #aaa;
+			text-align: left;
+			margin-bottom: 0.25em;
+			user-select: none;
+		}
+		.dialog-input-wrapper {
+			font-size: 3em;
+			border-radius: 5px;
+			border: 1px solid #aaa;
+			padding: 0;
+			position: relative;
+		}
+		.dialog-input-wrapper button {
+			position: absolute;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			left: calc(100% - 50px);
+			width: 50px;
+			border-top-left-radius: 0;
+			border-bottom-left-radius: 0;
+			border-top-right-radius: 5px;
+			border-bottom-right-radius: 5px;
+			border: none;
+			border-left: 1px solid #ddd;
+			z-index: 1;
+		}
+		.dialog-input {
+			font-size: inherit;
+			border-radius: 5px;
+			padding: 5px;
 		}
 	</style>
 	<script src="dist/index.js"></script>
