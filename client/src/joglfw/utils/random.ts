@@ -2,7 +2,7 @@
 export let rand = mulberry32(new Date().getMilliseconds());
 
 export function randSeed(seed: number) {
-	rand = mulberry32(new Date().getMilliseconds());
+	rand = mulberry32(seed);
 }
 
 /** returns a **signed** random number between -1.0 and +1.0 */

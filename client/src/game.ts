@@ -16,8 +16,14 @@ import { PlayerInputHandler } from "./player-input-handler";
 
 const console = logprefix("Game");
 
+export enum GameState {
+	CONFIGURE_TERRAIN,
+	SPECTATE,
+	PLAY,
+}
+
 export class Game {
-	started = false;
+	state = GameState.CONFIGURE_TERRAIN;
 	terrain: Terrain;
 	skyBox: SkyBox;
 	playerCar: Car;
@@ -31,27 +37,12 @@ export class Game {
 
 	async initialize(): Promise<void> {
 		console.log("Initializing");
-		const tc = new TerrainConfig();
-		tc.seed = rand();
-		tc.vertexDensity = 0.5;
-		tc.length = 100;
-		tc.width = 100;
-		tc.minElevation = -1.5;
-		tc.maxElevation = 2;
-		tc.seaFloorElevation = -10;
-		tc.roughness = 0.8;
 		this.terrain = new Terrain({ previewMode: true });
-		this.terrain.generate(tc);
-		this.terrain.finishGenerate();
 
 		World.getInstance().addEntity(this.terrain);
 		World.getInstance().setGlobal(Terrain, this.terrain);
 
-		this.freeCam = new FreeCamera(
-			new Vector(tc.width / 1.4, tc.maxElevation + 45, tc.length / 1.4),
-			// new Vector(5, tc.maxElevation + 3, 5),
-			new Vector(-1, -0.7, -1),
-		);
+		this.freeCam = new FreeCamera(new Vector(0, 0, -1), new Vector(0, 0, 1));
 		World.getInstance().addEntity(this.freeCam);
 
 		// camera controller (this one moves the render camera to the position of the target entity)
@@ -59,40 +50,18 @@ export class Game {
 		World.getInstance().addEntity(this.cameraCtrl);
 		this.cameraCtrl.attachToEntity(this.freeCam);
 
-		if (false) {
-			this.skyBox = new SkyBox();
-			await this.skyBox.load("data/textures/sky/1");
-			World.getInstance().addEntity(this.skyBox);
+		// this.skyBox = new SkyBox();
+		// await this.skyBox.load("data/textures/sky/1");
+		// World.getInstance().addEntity(this.skyBox);
 
-			this.playerCar = new Car(new Vector(0, tc.maxElevation + 3, 0), Quat.identity());
-			World.getInstance().addEntity(this.playerCar);
-			this.resetPlayer();
+		// this.playerCar = new Car(new Vector(0, tc.maxElevation + 3, 0), Quat.identity());
+		// World.getInstance().addEntity(this.playerCar);
+		// this.resetPlayer();
 
-			this.playerController = new PlayerController();
-			this.playerController.setTargetCar(this.playerCar);
-		}
-
-		this.cameraCtrl.checkCollision = this.checkCameraCollision.bind(this);
+		// this.playerController = new PlayerController();
+		// this.playerController.setTargetCar(this.playerCar);
 
 		console.log("Ready");
-	}
-
-	start(): void {
-		console.log("Starting game...");
-		assert(!this.started, "Game already started");
-		this.started = true;
-		this.playerInputHandler.setTargetObject(this.freeCam);
-		this.onStart.trigger();
-		console.log("Game started.");
-	}
-
-	stop(): void {
-		console.log("Stopping game...");
-		assert(this.started, "Game is not started");
-		this.started = false;
-		this.playerInputHandler.setTargetObject(null);
-		this.onStop.trigger();
-		console.log("Game stopped.");
 	}
 
 	update(dt: number): void {
@@ -129,6 +98,24 @@ export class Game {
 		}
 	}
 
+	setState(state: GameState): void {
+		if (this.state !== GameState.CONFIGURE_TERRAIN && state === GameState.CONFIGURE_TERRAIN) {
+			this.stop();
+		} else if (this.state === GameState.CONFIGURE_TERRAIN && state !== GameState.CONFIGURE_TERRAIN) {
+			this.start();
+		}
+		this.state = state;
+	}
+
+	updateConfig(cfg: TerrainConfig): void {
+		this.terrain.generate(cfg);
+		this.terrain.finishGenerate();
+		const cameraPos = new Vector(cfg.width / 1.4, cfg.maxElevation + 45, cfg.length / 1.4);
+		this.freeCam.getTransform().moveTo(cameraPos);
+		this.freeCam.getTransform().lookAt(cameraPos.add(new Vector(-1, -0.7, -1)));
+		this.cameraCtrl.update(0);
+	}
+
 	// -------------------------- PRIVATE AREA ------------------------------- //
 
 	private checkCameraCollision(prevPos: Vector, nextPos: Vector): Vector {
@@ -142,5 +129,25 @@ export class Game {
 			nextY = terrainY + MARGIN;
 		}
 		return nextPos.copy().setY(nextY);
+	}
+
+	private start(): void {
+		console.log("Starting game...");
+		assert(this.state == GameState.CONFIGURE_TERRAIN, "Game already started");
+		// TODO recreate terrain without preview
+		this.playerInputHandler.setTargetObject(this.freeCam);
+		this.onStart.trigger();
+		this.cameraCtrl.checkCollision = this.checkCameraCollision.bind(this);
+		console.log("Game started.");
+	}
+
+	private stop(): void {
+		console.log("Stopping game...");
+		assert(this.state != GameState.CONFIGURE_TERRAIN, "Game is not started");
+		this.playerInputHandler.setTargetObject(null);
+		this.onStop.trigger();
+		this.cameraCtrl.checkCollision = null;
+		// TODO destroy all entities except terrain
+		console.log("Game stopped.");
 	}
 }

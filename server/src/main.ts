@@ -5,6 +5,10 @@ import * as cors from "cors";
 import { Client } from "./client";
 import { SocketMessage } from "./common/socket-message";
 
+type BroadcastOptions = {
+	except?: string; // broadcast to all sockets except the one with this id
+};
+
 (function main(): void {
 	const app = express();
 	app.use(cors({ origin: "*" }));
@@ -51,6 +55,7 @@ import { SocketMessage } from "./common/socket-message";
 const clients: { [id: string]: Client } = {};
 
 let mapConfig: any = null;
+let masterConfigurerId: string = null;
 
 function setupSocket(socket: Socket): void {
 	socket.on("disconnect", (reason) => {
@@ -77,10 +82,46 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 		clients[socket.id] = new Client(socket, payload["name"]);
 		console.log(`Client ${socket.id} identified as "${payload["name"]}".`);
 		// send the map config to this client
+		if (mapConfig) {
+			console.log(`Sending map config to ${payload["name"]}`);
+		} else {
+			console.log(`No config to send to ${payload["name"]}`);
+		}
 		socket.send(SocketMessage.MAP_CONFIG, mapConfig);
 		return true;
 	}
 	if (!clients[socket.id]) {
 		return false;
+	}
+	switch (message) {
+		case SocketMessage.REQ_START_CONFIG:
+			if (masterConfigurerId) {
+				socket.send(SocketMessage.START_CONFIG_SLAVE);
+				console.log(`${clients[socket.id].name} Request to configure denied: SLAVE`);
+			} else {
+				masterConfigurerId = socket.id;
+				socket.send(SocketMessage.START_CONFIG_MASTER);
+				console.log(`${clients[socket.id].name} Request to configure granted: MASTER`);
+			}
+			break;
+		case SocketMessage.MAP_CONFIG:
+			if (socket.id === masterConfigurerId) {
+				// received config from master
+				mapConfig = payload;
+				broadcastMessage(SocketMessage.MAP_CONFIG, mapConfig, { except: socket.id });
+				console.log(`Received map config from ${clients[socket.id].name}`);
+			} else {
+				console.log(`Ignoring map config from non-master user ${clients[socket.id].name}`);
+			}
+	}
+	return true;
+}
+
+function broadcastMessage(message: SocketMessage, payload: any, options?: BroadcastOptions): void {
+	for (let clientId in clients) {
+		if (options?.except === clientId) {
+			continue;
+		}
+		clients[clientId].socket.send(message, payload);
 	}
 }

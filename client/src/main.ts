@@ -1,4 +1,4 @@
-import { Game } from "./game";
+import { Game, GameState } from "./game";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
 import { Shaders } from "./joglfw/render/shaders";
@@ -10,6 +10,10 @@ import { render2D, Render2dConfig, setContext2d } from "./render/render2d";
 import { WebSock } from "./websock";
 import { GUI } from "./gui";
 import { TerrainConfig } from "./entities/terrain/config";
+import { rand } from "./joglfw/utils/random";
+import { logprefix } from "./joglfw/log";
+
+const console = logprefix("ROOT");
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices
 
@@ -207,19 +211,32 @@ function joinGame(playerName: string): void {
 	GUI.displayView(GUI.Views.PlayerNameDialog, false);
 }
 
-async function changeTerrainConfig(cfg: TerrainConfig): Promise<void> {
+function terrainConfigReceived(cfg: TerrainConfig): void {
 	if (cfg === null) {
-		// the server has no config, we must start creating one
-		cfg = new TerrainConfig();
-		if (await WebSock.startChangeConfig(cfg)) {
-			// we're now in master config mode
-		} else {
-			// someone else started before, we switch to slave config mode and follow them
-		}
+		// the server has no config, we request to create one
+		console.log(`No map config available, requesting to become master.`);
+		WebSock.requestChangeConfig();
+	} else {
+		console.log(`Received map config from server (seed: ${cfg.seed}).`);
+		game.updateConfig(cfg);
+	}
+}
+
+function startTerrainConfig(isMaster: boolean): void {
+	game.setState(GameState.CONFIGURE_TERRAIN);
+	if (isMaster) {
+		console.log(`[MASTER] We are master configurer.`);
+		const cfg = new TerrainConfig();
+		cfg.seed = rand();
+		game.updateConfig(cfg);
+		WebSock.sendConfig(cfg);
+	} else {
+		console.log(`[SLAVE] Config received from master.`);
 	}
 }
 
 function initWebSocket(): void {
 	WebSock.init();
-	WebSock.onMapConfigReceived.add(changeTerrainConfig);
+	WebSock.onMapConfigReceived.add(terrainConfigReceived);
+	WebSock.onStartConfig.add(startTerrainConfig);
 }

@@ -70,9 +70,7 @@ export class Transform {
 		if (direction.equals(z)) {
 			this.orient_ = new Quat(0, 0, 0, 1);
 		} else {
-			const rotAxis: Vector = z.cross(direction).normalize();
-			const angle: number = Math.acos(direction.dot(z));
-			this.orient_ = quatRotation(rotAxis, angle);
+			this.orient_ = Quat.fromA_to_B(z, direction);
 		}
 		this.matDirty_ = true;
 	}
