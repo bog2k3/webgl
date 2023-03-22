@@ -32,7 +32,7 @@ export namespace GUI {
 			$("#master-label").css("display", "none");
 			$("#slave-label").css("display", "initial");
 			$("#seed").attr("readonly", "true");
-			$("#random_seed").attr("disabled", "true");
+			$("#random-seed").attr("disabled", "true");
 			enableSlider("min-elevation", false);
 			enableSlider("max-elevation", false);
 			enableSlider("variation", false);
@@ -42,7 +42,7 @@ export namespace GUI {
 			$("#master-label").css("display", "initial");
 			$("#slave-label").css("display", "none");
 			$("#seed").removeAttr("readonly");
-			$("#random_seed").removeAttr("disabled");
+			$("#random-seed").removeAttr("disabled");
 			enableSlider("min-elevation", true);
 			enableSlider("max-elevation", true);
 			enableSlider("variation", true);

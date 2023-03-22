@@ -280,5 +280,6 @@ function terrainParamChanged(param: string, value: number): void {
 				break;
 		}
 		game.updateConfig(gameConfig);
+		WebSock.sendConfig(gameConfig);
 	}, 300);
 }
