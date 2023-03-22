@@ -24,6 +24,9 @@ export class TerrainConfig {
 	 */
 	relativeRandomJitter = 0.8;
 
-	/** between [0.0 and 1.0] */
+	/** between [0.0 and 1.0] controls the large-scale height variation of the terrain*/
+	variation = 1.0;
+
+	/** between [0.0 and 1.0] controls the small-scale roughness*/
 	roughness = 0.5;
 }

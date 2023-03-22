@@ -1,17 +1,17 @@
+import { TerrainConfig } from "./entities/terrain/config";
 import { Game, GameState } from "./game";
+import { GUI } from "./gui";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
+import { logprefix } from "./joglfw/log";
 import { Shaders } from "./joglfw/render/shaders";
+import { randi } from "./joglfw/utils/random";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
-import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import { RenderData } from "./render/render-data";
 import { render2D, Render2dConfig, setContext2d } from "./render/render2d";
+import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import { WebSock } from "./websock";
-import { GUI } from "./gui";
-import { TerrainConfig } from "./entities/terrain/config";
-import { rand } from "./joglfw/utils/random";
-import { logprefix } from "./joglfw/log";
 
 const console = logprefix("ROOT");
 
@@ -28,6 +28,7 @@ let world: World;
 let game: Game;
 let inputHandler: HtmlInputHandler;
 let isPaused = false;
+let gameConfig: TerrainConfig = null;
 
 const render2dConfig: Render2dConfig = {
 	drawDebugText: false,
@@ -51,9 +52,7 @@ async function main(): Promise<void> {
 	game.onStart.add(onGameStarted);
 	game.onStop.add(onGameEnded);
 
-	GUI.init();
-	GUI.displayView(GUI.Views.PlayerNameDialog, true);
-	GUI.onPlayerName.add(joinGame);
+	initGui();
 
 	requestAnimationFrame(step);
 }
@@ -218,7 +217,9 @@ function terrainConfigReceived(cfg: TerrainConfig): void {
 		WebSock.requestChangeConfig();
 	} else {
 		console.log(`Received map config from server (seed: ${cfg.seed}).`);
+		gameConfig = cfg;
 		game.updateConfig(cfg);
+		GUI.updateMapParameters(cfg);
 	}
 }
 
@@ -226,17 +227,58 @@ function startTerrainConfig(isMaster: boolean): void {
 	game.setState(GameState.CONFIGURE_TERRAIN);
 	if (isMaster) {
 		console.log(`[MASTER] We are master configurer.`);
-		const cfg = new TerrainConfig();
-		cfg.seed = rand();
-		game.updateConfig(cfg);
-		WebSock.sendConfig(cfg);
+		if (!gameConfig) {
+			gameConfig = new TerrainConfig();
+			gameConfig.seed = randi(0xffffffff);
+		}
+		game.updateConfig(gameConfig);
+		WebSock.sendConfig(gameConfig);
+		GUI.updateMapParameters(gameConfig);
 	} else {
-		console.log(`[SLAVE] Config received from master.`);
+		console.log(`[SLAVE] Config started by another player.`);
 	}
+	GUI.displayView(GUI.Views.TerrainConfig, true);
+	GUI.setTerrainConfigMode({ readonly: !isMaster });
 }
 
 function initWebSocket(): void {
 	WebSock.init();
 	WebSock.onMapConfigReceived.add(terrainConfigReceived);
 	WebSock.onStartConfig.add(startTerrainConfig);
+}
+
+function initGui(): void {
+	GUI.init();
+	GUI.displayView(GUI.Views.PlayerNameDialog, true);
+	GUI.onPlayerName.add(joinGame);
+	GUI.onParameterChanged.add(terrainParamChanged);
+}
+
+let paramTimeout = null;
+function terrainParamChanged(param: string, value: number): void {
+	if (paramTimeout) {
+		clearTimeout(paramTimeout);
+	}
+	// debounce
+	paramTimeout = setTimeout(() => {
+		console.log(`PARAM ${param} = ${value}`);
+		switch (param) {
+			case "seed":
+				gameConfig.seed = value;
+				break;
+			case "min-elevation":
+				gameConfig.minElevation = value;
+				break;
+			case "max-elevation":
+				gameConfig.maxElevation = value;
+				break;
+			case "variation":
+				gameConfig.variation = value;
+				break;
+			case "roughness":
+				gameConfig.roughness = value;
+				break;
+		}
+		game.updateConfig(gameConfig);
+	}, 300);
 }

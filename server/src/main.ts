@@ -71,6 +71,16 @@ function setupSocket(socket: Socket): void {
 
 function removeClient(id: string): void {
 	delete clients[id];
+	if (masterConfigurerId === id) {
+		// the master has left the chat, we promote a new client to master
+		if (Object.keys(clients).length) {
+			masterConfigurerId = clients[Object.keys(clients)[0]].id;
+			clients[Object.keys(clients)[0]].socket.send(SocketMessage.START_CONFIG_MASTER);
+		} else {
+			masterConfigurerId = null; // no more master
+			mapConfig = null; // the first player that will connect will have to configure a new map
+		}
+	}
 }
 
 function handleClientMessage(socket: Socket, message: string, payload: any): boolean {
@@ -88,6 +98,10 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 			console.log(`No config to send to ${payload["name"]}`);
 		}
 		socket.send(SocketMessage.MAP_CONFIG, mapConfig);
+		if (masterConfigurerId) {
+			// someone is currently configuring the terrain, inform the new client
+			socket.send(SocketMessage.START_CONFIG_SLAVE);
+		}
 		return true;
 	}
 	if (!clients[socket.id]) {

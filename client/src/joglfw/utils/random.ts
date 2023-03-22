@@ -1,7 +1,11 @@
 /** returns a random number between 0.0 and 1.0 */
 export let rand = mulberry32(new Date().getMilliseconds());
 
-export function randSeed(seed: number) {
+/** Seed the generator with a number. The number should be an integer between 0 and 2^32 for best results */
+export function randSeed(seed?: number) {
+	if (!seed) {
+		seed = new Date().getMilliseconds();
+	}
 	rand = mulberry32(seed);
 }
 

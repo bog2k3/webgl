@@ -110,7 +110,7 @@ export class Game {
 	updateConfig(cfg: TerrainConfig): void {
 		this.terrain.generate(cfg);
 		this.terrain.finishGenerate();
-		const cameraPos = new Vector(cfg.width / 1.4, cfg.maxElevation + 45, cfg.length / 1.4);
+		const cameraPos = new Vector(cfg.width / 1.4, 100, cfg.length / 1.4);
 		this.freeCam.getTransform().moveTo(cameraPos);
 		this.freeCam.getTransform().lookAt(cameraPos.add(new Vector(-1, -0.7, -1)));
 		this.cameraCtrl.update(0);

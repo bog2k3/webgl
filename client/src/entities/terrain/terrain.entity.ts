@@ -148,6 +148,8 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		assert(c.vertexDensity > 0);
 		assert(c.width >= 1.0 / c.vertexDensity);
 		assert(c.length >= 1.0 / c.vertexDensity);
+		assert(c.variation >= 0 && c.variation <= 1.0);
+		assert(c.roughness >= 0 && c.roughness <= 1.0);
 	}
 
 	// generate the terrain mesh according to specified config. This will overwrite the existing data.
@@ -167,7 +169,6 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.aabb.vMax.y = config.maxElevation;
 		this.aabb.vMax.z = config.length * 0.5;
 
-		const nextSeed = rand();
 		randSeed(config.seed);
 
 		this.rows = Math.ceil(config.length * config.vertexDensity) + 1;
@@ -278,7 +279,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			});
 		}
 		console.log("Done generating.");
-		randSeed(nextSeed);
+		randSeed();
 	}
 
 	// Generate the render buffers and physics data structures
@@ -450,7 +451,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
 		randSeed(seed);
 		const height = new Heightmap(hparam);
-		height.blur(2);
+		height.blur(hparam.width / (1.0 + this.config.variation * hparam.width * 0.5));
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
 		randSeed(seed);
 		const roughNoise = new PerlinNoise(Math.max(4, this.config.width), Math.max(4, this.config.length));

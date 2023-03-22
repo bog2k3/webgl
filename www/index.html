@@ -1,22 +1,86 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>WebGL demo</title>
+		<title>Webmageddon 1.0</title>
 	</head>
 	<body style="text-align: center; position: relative">
 		<div id="canvas-container">
 			<canvas id="canvas3d" class="canvas" width="1280" height="720">
-				Your browser must support Canvas
+				Browserul tău nu suportă Canvas, viața-i grea.
 			</canvas>
 			<canvas id="canvas2d" class="canvas" width="1280" height="720" tabindex="0"></canvas>
 			<div id="gui-container" class="canvas" style="z-index: 1;">
-				<div id="dialog-player-name" style="display:none;">
-					<div class="dialog-title">Baga-ti numele:</div>
+				<div id="dialog-player-name">
+					<div class="dialog-title">Bagă-ți numele:</div>
 					<br>
 					<div class="dialog-input-wrapper">
 						<input id="player-name" class="dialog-input" type="text">
 						<button type="button" id="btn-confirm-name">OK</button>
 					</div>
+				</div>
+				<div id="terrain-config-panel">
+					<div id="master-label">
+						<h3>TU ești bossul care configurează harta.</h3>
+						<p>Folosește controalele de mai jos pentru a ajusta parametrii.</p>
+					</div>
+					<div id="slave-label">
+						<h4>Altcineva configurează harta, stai și privește.</h4>
+					</div>
+					<label for="seed">Seed:</label>
+					<br>
+					<input id="seed" type="number">
+					<button id="random-seed">Random</button>
+					<br><br>
+					<label for="min-elevation">Elevație minimă:</label>
+					<br>
+					<input id="min-elevation" type="range" min="-20" max="-1" list="min-elevation-list">
+					<input id="min-elevation-value" readonly="true" class="value-display">
+					<datalist id="min-elevation-list">
+						<option value="-20" label="-20"></option>
+						<option value="-15" label="-15"></option>
+						<option value="-10" label="-10"></option>
+						<option value="-5" label="-5"></option>
+						<option value="-1" label="-1"></option>
+					</datalist>
+					<br>
+					<label for="max-elevation">Elevație maximă:</label>
+					<br>
+					<input id="max-elevation" type="range" min="10" max="100" list="max-elevation-list">
+					<input id="max-elevation-value" readonly="true" class="value-display">
+					<datalist id="max-elevation-list">
+						<option value="10" label="10"></option>
+						<option value="30" label="30"></option>
+						<option value="50" label="50"></option>
+						<option value="70" label="70"></option>
+						<option value="100" label="100"></option>
+					</datalist>
+					<br>
+					<label for="variation">Variație:</label>
+					<br>
+					<input id="variation" type="range" min="0.0" max="1.0" step="0.1" list="variation-list">
+					<input id="variation-value" readonly="true" class="value-display">
+					<datalist id="variation-list">
+						<option value="0" label="0.0"></option>
+						<option value="0.2" label="0.2"></option>
+						<option value="0.4" label="0.4"></option>
+						<option value="0.6" label="0.6"></option>
+						<option value="0.8" label="0.8"></option>
+						<option value="1.0" label="1.0"></option>
+					</datalist>
+					<br>
+					<label for="roughness">Zgrunțuroșenie:</label>
+					<br>
+					<input id="roughness" type="range" min="0.0" max="1.0" step="0.1" list="roughness-list">
+					<input id="roughness-value" readonly="true" class="value-display">
+					<datalist id="roughness-list">
+						<option value="0" label="0.0"></option>
+						<option value="0.2" label="0.2"></option>
+						<option value="0.4" label="0.4"></option>
+						<option value="0.6" label="0.6"></option>
+						<option value="0.8" label="0.8"></option>
+						<option value="1.0" label="1.0"></option>
+					</datalist>
+					<br>
 				</div>
 			</div>
 		</div>
@@ -44,6 +108,9 @@
 			z-index: 1;
 		}
 		#gui-container > div {
+			display: none;
+		}
+		#gui-container > div.show {
 			display: inline-block;
 			margin-top: 50vh;
 			transform: translate(0, -50%);
@@ -89,6 +156,43 @@
 			font-size: inherit;
 			border-radius: 5px;
 			padding: 5px;
+		}
+		#terrain-config-panel.show {
+			display: block !important;
+			width: 500px;
+			margin-left: auto;
+			height: 100vh;
+			box-sizing: border-box;
+			padding-top: 2em !important;
+			padding-left: 2em !important;
+			text-align: left;
+		}
+		input[type="range"] {
+			width: 200px;
+		}
+		datalist {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			width: 200px;
+			font-size: 0.5em;
+		}
+		.value-display {
+			position: relative;
+			top: -0.5em;
+			margin-left: 1em;
+			width: 3em;
+			padding: 0.2em;
+			text-align: center;
+			background: #eee;
+		}
+		#master-label h3 {
+			color: blue;
+			text-shadow: 0 0 5px aqua;
+		}
+		#slave-label h4 {
+			color: orange;
+			text-shadow: 0 0 4px black;
 		}
 	</style>
 	<script src="dist/index.js"></script>

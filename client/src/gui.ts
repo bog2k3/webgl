@@ -1,39 +1,121 @@
+import * as $ from "jquery";
+import { TerrainConfig } from "./entities/terrain/config";
 import { Event } from "./joglfw/utils/event";
+import { randi } from "./joglfw/utils/random";
 
 export namespace GUI {
 	export enum Views {
 		PlayerNameDialog,
+		TerrainConfig,
 	}
 
-	const viewHandles: { [key in Views]?: HTMLElement } = {};
+	const viewHandles: { [key in Views]?: JQuery<HTMLElement> } = {};
 
 	export const onPlayerName = new Event<(name: string) => void>();
+	export const onParameterChanged = new Event<(param: string, value: number) => void>();
 
 	export function init(): void {
 		setupViews();
 	}
 
 	export function displayView(view: Views, show: boolean): void {
-		viewHandles[view].style.display = show ? "" : "none";
+		if (show) {
+			viewHandles[view].addClass("show");
+		} else {
+			viewHandles[view].removeClass("show");
+		}
+	}
+
+	export function setTerrainConfigMode(mode: { readonly: boolean }): void {
+		if (mode.readonly) {
+			// slave mode
+			$("#master-label").css("display", "none");
+			$("#slave-label").css("display", "initial");
+			$("#seed").attr("readonly", "true");
+			$("#random_seed").attr("disabled", "true");
+			enableSlider("min-elevation", false);
+			enableSlider("max-elevation", false);
+			enableSlider("variation", false);
+			enableSlider("roughness", false);
+		} else {
+			// master mode
+			$("#master-label").css("display", "initial");
+			$("#slave-label").css("display", "none");
+			$("#seed").removeAttr("readonly");
+			$("#random_seed").removeAttr("disabled");
+			enableSlider("min-elevation", true);
+			enableSlider("max-elevation", true);
+			enableSlider("variation", true);
+			enableSlider("roughness", true);
+		}
+	}
+
+	export function updateMapParameters(cfg: TerrainConfig): void {
+		$("#seed").val(cfg.seed);
+		$("#min-elevation").val(cfg.minElevation);
+		$("#max-elevation").val(cfg.maxElevation);
+		$("#variation").val(cfg.variation);
+		$("#roughness").val(cfg.roughness);
 	}
 
 	// -------------------------------------------- PRIVATE AREA ----------------------------------------------- //
 
 	function setupViews(): void {
-		viewHandles[Views.PlayerNameDialog] = document.getElementById("dialog-player-name");
-		document.getElementById("btn-confirm-name").onclick = handlePlayerName;
-		document.getElementById("player-name").onkeydown = triggerButton.bind(null, "btn-confirm-name");
+		viewHandles[Views.PlayerNameDialog] = $("#dialog-player-name");
+		viewHandles[Views.TerrainConfig] = $("#terrain-config-panel");
+		$("#btn-confirm-name").on("click", handlePlayerName);
+		$("#player-name").on("keydown", triggerButton.bind(null, "btn-confirm-name"));
+		$("#random-seed").on("click", handleRandomSeed);
+		$("#seed").on("change", handleSeedChanged);
+		$("#min-elevation").on("input", handleMinElevationChanged);
+		$("#max-elevation").on("input", handleMaxElevationChanged);
+		$("#variation").on("input", handleVariationChanged);
+		$("#roughness").on("input", handleRoughnessChanged);
 	}
 
 	function triggerButton(buttonId: string, event: KeyboardEvent): void {
 		if (event.key === "Enter") {
 			event.preventDefault();
-			document.getElementById(buttonId).click();
+			$(`#${buttonId}`).trigger("click");
 		}
 	}
 
 	function handlePlayerName(): void {
-		const name: string = document.getElementById("player-name")["value"];
+		const name: string = $("#player-name")["value"];
 		onPlayerName.trigger(name);
+	}
+
+	function enableSlider(id: string, enabled: boolean): void {
+		if (enabled) {
+			$(`#${id}`).removeAttr("disabled");
+		} else {
+			$(`#${id}`).attr("disabled", "true");
+		}
+	}
+
+	function handleRandomSeed(): void {
+		const newSeed = randi(0xffffffff);
+		$("#seed").val(newSeed);
+		onParameterChanged.trigger("seed", newSeed);
+	}
+
+	function handleSeedChanged(): void {
+		onParameterChanged.trigger("seed", Number.parseFloat($("#seed").val() as string));
+	}
+
+	function handleMinElevationChanged(): void {
+		onParameterChanged.trigger("min-elevation", Number.parseFloat($("#min-elevation").val() as string));
+	}
+
+	function handleMaxElevationChanged(): void {
+		onParameterChanged.trigger("max-elevation", Number.parseFloat($("#max-elevation").val() as string));
+	}
+
+	function handleVariationChanged(): void {
+		onParameterChanged.trigger("variation", Number.parseFloat($("#variation").val() as string));
+	}
+
+	function handleRoughnessChanged(): void {
+		onParameterChanged.trigger("roughness", Number.parseFloat($("#roughness").val() as string));
 	}
 }
