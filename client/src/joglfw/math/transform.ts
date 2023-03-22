@@ -1,6 +1,6 @@
 import { Matrix } from "./matrix";
 import { Quat } from "./quat";
-import { quatRotation, quatToMatrix } from "./quat-functions";
+import { matrixToQuat, quatRotation, quatToMatrix } from "./quat-functions";
 import { Vector } from "./vector";
 
 export class Transform {
@@ -66,12 +66,9 @@ export class Transform {
 	/** set the orientation such that the transform will point toward the specified point in parent space, given an up vector */
 	lookAt(refPos: Vector, refUp = Vector.axisY()): void {
 		const direction: Vector = refPos.sub(this.pos_).normalize();
-		const z = Vector.axisZ();
-		if (direction.equals(z)) {
-			this.orient_ = new Quat(0, 0, 0, 1);
-		} else {
-			this.orient_ = Quat.fromA_to_B(z, direction);
-		}
+		const xAxis = refUp.cross(direction).normalizeInPlace();
+		const yAxis = direction.cross(xAxis);
+		this.orient_ = matrixToQuat(Matrix.fromRows(xAxis, yAxis, direction, new Vector(0, 0, 0, 1)));
 		this.matDirty_ = true;
 	}
 

@@ -451,7 +451,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
 		randSeed(seed);
 		const height = new Heightmap(hparam);
-		height.blur(hparam.width / (1.0 + this.config.variation * hparam.width * 0.5));
+		height.blur(hparam.width / (2.0 + Math.pow(this.config.variation, 2) * hparam.width * 0.5));
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
 		randSeed(seed);
 		const roughNoise = new PerlinNoise(Math.max(4, this.config.width), Math.max(4, this.config.length));
