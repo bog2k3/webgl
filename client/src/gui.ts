@@ -13,6 +13,8 @@ export namespace GUI {
 
 	export const onPlayerName = new Event<(name: string) => void>();
 	export const onParameterChanged = new Event<(param: string, value: number) => void>();
+	export const onRandomizeAll = new Event<() => void>();
+	export const onStartGame = new Event<() => void>();
 
 	export function init(): void {
 		setupViews();
@@ -29,8 +31,8 @@ export namespace GUI {
 	export function setTerrainConfigMode(mode: { readonly: boolean }): void {
 		if (mode.readonly) {
 			// slave mode
-			$("#master-label").css("display", "none");
-			$("#slave-label").css("display", "initial");
+			$(".master-only").css("display", "none");
+			$(".slave-only").css("display", "initial");
 			$("#seed").attr("readonly", "true");
 			$("#random-seed").attr("disabled", "true");
 			enableSlider("min-elevation", false);
@@ -39,8 +41,8 @@ export namespace GUI {
 			enableSlider("roughness", false);
 		} else {
 			// master mode
-			$("#master-label").css("display", "initial");
-			$("#slave-label").css("display", "none");
+			$(".master-only").css("display", "initial");
+			$(".slave-only").css("display", "none");
 			$("#seed").removeAttr("readonly");
 			$("#random-seed").removeAttr("disabled");
 			enableSlider("min-elevation", true);
@@ -71,6 +73,8 @@ export namespace GUI {
 		$("#max-elevation").on("input", handleMaxElevationChanged);
 		$("#variation").on("input", handleVariationChanged);
 		$("#roughness").on("input", handleRoughnessChanged);
+		$("#randomize-all").on("click", () => onRandomizeAll.trigger());
+		$("#start-game").on("click", () => onStartGame.trigger());
 	}
 
 	function triggerButton(buttonId: string, event: KeyboardEvent): void {
@@ -81,7 +85,7 @@ export namespace GUI {
 	}
 
 	function handlePlayerName(): void {
-		const name: string = $("#player-name")["value"];
+		const name: string = $("#player-name").val() as string;
 		onPlayerName.trigger(name);
 	}
 

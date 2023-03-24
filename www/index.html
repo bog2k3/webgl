@@ -8,8 +8,8 @@
 			<canvas id="canvas3d" class="canvas" width="1280" height="720">
 				Browserul tău nu suportă Canvas, viața-i grea.
 			</canvas>
-			<canvas id="canvas2d" class="canvas" width="1280" height="720" tabindex="0"></canvas>
 			<div id="gui-container" class="canvas" style="z-index: 1;">
+				<canvas id="canvas2d" class="canvas" width="1280" height="720" tabindex="0"></canvas>
 				<div id="dialog-player-name">
 					<div class="dialog-title">Bagă-ți numele:</div>
 					<br>
@@ -19,17 +19,17 @@
 					</div>
 				</div>
 				<div id="terrain-config-panel">
-					<div id="master-label">
+					<div id="master-label" class="master-only">
 						<h3>TU ești bossul care configurează harta.</h3>
 						<p>Folosește controalele de mai jos pentru a ajusta parametrii.</p>
 					</div>
-					<div id="slave-label">
+					<div id="slave-label" class="slave-only">
 						<h4>Altcineva configurează harta, stai și privește.</h4>
 					</div>
 					<label for="seed">Seed:</label>
 					<br>
 					<input id="seed" type="number">
-					<button id="random-seed">Random</button>
+					<button id="random-seed" class="master-only">Random</button>
 					<br><br>
 					<label for="min-elevation">Elevație minimă:</label>
 					<br>
@@ -81,6 +81,12 @@
 						<option value="1.0" label="1.0"></option>
 					</datalist>
 					<br>
+					<br><br>
+					<button type="button" id="randomize-all" class="button-big master-only">Fa-le la nimereală</button>
+					<br><br>
+					<hr>
+					<br>
+					<button type="button" id="start-game" class="button-big button-primary master-only">Ajunge, să-i dăm bice!</button>
 				</div>
 			</div>
 		</div>
@@ -112,6 +118,8 @@
 		}
 		#gui-container > div.show {
 			display: inline-block;
+			position: relative;
+			z-index: 1;
 			margin-top: 50vh;
 			transform: translate(0, -50%);
 			padding: 15px;
@@ -193,6 +201,13 @@
 		#slave-label h4 {
 			color: orange;
 			text-shadow: 0 0 4px black;
+		}
+		.button-big {
+			padding: 0.5em;
+			width: 50%;
+		}
+		.button-primary {
+			font-size: 1.2em;
 		}
 	</style>
 	<script src="dist/index.js"></script>

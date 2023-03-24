@@ -75,7 +75,7 @@ function removeClient(id: string): void {
 		// the master has left the chat, we promote a new client to master
 		if (Object.keys(clients).length) {
 			masterConfigurerId = clients[Object.keys(clients)[0]].id;
-			clients[Object.keys(clients)[0]].socket.send(SocketMessage.START_CONFIG_MASTER);
+			clients[Object.keys(clients)[0]].socket.send(SocketMessage.S_START_CONFIG_MASTER);
 		} else {
 			masterConfigurerId = null; // no more master
 			mapConfig = null; // the first player that will connect will have to configure a new map
@@ -84,7 +84,7 @@ function removeClient(id: string): void {
 }
 
 function handleClientMessage(socket: Socket, message: string, payload: any): boolean {
-	if (message === SocketMessage.IDENTIFY) {
+	if (message === SocketMessage.C_IDENTIFY) {
 		if (clients[socket.id]) {
 			console.warn(`Client ${socket.id} is already identified, ignoring IDENTIFY message.`);
 			return true;
@@ -97,10 +97,10 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 		} else {
 			console.log(`No config to send to ${payload["name"]}`);
 		}
-		socket.send(SocketMessage.MAP_CONFIG, mapConfig);
+		socket.send(SocketMessage.CS_MAP_CONFIG, mapConfig);
 		if (masterConfigurerId) {
 			// someone is currently configuring the terrain, inform the new client
-			socket.send(SocketMessage.START_CONFIG_SLAVE);
+			socket.send(SocketMessage.S_START_CONFIG_SLAVE);
 		}
 		return true;
 	}
@@ -108,25 +108,33 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 		return false;
 	}
 	switch (message) {
-		case SocketMessage.REQ_START_CONFIG:
+		case SocketMessage.C_REQ_START_CONFIG:
 			if (masterConfigurerId) {
-				socket.send(SocketMessage.START_CONFIG_SLAVE);
+				socket.send(SocketMessage.S_START_CONFIG_SLAVE);
 				console.log(`${clients[socket.id].name} Request to configure denied: SLAVE`);
 			} else {
 				masterConfigurerId = socket.id;
-				socket.send(SocketMessage.START_CONFIG_MASTER);
+				socket.send(SocketMessage.S_START_CONFIG_MASTER);
 				console.log(`${clients[socket.id].name} Request to configure granted: MASTER`);
 			}
 			break;
-		case SocketMessage.MAP_CONFIG:
+		case SocketMessage.CS_MAP_CONFIG:
 			if (socket.id === masterConfigurerId) {
 				// received config from master
 				mapConfig = payload;
-				broadcastMessage(SocketMessage.MAP_CONFIG, mapConfig, { except: socket.id });
+				broadcastMessage(SocketMessage.CS_MAP_CONFIG, mapConfig, { except: socket.id });
 				console.log(`Received map config from ${clients[socket.id].name}`);
 			} else {
 				console.log(`Ignoring map config from non-master user ${clients[socket.id].name}`);
 			}
+			break;
+		case SocketMessage.C_REQ_START_GAME:
+			if (socket.id === masterConfigurerId) {
+				broadcastMessage(SocketMessage.S_START_GAME, null);
+			} else {
+				console.log(`Ignoring start request from non-master user ${clients[socket.id].name}`);
+			}
+			break;
 	}
 	return true;
 }

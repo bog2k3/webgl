@@ -9,7 +9,6 @@ import { Quat } from "./joglfw/math/quat";
 import { Vector } from "./joglfw/math/vector";
 import { assert } from "./joglfw/utils/assert";
 import { Event } from "./joglfw/utils/event";
-import { rand } from "./joglfw/utils/random";
 import { AttachMode, CameraController } from "./joglfw/world/camera-controller";
 import { World } from "./joglfw/world/world";
 import { PlayerInputHandler } from "./player-input-handler";
@@ -50,17 +49,6 @@ export class Game {
 		World.getInstance().addEntity(this.cameraCtrl);
 		this.cameraCtrl.attachToEntity(this.freeCam);
 
-		// this.skyBox = new SkyBox();
-		// await this.skyBox.load("data/textures/sky/1");
-		// World.getInstance().addEntity(this.skyBox);
-
-		// this.playerCar = new Car(new Vector(0, tc.maxElevation + 3, 0), Quat.identity());
-		// World.getInstance().addEntity(this.playerCar);
-		// this.resetPlayer();
-
-		// this.playerController = new PlayerController();
-		// this.playerController.setTargetCar(this.playerCar);
-
 		console.log("Ready");
 	}
 
@@ -99,18 +87,20 @@ export class Game {
 	}
 
 	setState(state: GameState): void {
-		if (this.state !== GameState.CONFIGURE_TERRAIN && state === GameState.CONFIGURE_TERRAIN) {
+		const oldState = this.state;
+		this.state = state;
+		this.terrain.setPreviewMode(this.state === GameState.CONFIGURE_TERRAIN);
+		if (oldState !== GameState.CONFIGURE_TERRAIN && state === GameState.CONFIGURE_TERRAIN) {
 			this.stop();
-		} else if (this.state === GameState.CONFIGURE_TERRAIN && state !== GameState.CONFIGURE_TERRAIN) {
+		} else if (oldState === GameState.CONFIGURE_TERRAIN && state !== GameState.CONFIGURE_TERRAIN) {
 			this.start();
 		}
-		this.state = state;
 	}
 
 	updateConfig(cfg: TerrainConfig): void {
 		this.terrain.generate(cfg);
 		this.terrain.finishGenerate();
-		const cameraPos = new Vector(cfg.width / 1.4, 100, cfg.length / 1.4);
+		const cameraPos = new Vector(cfg.width / 1.4, 180, cfg.length / 1.4);
 		this.freeCam.getTransform().moveTo(cameraPos);
 		this.freeCam.getTransform().lookAt(cameraPos.add(new Vector(-1, -0.7, -1)));
 		this.cameraCtrl.update(0);
@@ -133,21 +123,38 @@ export class Game {
 
 	private start(): void {
 		console.log("Starting game...");
-		assert(this.state == GameState.CONFIGURE_TERRAIN, "Game already started");
-		// TODO recreate terrain without preview
+		this.terrain.regenerate();
+		// TODO here we tamper with the terrain, add buildings & vegetation
+		this.terrain.finishGenerate();
 		this.playerInputHandler.setTargetObject(this.freeCam);
-		this.onStart.trigger();
 		this.cameraCtrl.checkCollision = this.checkCameraCollision.bind(this);
+
+		if (!this.skyBox) {
+			this.skyBox = new SkyBox();
+			this.skyBox.load("data/textures/sky/1");
+			World.getInstance().addEntity(this.skyBox);
+		}
+
+		this.playerCar = new Car(new Vector(0, this.terrain.getConfig().maxElevation + 3, 0), Quat.identity());
+		World.getInstance().addEntity(this.playerCar);
+		this.resetPlayer();
+
+		this.playerController = new PlayerController();
+		this.playerController.setTargetCar(this.playerCar);
+
+		this.onStart.trigger();
+
 		console.log("Game started.");
 	}
 
 	private stop(): void {
 		console.log("Stopping game...");
-		assert(this.state != GameState.CONFIGURE_TERRAIN, "Game is not started");
-		this.playerInputHandler.setTargetObject(null);
 		this.onStop.trigger();
+		this.playerInputHandler.setTargetObject(null);
 		this.cameraCtrl.checkCollision = null;
 		// TODO destroy all entities except terrain
+		this.terrain.regenerate();
+		this.terrain.finishGenerate();
 		console.log("Game stopped.");
 	}
 }

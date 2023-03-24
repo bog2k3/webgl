@@ -5,7 +5,7 @@ import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
 import { logprefix } from "./joglfw/log";
 import { Shaders } from "./joglfw/render/shaders";
-import { randi } from "./joglfw/utils/random";
+import { rand, randi } from "./joglfw/utils/random";
 import { World, WorldConfig } from "./joglfw/world/world";
 import { initPhysics } from "./physics/physics";
 import { RenderData } from "./render/render-data";
@@ -167,12 +167,6 @@ function initWorld(): void {
 
 	// auto pImgDebugDraw = new ImgDebugDraw();
 	// World::setGlobal<ImgDebugDraw>(pImgDebugDraw);
-
-	// const int margin = 20; // pixels
-	// World::setGlobal<GuiSystem>(new GuiSystem(&renderData.viewport, {margin, margin}, {renderData.windowW - 2*margin, renderData.windowH - 2*margin}));
-	// World::getGlobal<GuiSystem>()->onMousePointerDisplayRequest.add([](bool show) {
-	// 	setMouseCapture(!show);
-	// });
 }
 
 function togglePause(): void {
@@ -197,11 +191,13 @@ function scheduleResetRenderSize(newWidth: number, newHeight: number): void {
 	}
 	resetRenderSizeTimeout = setTimeout(() => {
 		resetRenderSize(renderData, newWidth, newHeight);
-		game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer?.fbTexture());
-		game.terrain.setWaterRefractionTex(
-			renderData.waterRenderData.refractionFramebuffer?.fbTexture(),
-			game.skyBox?.getCubeMapTexture(),
-		);
+		if (game) {
+			game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer?.fbTexture());
+			game.terrain.setWaterRefractionTex(
+				renderData.waterRenderData.refractionFramebuffer?.fbTexture(),
+				game.skyBox?.getCubeMapTexture(),
+			);
+		}
 	}, 500);
 }
 
@@ -245,6 +241,7 @@ function initWebSocket(): void {
 	WebSock.init();
 	WebSock.onMapConfigReceived.add(terrainConfigReceived);
 	WebSock.onStartConfig.add(startTerrainConfig);
+	WebSock.onStartGame.add(startGame);
 }
 
 function initGui(): void {
@@ -252,6 +249,8 @@ function initGui(): void {
 	GUI.displayView(GUI.Views.PlayerNameDialog, true);
 	GUI.onPlayerName.add(joinGame);
 	GUI.onParameterChanged.add(terrainParamChanged);
+	GUI.onRandomizeAll.add(randomizeConfig);
+	GUI.onStartGame.add(() => WebSock.requestStartGame());
 }
 
 let paramTimeout = null;
@@ -282,4 +281,22 @@ function terrainParamChanged(param: string, value: number): void {
 		game.updateConfig(gameConfig);
 		WebSock.sendConfig(gameConfig);
 	}, 300);
+}
+
+function randomizeConfig(): void {
+	if (!gameConfig) {
+		return;
+	}
+	gameConfig.seed = randi(0xffffffff);
+	gameConfig.minElevation = -20 + rand() * 19;
+	gameConfig.maxElevation = 10 + rand() * 90;
+	gameConfig.variation = rand();
+	gameConfig.roughness = rand();
+	GUI.updateMapParameters(gameConfig);
+	game.updateConfig(gameConfig);
+}
+
+function startGame(): void {
+	game.setState(GameState.SPECTATE);
+	GUI.displayView(GUI.Views.TerrainConfig, false);
 }

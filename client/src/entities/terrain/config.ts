@@ -3,9 +3,9 @@ export class TerrainConfig {
 	seed = 0;
 
 	/** length on X axis */
-	width = 200.0;
+	width = 500.0;
 	/** length on Z axis */
-	length = 200.0;
+	length = 500.0;
 	/** minimum Y axis value */
 	minElevation = -10.0;
 	/** maximum Y axis value */
@@ -15,7 +15,7 @@ export class TerrainConfig {
 	/** vertices per meter (actual density may be slightly higher due to rounding,
 	 * but is guaranteed to always be at least the specified value)
 	 */
-	vertexDensity = 1.0;
+	vertexDensity = 1;
 
 	/** random jitter applied to the vertex mesh in the XoZ plane;
 	 * a value of 1.0 means the amplitude of the jitter is equal

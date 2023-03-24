@@ -14,7 +14,7 @@ import { VertexAttribSource } from "../../joglfw/render/shader-program";
 import { VertexArrayObject } from "../../joglfw/render/vao";
 import { TextureInfo, TextureLoader } from "../../joglfw/texture-loader";
 import { assert } from "../../joglfw/utils/assert";
-import { rand, randSeed, srand } from "../../joglfw/utils/random";
+import { randSeed, srand } from "../../joglfw/utils/random";
 import { Entity } from "../../joglfw/world/entity";
 import { CollisionGroups } from "../../physics/collision-groups";
 import { PhysBodyConfig, PhysBodyProxy } from "../../physics/phys-body-proxy";
@@ -92,22 +92,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	constructor(options: { previewMode: boolean }) {
 		super();
 		this.renderData = new TerrainRenderData();
-		this.previewMode = options.previewMode;
-		if (this.previewMode) {
-			this.renderData.shaderProgram_ =
-				ShaderProgramManager.requestProgram<ShaderTerrainPreview>(ShaderTerrainPreview);
-		} else {
-			this.renderData.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderTerrain>(ShaderTerrain);
-		}
-
-		this.renderData.reloadHandler = this.renderData.shaderProgram_.onProgramReloaded.add(() => {
-			this.setupVAO();
-		});
-		this.setupVAO();
-
-		if (!this.previewMode) {
-			this.water = new Water();
-		}
+		this.setPreviewMode(options.previewMode);
 	}
 
 	override getType(): string {
@@ -124,6 +109,36 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		if (this.water) {
 			this.water.release();
 			this.water = null;
+		}
+	}
+
+	isPreviewMode(): boolean {
+		return this.previewMode;
+	}
+
+	setPreviewMode(preview: boolean): void {
+		if (this.previewMode === preview) {
+			return;
+		}
+		this.previewMode = preview;
+		if (this.previewMode) {
+			this.renderData.shaderProgram_ =
+				ShaderProgramManager.requestProgram<ShaderTerrainPreview>(ShaderTerrainPreview);
+		} else {
+			this.renderData.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderTerrain>(ShaderTerrain);
+		}
+
+		if (this.renderData.reloadHandler) {
+			this.renderData.shaderProgram_.onProgramReloaded.remove(this.renderData.reloadHandler);
+			this.renderData.reloadHandler = null;
+		}
+		this.renderData.reloadHandler = this.renderData.shaderProgram_.onProgramReloaded.add(() => {
+			this.setupVAO();
+		});
+		this.setupVAO();
+
+		if (!this.previewMode && !this.water) {
+			this.water = new Water();
 		}
 	}
 
@@ -152,10 +167,21 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		assert(c.roughness >= 0 && c.roughness <= 1.0);
 	}
 
-	// generate the terrain mesh according to specified config. This will overwrite the existing data.
-	// Render buffers and Physics data structures will not be generated at this point, thus allowing the user to make modifications
-	// to the terrain geometry before that.
-	// Call finishGenerate() to generate these objects after you're done.
+	/**
+	 * Regenerates the terrain with the same config that was last passed to generate().
+	 * Usefull if previewMode has changed in the meantime.
+	 * Must still call finishGenerate() after.
+	 */
+	regenerate(): void {
+		this.generate(this.config);
+	}
+
+	/**
+	 * Generates the terrain mesh according to specified config. This will overwrite the existing data.
+	 * Render buffers and Physics data structures will not be generated at this point, thus allowing the user to make modifications
+	 * to the terrain geometry before that.
+	 * Call finishGenerate() to generate these objects after you're done.
+	 */
 	generate(config: TerrainConfig): void {
 		console.log("Generating . . .");
 		this.validateSettings(config);
@@ -171,8 +197,10 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 		randSeed(config.seed);
 
-		this.rows = Math.ceil(config.length * config.vertexDensity) + 1;
-		this.cols = Math.ceil(config.width * config.vertexDensity) + 1;
+		const densityFactor: number = this.previewMode ? 0.2 : 1.0;
+
+		this.rows = Math.ceil(config.length * config.vertexDensity * densityFactor) + 1;
+		this.cols = Math.ceil(config.width * config.vertexDensity * densityFactor) + 1;
 
 		// we need to generate some 'skirt' vertices that will encompass the entire terrain in a circle,
 		// in order to extend the sea-bed away from the main terrain
@@ -270,7 +298,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		this.bspTree = new BSPTree<number>(bspConfig, this.triangleAABBGenerator, triIndices);
 
 		console.log("Generating water . . .");
-		if (this.water) {
+		if (!this.previewMode) {
 			this.water.generate(<WaterConfig>{
 				innerRadius: terrainRadius, // inner radius
 				outerExtent: seaBedRadius - terrainRadius + 200, // outer extent
@@ -329,7 +357,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			for (let i = 0; i < TerrainVertex.nTextures; i++) {
 				this.renderData.shaderProgram_.uniforms().setTextureSampler(i, i);
 			}
-			if (this.water) {
+			if (!this.previewMode) {
 				gl.activeTexture(gl.TEXTURE5);
 				gl.bindTexture(gl.TEXTURE_2D, this.water.getNormalTexture());
 				this.renderData.shaderProgram_.uniforms().setWaterNormalTexSampler(5);
@@ -378,12 +406,14 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 			checkGLError("Terrain.render()");
 		} else if (rctx.renderPass === RenderPass.WaterSurface) {
-			if (this.water) this.water.render(context);
+			if (!this.previewMode) this.water.render(context);
 		}
 	}
 
 	update(dt: number): void {
-		this.water?.update(dt);
+		if (!this.previewMode) {
+			this.water.update(dt);
+		}
 	}
 
 	getHeightValue(where: Vector): number {
@@ -448,10 +478,11 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		hparam.length = Math.floor(this.config.length / 2);
 		hparam.minHeight = this.config.minElevation;
 		hparam.maxHeight = this.config.maxElevation;
+		hparam.variation = this.config.variation;
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
 		randSeed(seed);
 		const height = new Heightmap(hparam);
-		height.blur(hparam.width / (2.0 + Math.pow(this.config.variation, 2) * hparam.width * 0.5));
+		height.blur(2);
 		// reset seed so we always compute the same displacement regardless of how many vertices we have
 		randSeed(seed);
 		const roughNoise = new PerlinNoise(Math.max(4, this.config.width), Math.max(4, this.config.length));

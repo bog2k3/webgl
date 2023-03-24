@@ -12,6 +12,8 @@ export class HeightmapParams {
 	minHeight: number;
 	/** higher displacement value on Y axis (may be negative) */
 	maxHeight: number;
+	/** 0.0 - 1.0 */
+	variation: number;
 }
 
 export class Heightmap {
