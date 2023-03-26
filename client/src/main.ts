@@ -99,6 +99,7 @@ function update(dt: number): void {
 }
 
 function onGameStarted(): void {
+	GUI.displayView(GUI.Views.Loading, false);
 	game.terrain.setWaterReflectionTex(renderData.waterRenderData.reflectionFramebuffer.fbTexture());
 	game.terrain.setWaterRefractionTex(
 		renderData.waterRenderData.refractionFramebuffer.fbTexture(),
@@ -297,6 +298,7 @@ function randomizeConfig(): void {
 }
 
 function startGame(): void {
-	game.setState(GameState.SPECTATE);
 	GUI.displayView(GUI.Views.TerrainConfig, false);
+	GUI.displayView(GUI.Views.Loading, true);
+	setTimeout(() => game.setState(GameState.SPECTATE), 0);
 }

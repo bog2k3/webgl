@@ -18,6 +18,10 @@
 						<button type="button" id="btn-confirm-name">OK</button>
 					</div>
 				</div>
+				<div id="dialog-loading">
+					<div class="spinner"></div>
+					<h4>Jocul se incarcă, așteaptă...</h4>
+				</div>
 				<div id="terrain-config-panel">
 					<div id="master-label" class="master-only">
 						<h3>TU ești bossul care configurează harta.</h3>
@@ -208,6 +212,22 @@
 		}
 		.button-primary {
 			font-size: 1.2em;
+		}
+		.spinner {
+			margin: 0 auto;
+			border: 16px solid #f3f3f3;
+			border-top: 16px solid #3498db;
+			border-radius: 50%;
+			width: 120px;
+			height: 120px;
+			animation: spin 2s linear infinite;
+		}
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+		#dialog-loading {
+			padding: 2em 6em 1em 6em !important;
 		}
 	</style>
 	<script src="dist/index.js"></script>

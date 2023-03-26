@@ -7,6 +7,7 @@ export namespace GUI {
 	export enum Views {
 		PlayerNameDialog,
 		TerrainConfig,
+		Loading,
 	}
 
 	const viewHandles: { [key in Views]?: JQuery<HTMLElement> } = {};
@@ -65,6 +66,7 @@ export namespace GUI {
 	function setupViews(): void {
 		viewHandles[Views.PlayerNameDialog] = $("#dialog-player-name");
 		viewHandles[Views.TerrainConfig] = $("#terrain-config-panel");
+		viewHandles[Views.Loading] = $("#dialog-loading");
 		$("#btn-confirm-name").on("click", handlePlayerName);
 		$("#player-name").on("keydown", triggerButton.bind(null, "btn-confirm-name"));
 		$("#random-seed").on("click", handleRandomSeed);
