@@ -330,6 +330,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			this.physicsBodyMeta = null;
 		}
 		this.bspTree = null;
+		this.triangleAABBGenerator.clear();
 	}
 
 	render(context: RenderContext): void {
@@ -369,14 +370,14 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 			if (rctx.enableClipPlane) {
 				if (rctx.subspace < 0) {
 					// draw below-water subspace:
-					gl.drawElements(gl.TRIANGLES, this.renderData.trisBelowWater_ * 3, gl.UNSIGNED_SHORT, 0);
+					gl.drawElements(gl.TRIANGLES, this.renderData.trisBelowWater_ * 3, gl.UNSIGNED_INT, 0);
 				} else {
 					// draw above-water subspace:
 					gl.drawElements(
 						gl.TRIANGLES,
 						this.renderData.trisAboveWater_ * 3,
-						gl.UNSIGNED_SHORT,
-						this.renderData.trisBelowWater_ * 3 * 2,
+						gl.UNSIGNED_INT,
+						this.renderData.trisBelowWater_ * 3 * 4,
 					);
 				}
 			} else {
@@ -384,7 +385,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 				gl.drawElements(
 					gl.TRIANGLES,
 					(this.renderData.trisBelowWater_ + this.renderData.trisAboveWater_) * 3,
-					gl.UNSIGNED_SHORT,
+					gl.UNSIGNED_INT,
 					0,
 				);
 			}
@@ -647,7 +648,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 		const waterLevelTolerance = 0.01;
-		const indices = new Uint16Array(6 * this.triangles.length); // alocate double the number of triangle points to make sure we don't overflow
+		const indices = new Uint32Array(6 * this.triangles.length); // alocate double the number of triangle points to make sure we don't overflow
 		this.renderData.trisBelowWater_ = 0;
 		// first loop: indices for tris below water
 		for (let i = 0; i < this.triangles.length; i++) {
@@ -918,5 +919,8 @@ class TriangleAABBGenerator implements AABBGeneratorInterface<number> {
 		}
 		return this.cache[i];
 	}
-	// TODO we should probably clear this after finishing
+
+	clear(): void {
+		this.cache = {};
+	}
 }

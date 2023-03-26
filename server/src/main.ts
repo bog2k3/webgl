@@ -71,7 +71,7 @@ function setupSocket(socket: Socket): void {
 
 function removeClient(id: string): void {
 	delete clients[id];
-	if (masterConfigurerId === id) {
+	if (masterConfigurerId === id || Object.keys(clients).length === 0) {
 		// the master has left the chat, we promote a new client to master
 		if (Object.keys(clients).length) {
 			masterConfigurerId = clients[Object.keys(clients)[0]].id;
@@ -89,19 +89,7 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 			console.warn(`Client ${socket.id} is already identified, ignoring IDENTIFY message.`);
 			return true;
 		}
-		clients[socket.id] = new Client(socket, payload["name"]);
-		console.log(`Client ${socket.id} identified as "${payload["name"]}".`);
-		// send the map config to this client
-		if (mapConfig) {
-			console.log(`Sending map config to ${payload["name"]}`);
-		} else {
-			console.log(`No config to send to ${payload["name"]}`);
-		}
-		socket.send(SocketMessage.CS_MAP_CONFIG, mapConfig);
-		if (masterConfigurerId) {
-			// someone is currently configuring the terrain, inform the new client
-			socket.send(SocketMessage.S_START_CONFIG_SLAVE);
-		}
+		addClient(socket, payload["name"]);
 		return true;
 	}
 	if (!clients[socket.id]) {
@@ -131,12 +119,32 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 		case SocketMessage.C_REQ_START_GAME:
 			if (socket.id === masterConfigurerId) {
 				broadcastMessage(SocketMessage.S_START_GAME, null);
+				masterConfigurerId = null;
 			} else {
 				console.log(`Ignoring start request from non-master user ${clients[socket.id].name}`);
 			}
 			break;
 	}
 	return true;
+}
+
+function addClient(socket: Socket, name: string): void {
+	clients[socket.id] = new Client(socket, name);
+	console.log(`Client ${socket.id} identified as "${name}".`);
+	// send the map config to this client
+	if (mapConfig) {
+		console.log(`Sending map config to ${name}`);
+	} else {
+		console.log(`No config to send to ${name}`);
+	}
+	socket.send(SocketMessage.CS_MAP_CONFIG, mapConfig);
+	if (masterConfigurerId) {
+		// someone is currently configuring the terrain, inform the new client
+		socket.send(SocketMessage.S_START_CONFIG_SLAVE);
+	} else if (mapConfig) {
+		// game is in progress
+		socket.send(SocketMessage.S_START_GAME);
+	}
 }
 
 function broadcastMessage(message: SocketMessage, payload: any, options?: BroadcastOptions): void {

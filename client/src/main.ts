@@ -66,7 +66,7 @@ async function initGraphics(canvas2d: HTMLCanvasElement, canvas3d: HTMLCanvasEle
 	initGL(canvas3d, contextOptions);
 
 	renderData = new RenderData(canvas3d.width, canvas3d.height);
-	// renderData.config.renderPhysicsDebug = true;
+	renderData.config.renderPhysicsDebug = false;
 	await initRender(renderData);
 
 	setContext2d(canvas2d.getContext("2d"));

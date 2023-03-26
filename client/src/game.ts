@@ -139,7 +139,7 @@ export class Game {
 		this.playerController = new PlayerController();
 		this.playerController.setTargetCar(this.playerCar);
 
-		this.positionExhibitCamera(this.terrain.getConfig(), 1.0, 50);
+		this.positionExhibitCamera(this.terrain.getConfig(), 0.8, 30, new Vector(-1, -0.5, 0));
 
 		this.onStart.trigger();
 
@@ -157,10 +157,10 @@ export class Game {
 		console.log("Game stopped.");
 	}
 
-	private positionExhibitCamera(cfg: TerrainConfig, distanceScale: number, height: number): void {
+	private positionExhibitCamera(cfg: TerrainConfig, distanceScale: number, height: number, direction?: Vector): void {
 		const cameraPos = new Vector(cfg.width * 0.39 * distanceScale, height, cfg.length * 0.39 * distanceScale);
 		this.freeCam.getTransform().moveTo(cameraPos);
-		this.freeCam.getTransform().lookAt(new Vector(0));
+		this.freeCam.getTransform().lookAt(direction ? cameraPos.add(direction) : new Vector(0));
 		this.cameraCtrl.update(0);
 	}
 }

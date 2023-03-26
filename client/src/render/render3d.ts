@@ -79,7 +79,7 @@ export async function initRender(renderData: RenderData): Promise<boolean> {
 	// set up viewport and camera
 	renderData.viewport.setBkColor(new Vector(0, 0, 0));
 	renderData.viewport.camera().setFOV(Math.PI / 2.5);
-	renderData.viewport.camera().setZPlanes(0.15, 1000);
+	renderData.viewport.camera().setZPlanes(0.3, 1500);
 	renderData.viewport.camera().moveTo(new Vector(0, 0, -1));
 
 	Mesh.ENABLE_COLOR_DEBUG = true;
