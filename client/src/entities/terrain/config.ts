@@ -22,7 +22,7 @@ export class TerrainConfig {
 	 * to the initial distance between vertices;
 	 * this has the effect of producing an irregular (less matrix-like) mesh
 	 */
-	relativeRandomJitter = 0.8;
+	relativeRandomJitter = 0.4;
 
 	/** between [0.0 and 1.0] controls the large-scale height variation of the terrain*/
 	variation = 0.8;

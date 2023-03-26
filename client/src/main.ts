@@ -289,8 +289,8 @@ function randomizeConfig(): void {
 		return;
 	}
 	gameConfig.seed = randi(0xffffffff);
-	gameConfig.minElevation = -20 + rand() * 19;
-	gameConfig.maxElevation = 10 + rand() * 90;
+	gameConfig.minElevation = -10 + rand() * 9;
+	gameConfig.maxElevation = 10 + rand() * 60;
 	gameConfig.variation = rand();
 	gameConfig.roughness = rand();
 	GUI.updateMapParameters(gameConfig);
@@ -300,5 +300,5 @@ function randomizeConfig(): void {
 function startGame(): void {
 	GUI.displayView(GUI.Views.TerrainConfig, false);
 	GUI.displayView(GUI.Views.Loading, true);
-	setTimeout(() => game.setState(GameState.SPECTATE), 0);
+	setTimeout(() => game.setState(GameState.SPECTATE), 100);
 }

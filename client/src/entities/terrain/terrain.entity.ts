@@ -197,7 +197,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 
 		randSeed(config.seed);
 
-		const densityFactor: number = this.previewMode ? 0.2 : 1.0;
+		const densityFactor: number = this.previewMode ? 0.4 : 1.0;
 
 		this.rows = Math.ceil(config.length * config.vertexDensity * densityFactor) + 1;
 		this.cols = Math.ceil(config.width * config.vertexDensity * densityFactor) + 1;
@@ -219,10 +219,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		// compute terrain vertices
 		for (let i = 0; i < this.rows; i++) {
 			for (let j = 0; j < this.cols; j++) {
-				const jitter = new Vector(
-					srand() * config.relativeRandomJitter * dx,
-					srand() * config.relativeRandomJitter * dz,
-				);
+				const jitter = new Vector(srand() * dx, srand() * dz).scaleInPlace(config.relativeRandomJitter);
 				this.vertices[i * this.cols + j] = new TerrainVertex({
 					pos: bottomLeft.add(new Vector(dx * j + jitter.x, config.minElevation, dz * i + jitter.y)),
 					normal: new Vector(0.0, 1.0, 0.0),
@@ -586,7 +583,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 	}
 
 	private computeTextureWeights(): void {
-		const pnoise = new PerlinNoise(this.config.width / 2, this.config.length / 2);
+		const pnoise = new PerlinNoise(Math.max(4, this.config.width / 4), Math.max(4, this.config.length / 4));
 		const bottomLeft = new Vector(-this.config.width * 0.5, 0, -this.config.length * 0.5);
 		const grassBias = 0.2; // bias to more grass over dirt
 		for (let i = 0; i < this.rows * this.cols; i++) {
@@ -609,9 +606,9 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 				// above water grass-rock coefficient
 				// height factor for grass vs rock: the higher the vertex, the more likely it is to be rock
 				let hFactor: number = clamp(this.vertices[i].pos.y / this.config.maxElevation, 0, 1); // hFactor is 1.0 at the highest elevation, 0.0 at sea level.
-				hFactor = Math.pow(hFactor, 1.5);
+				hFactor = Math.pow(hFactor, 0.75);
 				cutoffY += (1.0 - cutoffY) * hFactor;
-				this.vertices[i].texBlendFactor.z = this.vertices[i].normal.y > cutoffY ? 1 : 0; // grass vs rock
+				this.vertices[i].texBlendFactor.z = this.vertices[i].normal.y > cutoffY ? 1 : 0; // rock (0.0) vs grass (1.0)
 			} else {
 				// this is below water
 				if (u <= 0.01 || v <= 0.01 || u >= 0.99 || v >= 0.99) {
@@ -625,7 +622,7 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 							0.3 * pnoise.get(u * 0.6, v * 0.6, 7) +
 							0.1 * pnoise.get(u * 1.0, v * 1.0, 7);
 						const sandBias = 0.4 * this.vertices[i].normal.y; // flat areas are more likely to be sand rather than rock
-						this.vertices[i].texBlendFactor.z = noise + sandBias > 0 ? 1 : 0.25;
+						this.vertices[i].texBlendFactor.z = noise + sandBias > 0 ? 1 : 0.8;
 					} else {
 						this.vertices[i].texBlendFactor.z = 0.2; // steep underwater areas are still rock
 					}

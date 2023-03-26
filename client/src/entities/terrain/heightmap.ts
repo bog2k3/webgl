@@ -18,13 +18,14 @@ export class HeightmapParams {
 
 export class Heightmap {
 	/** jitter is multiplied by this factor at each iteration */
-	private static readonly jitterReductionFactor = 0.5;
+	private jitterReductionFactor: number;
 
 	constructor(params: HeightmapParams) {
 		this.width_ = nextPowerOfTwo(params.width) + 1;
 		this.length_ = nextPowerOfTwo(params.length) + 1;
 		this.baseY_ = params.minHeight;
 		this.amplitude_ = params.maxHeight - params.minHeight;
+		this.jitterReductionFactor = 1.0 / (2.4 - params.variation);
 		this.values_ = new Array(this.width_ * this.length_);
 
 		this.generate();
@@ -157,7 +158,7 @@ export class Heightmap {
 			r2: this.length_ - 1,
 			c1: 0,
 			c2: this.width_ - 1,
-			jitterAmp: this.amplitude_ * Heightmap.jitterReductionFactor,
+			jitterAmp: this.amplitude_ * this.jitterReductionFactor,
 		});
 		let index = 0;
 		// compute diamond displacement iteratively:
@@ -176,7 +177,7 @@ export class Heightmap {
 					r2: midR,
 					c1: c1,
 					c2: midC,
-					jitterAmp: vSteps[index].jitterAmp * Heightmap.jitterReductionFactor,
+					jitterAmp: vSteps[index].jitterAmp * this.jitterReductionFactor,
 				});
 				// top-right
 				vSteps.push({
@@ -184,7 +185,7 @@ export class Heightmap {
 					r2: midR,
 					c1: midC,
 					c2: c2,
-					jitterAmp: vSteps[index].jitterAmp * Heightmap.jitterReductionFactor,
+					jitterAmp: vSteps[index].jitterAmp * this.jitterReductionFactor,
 				});
 				// bottom-left
 				vSteps.push({
@@ -192,7 +193,7 @@ export class Heightmap {
 					r2: r2,
 					c1: c1,
 					c2: midC,
-					jitterAmp: vSteps[index].jitterAmp * Heightmap.jitterReductionFactor,
+					jitterAmp: vSteps[index].jitterAmp * this.jitterReductionFactor,
 				});
 				// bottom-right
 				vSteps.push({
@@ -200,7 +201,7 @@ export class Heightmap {
 					r2: r2,
 					c1: midC,
 					c2: c2,
-					jitterAmp: vSteps[index].jitterAmp * Heightmap.jitterReductionFactor,
+					jitterAmp: vSteps[index].jitterAmp * this.jitterReductionFactor,
 				});
 			}
 			index++;
