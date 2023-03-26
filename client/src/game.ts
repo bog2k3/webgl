@@ -100,10 +100,7 @@ export class Game {
 	updateConfig(cfg: TerrainConfig): void {
 		this.terrain.generate(cfg);
 		this.terrain.finishGenerate();
-		const cameraPos = new Vector(cfg.width / 1.4, 180, cfg.length / 1.4);
-		this.freeCam.getTransform().moveTo(cameraPos);
-		this.freeCam.getTransform().lookAt(cameraPos.add(new Vector(-1, -0.7, -1)));
-		this.cameraCtrl.update(0);
+		this.positionExhibitCamera(cfg, 1.3, 80);
 	}
 
 	// -------------------------- PRIVATE AREA ------------------------------- //
@@ -142,6 +139,8 @@ export class Game {
 		this.playerController = new PlayerController();
 		this.playerController.setTargetCar(this.playerCar);
 
+		this.positionExhibitCamera(this.terrain.getConfig(), 1.0, 50);
+
 		this.onStart.trigger();
 
 		console.log("Game started.");
@@ -156,5 +155,12 @@ export class Game {
 		this.terrain.regenerate();
 		this.terrain.finishGenerate();
 		console.log("Game stopped.");
+	}
+
+	private positionExhibitCamera(cfg: TerrainConfig, distanceScale: number, height: number): void {
+		const cameraPos = new Vector(cfg.width * 0.39 * distanceScale, height, cfg.length * 0.39 * distanceScale);
+		this.freeCam.getTransform().moveTo(cameraPos);
+		this.freeCam.getTransform().lookAt(new Vector(0));
+		this.cameraCtrl.update(0);
 	}
 }
