@@ -63,6 +63,11 @@ export class HtmlInputHandler {
 		return this.eventQueue.splice(0);
 	}
 
+	/** Clears the event queue. Useful afer a blocking loading, to avoid mouse jumps */
+	clear(): void {
+		this.eventQueue.splice(0);
+	}
+
 	// ------------------- PRIVATE AREA ----------------- //
 	private eventQueue: InputEvent[] = [];
 

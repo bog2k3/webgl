@@ -120,17 +120,16 @@ export class Terrain extends Entity implements IRenderable, IGLResource {
 		if (this.previewMode === preview) {
 			return;
 		}
+		if (this.renderData.reloadHandler) {
+			this.renderData.shaderProgram_.onProgramReloaded.remove(this.renderData.reloadHandler);
+			this.renderData.reloadHandler = null;
+		}
 		this.previewMode = preview;
 		if (this.previewMode) {
 			this.renderData.shaderProgram_ =
 				ShaderProgramManager.requestProgram<ShaderTerrainPreview>(ShaderTerrainPreview);
 		} else {
 			this.renderData.shaderProgram_ = ShaderProgramManager.requestProgram<ShaderTerrain>(ShaderTerrain);
-		}
-
-		if (this.renderData.reloadHandler) {
-			this.renderData.shaderProgram_.onProgramReloaded.remove(this.renderData.reloadHandler);
-			this.renderData.reloadHandler = null;
 		}
 		this.renderData.reloadHandler = this.renderData.shaderProgram_.onProgramReloaded.add(() => {
 			this.setupVAO();

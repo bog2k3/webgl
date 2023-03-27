@@ -42,6 +42,7 @@ export class World implements IRenderable, IUpdatable {
 		this.entities_.splice(0);
 		this.entsToRender_.splice(0);
 		this.entsToUpdate_.splice(0);
+		this.resetting_ = false;
 	}
 
 	update(dt: number): void {
@@ -146,7 +147,6 @@ export class World implements IRenderable, IUpdatable {
 	}
 
 	removeEntity(e: Entity): void {
-		assert(e.isDestroyed(), "Cannot remove undestroyed entity from world. Call Entity.destroy() instead");
 		if (!this.resetting_) {
 			this.entities_.splice(this.entities_.indexOf(e), 1);
 			this.entsToRender_.splice(this.entities_.indexOf(e), 1);

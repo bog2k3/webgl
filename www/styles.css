@@ -1,0 +1,146 @@
+body {
+	margin: 0;
+}
+#canvas-container {
+	min-width: 640px;
+	min-height: 480px;
+	width: 100vw;
+	height: 100vh;
+	margin: 0 auto;
+	position: relative;
+}
+.canvas {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+}
+#canvas2d {
+	z-index: 1;
+}
+#gui-container > div {
+	display: none;
+}
+#gui-container > div.show {
+	display: inline-block;
+	position: relative;
+	z-index: 1;
+	margin-top: 50vh;
+	transform: translate(0, -50%);
+	padding: 15px;
+	background: rgba(255,255,255,0.5);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 0 10px 1px white;
+	border-radius: 10px;
+	border: 3px solid white;
+}
+.dialog-title {
+	color: white;
+	font-size: 3em;
+	font-family: "arial";
+	text-shadow: 1px 1px 5px #aaa;
+	text-align: left;
+	margin-bottom: 0.25em;
+	user-select: none;
+}
+.dialog-input-wrapper {
+	font-size: 3em;
+	border-radius: 5px;
+	border: 1px solid #aaa;
+	padding: 0;
+	position: relative;
+}
+.dialog-input-wrapper button {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	left: calc(100% - 50px);
+	width: 50px;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+	border: none;
+	border-left: 1px solid #ddd;
+	z-index: 1;
+}
+.dialog-input {
+	font-size: inherit;
+	border-radius: 5px;
+	padding: 5px;
+}
+#terrain-config-panel.show {
+	display: block !important;
+	width: 500px;
+	margin-left: auto;
+	height: 100vh;
+	box-sizing: border-box;
+	padding-top: 2em !important;
+	padding-left: 2em !important;
+	text-align: left;
+}
+input[type="range"] {
+	width: 200px;
+}
+datalist {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	width: 200px;
+	font-size: 0.5em;
+}
+.value-display {
+	position: relative;
+	top: -0.5em;
+	margin-left: 1em;
+	width: 3em;
+	padding: 0.2em;
+	text-align: center;
+	background: #eee;
+}
+#master-label h3 {
+	color: blue;
+	text-shadow: 0 0 5px aqua;
+}
+#slave-label h4 {
+	color: orange;
+	text-shadow: 0 0 4px black;
+}
+.button-big {
+	padding: 0.5em;
+	width: 50%;
+}
+.button-primary {
+	font-size: 1.2em;
+}
+.spinner {
+	margin: 0 auto;
+	border: 16px solid #f3f3f3;
+	border-top: 16px solid #3498db;
+	border-radius: 50%;
+	width: 120px;
+	height: 120px;
+	animation: spin 2s linear infinite;
+}
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+#dialog-loading {
+	padding: 2em 6em 1em 6em !important;
+}
+#ingame-menu {
+	padding: 2em !important;
+}
+#ingame-menu hr {
+	margin: 1.5em 0;
+}
+.button-large {
+	padding: 1.5em 3em;
+	height: 3em;
+	font-size: 1.5em;
+	line-height: 0;
+	width: 100%;
+}

@@ -28,10 +28,9 @@ export class CameraController extends Entity implements IUpdatable {
 	 * Before the camera position is updated, this function is invoked with the previous and next positions of
 	 * the camera.
 	 * The function must return the allowed position to be set next.
+	 * If this is set to null, no check is performed and any position is allowed.
 	 */
-	checkCollision = (prevPos: Vector, nextPos: Vector): Vector => {
-		return nextPos; // allow any position by default
-	};
+	checkCollision: (prevPos: Vector, nextPos: Vector) => Vector = null;
 
 	constructor(target: Camera) {
 		super();
@@ -57,7 +56,9 @@ export class CameraController extends Entity implements IUpdatable {
 		}
 		const tr: Transform = this.attachedEntity.getTransform(this.attachedFrame);
 		let nextPos: Vector = this.attachOffset.mulQ(tr.orientation()).add(tr.position());
-		nextPos = this.checkCollision(this.camera.position(), nextPos);
+		if (this.checkCollision) {
+			nextPos = this.checkCollision(this.camera.position(), nextPos);
+		}
 
 		if (this.attachMode & AttachMode.POSITION_ONLY) {
 			this.camera.moveTo(nextPos);

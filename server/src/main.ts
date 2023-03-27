@@ -25,7 +25,7 @@ type BroadcastOptions = {
 		root: "../www",
 	};
 
-	const allowedFiles = ["/favicon.ico", "/index.html"];
+	const allowedFiles = ["/favicon.ico", "/index.html", "/styles.css"];
 
 	app.get("/dist/*", (req, res) => {
 		res.sendFile(req.url, fileOptions);
@@ -104,6 +104,7 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 				masterConfigurerId = socket.id;
 				socket.send(SocketMessage.S_START_CONFIG_MASTER);
 				console.log(`${clients[socket.id].name} Request to configure granted: MASTER`);
+				broadcastMessage(SocketMessage.S_START_CONFIG_SLAVE, null, { except: socket.id });
 			}
 			break;
 		case SocketMessage.CS_MAP_CONFIG:

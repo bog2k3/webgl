@@ -8,6 +8,7 @@ export namespace GUI {
 		PlayerNameDialog,
 		TerrainConfig,
 		Loading,
+		InGameMenu,
 	}
 
 	const viewHandles: { [key in Views]?: JQuery<HTMLElement> } = {};
@@ -16,6 +17,8 @@ export namespace GUI {
 	export const onParameterChanged = new Event<(param: string, value: number) => void>();
 	export const onRandomizeAll = new Event<() => void>();
 	export const onStartGame = new Event<() => void>();
+	export const onReturnToGame = new Event<() => void>();
+	export const onReqChangeConfig = new Event<() => void>();
 
 	export function init(): void {
 		setupViews();
@@ -27,6 +30,10 @@ export namespace GUI {
 		} else {
 			viewHandles[view].removeClass("show");
 		}
+	}
+
+	export function isViewVisible(view: Views): boolean {
+		return viewHandles[view].hasClass("show");
 	}
 
 	export function setTerrainConfigMode(mode: { readonly: boolean }): void {
@@ -67,6 +74,7 @@ export namespace GUI {
 		viewHandles[Views.PlayerNameDialog] = $("#dialog-player-name");
 		viewHandles[Views.TerrainConfig] = $("#terrain-config-panel");
 		viewHandles[Views.Loading] = $("#dialog-loading");
+		viewHandles[Views.InGameMenu] = $("#ingame-menu");
 		$("#btn-confirm-name").on("click", handlePlayerName);
 		$("#player-name").on("keydown", triggerButton.bind(null, "btn-confirm-name"));
 		$("#random-seed").on("click", handleRandomSeed);
@@ -77,6 +85,8 @@ export namespace GUI {
 		$("#roughness").on("input", handleRoughnessChanged);
 		$("#randomize-all").on("click", () => onRandomizeAll.trigger());
 		$("#start-game").on("click", () => onStartGame.trigger());
+		$("#btn-continue").on("click", () => onReturnToGame.trigger());
+		$("#btn-change-config").on("click", () => onReqChangeConfig.trigger());
 	}
 
 	function triggerButton(buttonId: string, event: KeyboardEvent): void {

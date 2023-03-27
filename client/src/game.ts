@@ -7,9 +7,9 @@ import { Terrain } from "./entities/terrain/terrain.entity";
 import { logprefix } from "./joglfw/log";
 import { Quat } from "./joglfw/math/quat";
 import { Vector } from "./joglfw/math/vector";
-import { assert } from "./joglfw/utils/assert";
 import { Event } from "./joglfw/utils/event";
 import { AttachMode, CameraController } from "./joglfw/world/camera-controller";
+import { Entity } from "./joglfw/world/entity";
 import { World } from "./joglfw/world/world";
 import { PlayerInputHandler } from "./player-input-handler";
 
@@ -31,6 +31,9 @@ export class Game {
 	cameraCtrl: CameraController;
 	playerInputHandler = new PlayerInputHandler();
 
+	/** these are entities that are never destroyed */
+	readonly godEntities: Entity[] = [];
+
 	onStart = new Event<() => void>();
 	onStop = new Event<() => void>();
 
@@ -40,13 +43,16 @@ export class Game {
 
 		World.getInstance().addEntity(this.terrain);
 		World.getInstance().setGlobal(Terrain, this.terrain);
+		this.godEntities.push(this.terrain);
 
 		this.freeCam = new FreeCamera(new Vector(0, 0, -1), new Vector(0, 0, 1));
 		World.getInstance().addEntity(this.freeCam);
+		this.godEntities.push(this.freeCam);
 
 		// camera controller (this one moves the render camera to the position of the target entity)
 		this.cameraCtrl = new CameraController(null);
 		World.getInstance().addEntity(this.cameraCtrl);
+		this.godEntities.push(this.cameraCtrl);
 		this.cameraCtrl.attachToEntity(this.freeCam);
 
 		console.log("Ready");
@@ -86,14 +92,13 @@ export class Game {
 		}
 	}
 
-	setState(state: GameState): void {
+	setState(state: GameState): Promise<void> {
 		const oldState = this.state;
 		this.state = state;
-		this.terrain.setPreviewMode(this.state === GameState.CONFIGURE_TERRAIN);
 		if (oldState !== GameState.CONFIGURE_TERRAIN && state === GameState.CONFIGURE_TERRAIN) {
-			this.stop();
+			return this.stop();
 		} else if (oldState === GameState.CONFIGURE_TERRAIN && state !== GameState.CONFIGURE_TERRAIN) {
-			this.start();
+			return this.start();
 		}
 	}
 
@@ -110,7 +115,7 @@ export class Game {
 			return nextPos;
 		}
 		const terrainY = this.terrain.getHeightValue(nextPos);
-		const MARGIN = 0.25;
+		const MARGIN = 0.35;
 		let nextY = nextPos.y;
 		if (nextY < terrainY + MARGIN) {
 			nextY = terrainY + MARGIN;
@@ -118,19 +123,23 @@ export class Game {
 		return nextPos.copy().setY(nextY);
 	}
 
-	private start(): void {
+	private start(): Promise<void> {
 		console.log("Starting game...");
-		this.terrain.regenerate();
-		// TODO here we tamper with the terrain, add buildings & vegetation
-		this.terrain.finishGenerate();
 		this.playerInputHandler.setTargetObject(this.freeCam);
 		this.cameraCtrl.checkCollision = this.checkCameraCollision.bind(this);
 
+		let skyboxPromise = Promise.resolve();
 		if (!this.skyBox) {
 			this.skyBox = new SkyBox();
-			this.skyBox.load("data/textures/sky/1");
-			World.getInstance().addEntity(this.skyBox);
+			skyboxPromise = this.skyBox.load("data/textures/sky/1");
+			this.godEntities.push(this.skyBox);
 		}
+		World.getInstance().addEntity(this.skyBox);
+
+		this.terrain.setPreviewMode(false);
+		this.terrain.regenerate();
+		// TODO here we tamper with the terrain, add buildings & vegetation
+		this.terrain.finishGenerate();
 
 		this.playerCar = new Car(new Vector(0, this.terrain.getConfig().maxElevation + 3, 0), Quat.identity());
 		World.getInstance().addEntity(this.playerCar);
@@ -141,20 +150,30 @@ export class Game {
 
 		this.positionExhibitCamera(this.terrain.getConfig(), 0.8, 30, new Vector(-1, -0.5, 0));
 
-		this.onStart.trigger();
-
-		console.log("Game started.");
+		return skyboxPromise.then(() => {
+			this.onStart.trigger();
+			console.log("Game started.");
+		});
 	}
 
-	private stop(): void {
+	private stop(): Promise<void> {
 		console.log("Stopping game...");
 		this.onStop.trigger();
 		this.playerInputHandler.setTargetObject(null);
 		this.cameraCtrl.checkCollision = null;
-		// TODO destroy all entities except terrain
+		// destroy all entities except god entities
+		for (let e of this.godEntities) {
+			World.getInstance().removeEntity(e);
+		}
+		World.getInstance().reset();
+		World.getInstance().addEntity(this.terrain);
+		World.getInstance().addEntity(this.cameraCtrl);
+		World.getInstance().addEntity(this.freeCam);
+		this.terrain.setPreviewMode(true);
 		this.terrain.regenerate();
 		this.terrain.finishGenerate();
 		console.log("Game stopped.");
+		return Promise.resolve();
 	}
 
 	private positionExhibitCamera(cfg: TerrainConfig, distanceScale: number, height: number, direction?: Vector): void {
