@@ -1,10 +1,17 @@
 import { AABB } from "../math/aabb";
 import { Transform } from "../math/transform";
+import { Event } from "../utils/event";
 import { World } from "./world";
 export abstract class Entity {
+	onDestroyed = new Event<(this: this) => void>();
+
 	destroy(): void {
+		if (this.isDestroyed_) {
+			return;
+		}
 		this.isDestroyed_ = true;
 		World.getInstance().removeEntity(this);
+		this.onDestroyed.trigger(this);
 	}
 
 	isDestroyed(): boolean {

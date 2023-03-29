@@ -11,8 +11,12 @@ export class CollisionChecker implements IUpdatable {
 		const numManifolds = physWorld.getDispatcher().getNumManifolds();
 		for (let i = 0; i < numManifolds; i++) {
 			const contactManifold = physWorld.getDispatcher().getManifoldByIndexInternal(i);
-			const pMetaA = <PhysBodyProxy>contactManifold.getBody0().getUserPointer();
-			const pMetaB = <PhysBodyProxy>contactManifold.getBody1().getUserPointer();
+			const pMetaA = <PhysBodyProxy>(
+				(Ammo as any).castObject(contactManifold.getBody0(), Ammo.btRigidBody).proxyPtr
+			);
+			const pMetaB = <PhysBodyProxy>(
+				(Ammo as any).castObject(contactManifold.getBody1(), Ammo.btRigidBody).proxyPtr
+			);
 
 			assert(
 				pMetaA != null || pMetaB !== null,

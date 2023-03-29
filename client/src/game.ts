@@ -11,6 +11,7 @@ import { Event } from "./joglfw/utils/event";
 import { AttachMode, CameraController } from "./joglfw/world/camera-controller";
 import { Entity } from "./joglfw/world/entity";
 import { World } from "./joglfw/world/world";
+import { CollisionChecker } from "./physics/collision-checker";
 import { PlayerInputHandler } from "./player-input-handler";
 
 const console = logprefix("Game");
@@ -30,6 +31,7 @@ export class Game {
 	freeCam: FreeCamera;
 	cameraCtrl: CameraController;
 	playerInputHandler = new PlayerInputHandler();
+	collisionChecker = new CollisionChecker();
 
 	/** these are entities that are never destroyed */
 	readonly godEntities: Entity[] = [];
@@ -61,9 +63,13 @@ export class Game {
 	update(dt: number): void {
 		this.playerInputHandler.update(dt);
 		World.getInstance().update(dt);
+		this.collisionChecker.update(dt);
 	}
 
 	resetPlayer(): void {
+		if (this.state === GameState.CONFIGURE_TERRAIN) {
+			return;
+		}
 		const y = 3 + this.terrain.getHeightValue(new Vector(0, 0, 0));
 		this.playerCar.teleport(new Vector(0, y, 0), Quat.identity());
 		if (this.cameraCtrl.getAttachedEntity() === this.playerCar) {
@@ -72,6 +78,9 @@ export class Game {
 	}
 
 	toggleCamera(): void {
+		if (this.state === GameState.CONFIGURE_TERRAIN) {
+			return;
+		}
 		if (this.cameraCtrl.getAttachedEntity() === this.freeCam) {
 			// switch to car
 			this.cameraCtrl.attachToEntity(
@@ -160,7 +169,9 @@ export class Game {
 		console.log("Stopping game...");
 		this.onStop.trigger();
 		this.playerInputHandler.setTargetObject(null);
+		this.playerCar = null;
 		this.cameraCtrl.checkCollision = null;
+		this.cameraCtrl.attachToEntity(this.freeCam);
 		// destroy all entities except god entities
 		for (let e of this.godEntities) {
 			World.getInstance().removeEntity(e);

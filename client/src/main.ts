@@ -34,23 +34,26 @@ const render2dConfig: Render2dConfig = {
 window.onload = main;
 // prettier-ignore
 async function main(): Promise<void> {
-	initWebSocket();
-	canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
-	canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
-	adjustCanvasSize();
-	window.onresize = adjustCanvasSize;
-	await Promise.all([
-		initGraphics(canvas2D, canvas3D),
-		initPhysics()
-	]);
-	initWorld();
-	await Promise.all([
-		initGame(),
-		initInput(canvas2D),
-		initGui()
-	]);
+	initGui();
+	GUI.displayView(GUI.Views.Loading, true);
+	setTimeout(async () => {
+		initWebSocket();
+		canvas3D = document.getElementById("canvas3d") as HTMLCanvasElement;
+		canvas2D = document.getElementById("canvas2d") as HTMLCanvasElement;
+		adjustCanvasSize();
+		window.onresize = adjustCanvasSize;
+		await Promise.all([
+			initGraphics(canvas2D, canvas3D),
+			initPhysics()
+		]);
+		initWorld();
+		initInput(canvas2D);
+		await initGame();
 
-	requestAnimationFrame(step);
+		requestAnimationFrame(step);
+		GUI.displayView(GUI.Views.Loading, false);
+		GUI.displayView(GUI.Views.PlayerNameDialog, true);
+	}, 0);
 }
 
 async function initGraphics(canvas2d: HTMLCanvasElement, canvas3d: HTMLCanvasElement): Promise<void> {
@@ -100,7 +103,6 @@ function initWebSocket(): void {
 
 function initGui(): void {
 	GUI.init();
-	GUI.displayView(GUI.Views.PlayerNameDialog, true);
 	GUI.onPlayerName.add(joinGame);
 	GUI.onParameterChanged.add(terrainParamChanged);
 	GUI.onRandomizeAll.add(randomizeConfig);
@@ -160,7 +162,7 @@ function onGameEnded(): void {
 }
 
 function handleCanvasClicked(canvas: HTMLCanvasElement, event: PointerEvent): void {
-	if (!GUI.isViewVisible(GUI.Views.InGameMenu)) {
+	if (!GUI.isViewVisible(GUI.Views.InGameMenu) && GlobalState.game.state !== GameState.CONFIGURE_TERRAIN) {
 		canvas.requestPointerLock();
 	}
 }
@@ -168,7 +170,9 @@ function handleCanvasClicked(canvas: HTMLCanvasElement, event: PointerEvent): vo
 function pointerLockChanged(): void {
 	if (!document.pointerLockElement) {
 		// pointer got unlocked, we display the menu
-		GUI.displayView(GUI.Views.InGameMenu, true);
+		if (GlobalState.game.state !== GameState.CONFIGURE_TERRAIN) {
+			GUI.displayView(GUI.Views.InGameMenu, true);
+		}
 	}
 }
 

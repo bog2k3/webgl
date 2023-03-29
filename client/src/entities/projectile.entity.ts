@@ -7,8 +7,8 @@ import { IRenderable } from "../joglfw/render/renderable";
 import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
 import { CollisionGroups } from "../physics/collision-groups";
-import { bullet2Vec, quat2Bullet } from "../physics/functions";
-import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
+import { bullet2Vec } from "../physics/functions";
+import { CollisionEvent, PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
 
@@ -19,6 +19,7 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 	constructor(position: Vector, velocity: Vector) {
 		super();
 		this.createBody(position, velocity);
+		this.onDestroyed.add(() => this.release());
 	}
 
 	getType(): string {
@@ -44,6 +45,10 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 	private physBody: PhysBodyProxy;
 	private physShape: Ammo.btCollisionShape;
 
+	private release(): void {
+		this.physBody.destroy();
+	}
+
 	private renderPlaceholders(ctx: RenderContext): void {
 		physWorld.debugDrawObject(this.physBody.body.getWorldTransform(), this.physShape, new Ammo.btVector3(1, 0, 0));
 	}
@@ -67,5 +72,13 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 					CollisionGroups.PROJECTILE,
 			}),
 		);
+		this.physBody.collisionCfg[EntityTypes.Terrain] = true;
+		this.physBody.collisionCfg[EntityTypes.Car] = true;
+		this.physBody.onCollision.add(this.handleCollision.bind(this));
+	}
+
+	private handleCollision(ev: CollisionEvent): void {
+		// TODO create explosion
+		this.destroy();
 	}
 }

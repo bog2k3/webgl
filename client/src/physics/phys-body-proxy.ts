@@ -20,7 +20,7 @@ export class CollisionEvent {
 	thisMeta: PhysBodyProxy;
 	otherMeta: PhysBodyProxy;
 	static readonly maxNumberContacts = 4;
-	contacts: ContactPoint[];
+	contacts: ContactPoint[] = [];
 }
 
 // construction config for physics body
@@ -91,7 +91,7 @@ export class PhysBodyProxy {
 		cinfo.set_m_friction(cfg.friction);
 
 		this.body = new Ammo.btRigidBody(cinfo);
-		this.body.setUserPointer(this);
+		(this.body as any).proxyPtr = this;
 		this.body.setLinearVelocity(vec2Bullet(cfg.initialVelocity));
 		this.body.setAngularVelocity(vec2Bullet(cfg.initialAngularVelocity.toEulerAngles()));
 

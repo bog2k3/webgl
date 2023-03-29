@@ -149,8 +149,12 @@ export class World implements IRenderable, IUpdatable {
 	removeEntity(e: Entity): void {
 		if (!this.resetting_) {
 			this.entities_.splice(this.entities_.indexOf(e), 1);
-			this.entsToRender_.splice(this.entities_.indexOf(e), 1);
-			this.entsToUpdate_.splice(this.entities_.indexOf(e), 1);
+			if (isRenderable(e)) {
+				this.entsToRender_.splice(this.entsToRender_.indexOf(e), 1);
+			}
+			if (isUpdatable(e)) {
+				this.entsToUpdate_.splice(this.entsToUpdate_.indexOf(e), 1);
+			}
 		}
 	}
 

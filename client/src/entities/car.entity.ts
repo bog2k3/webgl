@@ -74,6 +74,8 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		this.turretFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5 + Car.UPPER_BODY_HEIGHT));
 		this.frames["turret"] = this.turretFrame;
 		this.turretMesh = Mesh.makeGizmo();
+
+		this.onDestroyed.add(() => this.release());
 	}
 
 	getType(): string {
@@ -188,6 +190,19 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 	private turretFrame: VirtualFrame;
 	private turretMesh: Mesh;
 
+	private constraints: Ammo.btTypedConstraint[] = [];
+
+	private release(): void {
+		for (let c of this.constraints) {
+			physWorld.removeConstraint(c);
+		}
+		this.constraints.splice(0);
+		this.chassisBody.destroy();
+		for (let w of this.wheelBodies) {
+			w.destroy();
+		}
+	}
+
 	private createChassis(position: Vector, orientation: Quat): void {
 		const lowerChassisShape = new Ammo.btBoxShape(
 			new Ammo.btVector3(Car.LOWER_BODY_WIDTH * 0.5, Car.LOWER_BODY_HEIGHT * 0.5, Car.LOWER_BODY_LENGTH * 0.5),
@@ -266,6 +281,7 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		spring.setLinearUpperLimit(new Ammo.btVector3(0, Car.WHEEL_DIAMETER, 0));
 		spring.setEquilibriumPoint();
 		physWorld.addConstraint(spring);
+		this.constraints.push(spring);
 
 		this.frames[`wheel${i}`] = this.wheelBodies[i];
 	}
@@ -285,22 +301,22 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 			}),
 		);
 		const wheelPoint = new Ammo.btVector3(0, 0, Car.WHEEL_DIAMETER * 0.5);
-		physWorld.addConstraint(
-			new Ammo.btPoint2PointConstraint(
-				this.wheelBodies[0].body,
-				conrodBody.body,
-				wheelPoint,
-				new Ammo.btVector3(-conrodWidth * 0.5, 0, 0),
-			),
-		);
-		physWorld.addConstraint(
-			new Ammo.btPoint2PointConstraint(
-				this.wheelBodies[1].body,
-				conrodBody.body,
-				wheelPoint,
-				new Ammo.btVector3(+conrodWidth * 0.5, 0, 0),
-			),
-		);
+		// physWorld.addConstraint(
+		// 	new Ammo.btPoint2PointConstraint(
+		// 		this.wheelBodies[0].body,
+		// 		conrodBody.body,
+		// 		wheelPoint,
+		// 		new Ammo.btVector3(-conrodWidth * 0.5, 0, 0),
+		// 	),
+		// );
+		// physWorld.addConstraint(
+		// 	new Ammo.btPoint2PointConstraint(
+		// 		this.wheelBodies[1].body,
+		// 		conrodBody.body,
+		// 		wheelPoint,
+		// 		new Ammo.btVector3(+conrodWidth * 0.5, 0, 0),
+		// 	),
+		// );
 	}
 
 	private updateTurret(dt: number): void {
