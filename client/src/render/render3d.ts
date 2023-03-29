@@ -257,6 +257,7 @@ function setupRenderPass(renderData: RenderData, pass: RenderPass) {
 			if (renderData.renderCtx.cameraUnderwater) {
 				renderData.viewport.setBkColor(renderData.waterRenderData.waterColor.scale(waterDepthFactor));
 			}
+			renderData.viewport.activate();
 			renderData.viewport.clear();
 			break;
 
