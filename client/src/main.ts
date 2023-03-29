@@ -29,6 +29,7 @@ let canvas2D: HTMLCanvasElement;
 
 const render2dConfig: Render2dConfig = {
 	drawDebugText: false,
+	drawSpectateText: false,
 };
 
 window.onload = main;
@@ -103,16 +104,19 @@ function initWebSocket(): void {
 
 function initGui(): void {
 	GUI.init();
-	GUI.onPlayerName.add(joinGame);
+	GUI.onPlayerName.add(authenticate);
 	GUI.onParameterChanged.add(terrainParamChanged);
 	GUI.onRandomizeAll.add(randomizeConfig);
 	GUI.onStartGame.add(() => WebSock.requestStartGame());
 	GUI.onReturnToGame.add(() => returnToGame());
 	GUI.onReqChangeConfig.add(() => requestChangeConfig());
+	GUI.onSpectate.add(() => spectate());
+	GUI.onJoinGame.add(() => joinGame());
 }
 
 let lastTime = new Date();
 function step(): void {
+	render2dConfig.drawSpectateText = GlobalState.game.state === GameState.SPECTATE;
 	render3D(GlobalState.renderData, GlobalState.world);
 	render2D(render2dConfig);
 	const now = new Date();
@@ -195,6 +199,9 @@ function handleSystemKeys(ev: InputEvent): void {
 	}
 	switch (ev.keyCode) {
 		// Add system keys here - keys that trigger menus or other stuff
+		case "Space":
+			joinGame();
+			break;
 		default:
 			return;
 	}
@@ -212,7 +219,7 @@ function handleDebugKeys(ev: InputEvent) {
 		case "Tab":
 			GlobalState.game.toggleCamera();
 			break;
-		case "Space":
+		case "KeyI":
 			togglePause();
 			break;
 		default:
@@ -260,7 +267,7 @@ function scheduleResetRenderSize(newWidth: number, newHeight: number): void {
 	}, 500);
 }
 
-function joinGame(playerName: string): void {
+function authenticate(playerName: string): void {
 	GUI.displayView(GUI.Views.PlayerNameDialog, false);
 	GUI.displayView(GUI.Views.Loading, true);
 	setTimeout(() => WebSock.authenticate(playerName), 50);
@@ -269,6 +276,7 @@ function joinGame(playerName: string): void {
 function startGame(): void {
 	GUI.displayView(GUI.Views.TerrainConfig, false);
 	GUI.displayView(GUI.Views.Loading, true);
+	GUI.setSpectateMode({ spectate: true });
 	setTimeout(() => GlobalState.game.setState(GameState.SPECTATE), 50);
 }
 
@@ -281,4 +289,20 @@ function requestChangeConfig(): void {
 	GUI.displayView(GUI.Views.InGameMenu, false);
 	GUI.displayView(GUI.Views.Loading, true);
 	setTimeout(() => WebSock.requestChangeConfig(), 50);
+}
+
+function joinGame(): void {
+	if (GlobalState.game.state === GameState.SPECTATE) {
+		GlobalState.game.setState(GameState.PLAY);
+		GUI.setSpectateMode({ spectate: false });
+		returnToGame();
+	}
+}
+
+function spectate(): void {
+	if (GlobalState.game.state === GameState.PLAY) {
+		GlobalState.game.setState(GameState.SPECTATE);
+		GUI.setSpectateMode({ spectate: true });
+		returnToGame();
+	}
 }

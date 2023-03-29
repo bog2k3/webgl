@@ -19,6 +19,8 @@ export namespace GUI {
 	export const onStartGame = new Event<() => void>();
 	export const onReturnToGame = new Event<() => void>();
 	export const onReqChangeConfig = new Event<() => void>();
+	export const onSpectate = new Event<() => void>();
+	export const onJoinGame = new Event<() => void>();
 
 	export function init(): void {
 		setupViews();
@@ -68,6 +70,16 @@ export namespace GUI {
 		$("#roughness").val(cfg.roughness);
 	}
 
+	export function setSpectateMode(mode: { spectate: boolean }): void {
+		if (mode.spectate) {
+			$("#btn-spectate").css("display", "none");
+			$("#btn-join").css("display", "initial");
+		} else {
+			$("#btn-spectate").css("display", "initial");
+			$("#btn-join").css("display", "none");
+		}
+	}
+
 	// -------------------------------------------- PRIVATE AREA ----------------------------------------------- //
 
 	function setupViews(): void {
@@ -87,6 +99,8 @@ export namespace GUI {
 		$("#start-game").on("click", () => onStartGame.trigger());
 		$("#btn-continue").on("click", () => onReturnToGame.trigger());
 		$("#btn-change-config").on("click", () => onReqChangeConfig.trigger());
+		$("#btn-spectate").on("click", () => onSpectate.trigger());
+		$("#btn-join").on("click", () => onJoinGame.trigger());
 	}
 
 	function triggerButton(buttonId: string, event: KeyboardEvent): void {

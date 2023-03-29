@@ -27,7 +27,7 @@ export class Game {
 	terrain: Terrain;
 	skyBox: SkyBox;
 	playerCar: Car;
-	playerController: PlayerController;
+	playerController = new PlayerController();
 	freeCam: FreeCamera;
 	cameraCtrl: CameraController;
 	playerInputHandler = new PlayerInputHandler();
@@ -81,33 +81,33 @@ export class Game {
 		if (this.state === GameState.CONFIGURE_TERRAIN) {
 			return;
 		}
-		if (this.cameraCtrl.getAttachedEntity() === this.freeCam) {
-			// switch to car
-			this.cameraCtrl.attachToEntity(
-				this.playerCar,
-				// AttachMode.ORBIT,
-				AttachMode.FIXED,
-				"camera-attachment",
-				new Vector(0, 1.5, -4.5),
-			);
-			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING);
-			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
-			this.playerInputHandler.setTargetObject(this.playerController);
-		} else {
-			// switch to free-camera
-			this.cameraCtrl.attachToEntity(this.freeCam, AttachMode.FIXED);
-			// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
-			this.playerInputHandler.setTargetObject(this.freeCam);
+		if (this.cameraCtrl.getAttachedEntity() === this.playerCar) {
+			// TODO toggle between different camera positions
 		}
 	}
 
 	setState(state: GameState): Promise<void> {
+		if (state === this.state) {
+			return;
+		}
 		const oldState = this.state;
 		this.state = state;
 		if (oldState !== GameState.CONFIGURE_TERRAIN && state === GameState.CONFIGURE_TERRAIN) {
 			return this.stop();
 		} else if (oldState === GameState.CONFIGURE_TERRAIN && state !== GameState.CONFIGURE_TERRAIN) {
 			return this.start();
+		}
+		if (this.state === GameState.PLAY) {
+			this.spawnPlayer();
+			this.switchToPlayerCamera();
+		}
+		if (this.state === GameState.SPECTATE) {
+			if (this.playerCar) {
+				this.playerCar.destroy();
+				this.playerController.setTargetCar(null);
+				this.playerCar = null;
+			}
+			this.switchToFreeCamera();
 		}
 	}
 
@@ -150,13 +150,6 @@ export class Game {
 		// TODO here we tamper with the terrain, add buildings & vegetation
 		this.terrain.finishGenerate();
 
-		this.playerCar = new Car(new Vector(0, this.terrain.getConfig().maxElevation + 3, 0), Quat.identity());
-		World.getInstance().addEntity(this.playerCar);
-		this.resetPlayer();
-
-		this.playerController = new PlayerController();
-		this.playerController.setTargetCar(this.playerCar);
-
 		this.positionExhibitCamera(this.terrain.getConfig(), 0.8, 30, new Vector(-1, -0.5, 0));
 
 		return skyboxPromise.then(() => {
@@ -168,10 +161,11 @@ export class Game {
 	private stop(): Promise<void> {
 		console.log("Stopping game...");
 		this.onStop.trigger();
-		this.playerInputHandler.setTargetObject(null);
 		this.playerCar = null;
 		this.cameraCtrl.checkCollision = null;
-		this.cameraCtrl.attachToEntity(this.freeCam);
+		this.switchToFreeCamera();
+		this.playerInputHandler.setTargetObject(null);
+		this.playerController.setTargetCar(null);
 		// destroy all entities except god entities
 		for (let e of this.godEntities) {
 			World.getInstance().removeEntity(e);
@@ -192,5 +186,36 @@ export class Game {
 		this.freeCam.getTransform().moveTo(cameraPos);
 		this.freeCam.getTransform().lookAt(direction ? cameraPos.add(direction) : new Vector(0));
 		this.cameraCtrl.update(0);
+	}
+
+	private spawnPlayer(): void {
+		if (this.playerCar) {
+			throw new Error("Player already spawned");
+		}
+		this.playerCar = new Car(new Vector(0, this.terrain.getConfig().maxElevation + 3, 0), Quat.identity());
+		World.getInstance().addEntity(this.playerCar);
+		this.resetPlayer();
+
+		this.playerController.setTargetCar(this.playerCar);
+	}
+
+	private switchToFreeCamera(): void {
+		this.cameraCtrl.attachToEntity(this.freeCam, AttachMode.FIXED);
+		// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
+		this.playerInputHandler.setTargetObject(this.freeCam);
+	}
+
+	private switchToPlayerCamera(): void {
+		// switch to car
+		this.cameraCtrl.attachToEntity(
+			this.playerCar,
+			// AttachMode.ORBIT,
+			AttachMode.FIXED,
+			"camera-attachment",
+			new Vector(0, 1.5, -4.5),
+		);
+		// this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING);
+		// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
+		this.playerInputHandler.setTargetObject(this.playerController);
 	}
 }
