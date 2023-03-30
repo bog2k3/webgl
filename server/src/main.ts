@@ -2,8 +2,9 @@ import { Server, Socket } from "socket.io";
 import * as express from "express";
 import * as http from "http";
 import * as cors from "cors";
-import { Client } from "./client";
+import { Client, ClientState } from "./client";
 import { SocketMessage } from "./common/socket-message";
+import { CPlayerSpawnedDTO } from "./common/c-player-spawned.dto";
 
 type BroadcastOptions = {
 	except?: string; // broadcast to all sockets except the one with this id
@@ -53,6 +54,7 @@ type BroadcastOptions = {
 })();
 
 const clients: { [id: string]: Client } = {};
+const messageHandlers: { [msg in SocketMessage]?: (socket: Socket, payload: any) => void } = {};
 
 let mapConfig: any = null;
 let masterConfigurerId: string = null;
@@ -64,9 +66,13 @@ function setupSocket(socket: Socket): void {
 	});
 	socket.on("message", (message: string, payload: any) => {
 		if (!handleClientMessage(socket, message, payload)) {
-			console.warn(`Ignoring message from unknown client ${socket.id}:`, message, payload);
+			console.warn(`Ignoring message from client ${socket.id}:`, message, payload);
 		}
 	});
+	messageHandlers[SocketMessage.C_REQ_START_CONFIG] = handleReqStartConfig;
+	messageHandlers[SocketMessage.CS_MAP_CONFIG] = handleMapConfig;
+	messageHandlers[SocketMessage.C_REQ_START_GAME] = handleReqStartGame;
+	messageHandlers[SocketMessage.C_PLAYER_SPAWNED] = handlePlayerSpawned;
 }
 
 function removeClient(id: string): void {
@@ -93,40 +99,66 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 		return true;
 	}
 	if (!clients[socket.id]) {
+		console.error(`Received message from unknown client: ${socket.id}`);
 		return false;
 	}
-	switch (message) {
-		case SocketMessage.C_REQ_START_CONFIG:
-			if (masterConfigurerId) {
-				socket.send(SocketMessage.S_START_CONFIG_SLAVE);
-				console.log(`${clients[socket.id].name} Request to configure denied: SLAVE`);
-			} else {
-				masterConfigurerId = socket.id;
-				socket.send(SocketMessage.S_START_CONFIG_MASTER);
-				console.log(`${clients[socket.id].name} Request to configure granted: MASTER`);
-				broadcastMessage(SocketMessage.S_START_CONFIG_SLAVE, null, { except: socket.id });
-			}
-			break;
-		case SocketMessage.CS_MAP_CONFIG:
-			if (socket.id === masterConfigurerId) {
-				// received config from master
-				mapConfig = payload;
-				broadcastMessage(SocketMessage.CS_MAP_CONFIG, mapConfig, { except: socket.id });
-				console.log(`Received map config from ${clients[socket.id].name}`);
-			} else {
-				console.log(`Ignoring map config from non-master user ${clients[socket.id].name}`);
-			}
-			break;
-		case SocketMessage.C_REQ_START_GAME:
-			if (socket.id === masterConfigurerId) {
-				broadcastMessage(SocketMessage.S_START_GAME, null);
-				masterConfigurerId = null;
-			} else {
-				console.log(`Ignoring start request from non-master user ${clients[socket.id].name}`);
-			}
-			break;
+	if (!messageHandlers[message]) {
+		console.error(`No handler registered for message "${message}"`);
+		return false;
 	}
+	messageHandlers[message](socket, payload);
 	return true;
+}
+
+function handleReqStartConfig(socket: Socket, payload: never): void {
+	if (masterConfigurerId) {
+		socket.send(SocketMessage.S_START_CONFIG_SLAVE);
+		console.log(`${clients[socket.id].name} Request to configure denied: SLAVE`);
+	} else {
+		masterConfigurerId = socket.id;
+		socket.send(SocketMessage.S_START_CONFIG_MASTER);
+		console.log(`${clients[socket.id].name} Request to configure granted: MASTER`);
+		broadcastMessage(SocketMessage.S_START_CONFIG_SLAVE, null, { except: socket.id });
+	}
+}
+
+function handleMapConfig(socket: Socket, payload: any): void {
+	if (socket.id === masterConfigurerId) {
+		// received config from master
+		mapConfig = payload;
+		broadcastMessage(SocketMessage.CS_MAP_CONFIG, mapConfig, { except: socket.id });
+		console.log(`Received map config from ${clients[socket.id].name}`);
+	} else {
+		console.log(`Ignoring map config from non-master user ${clients[socket.id].name}`);
+	}
+}
+
+function handleReqStartGame(socket: Socket, payload: never): void {
+	if (socket.id === masterConfigurerId) {
+		broadcastMessage(SocketMessage.S_START_GAME, null);
+		masterConfigurerId = null;
+	} else {
+		console.log(`Ignoring start request from non-master user ${clients[socket.id].name}`);
+	}
+}
+
+function handlePlayerSpawned(socket: Socket, payload: CPlayerSpawnedDTO): void {
+	if (clients[socket.id].state !== ClientState.PLAY) {
+		clients[socket.id].state = ClientState.PLAY;
+		broadcastMessage(
+			SocketMessage.S_CLIENT_STATE_CHANGED,
+			{
+				name: clients[socket.id].name,
+				state: clients[socket.id].state,
+			},
+			{
+				except: socket.id,
+			},
+		);
+	}
+	broadcastMessage(SocketMessage.S_PLAYER_SPAWNED, payload, {
+		except: socket.id,
+	});
 }
 
 function addClient(socket: Socket, name: string): void {
