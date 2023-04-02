@@ -39,6 +39,10 @@ export class Quat extends Vector {
 		);
 	}
 
+	static fromDTO(dto: Partial<Quat>): Quat {
+		return new Quat(dto.x, dto.y, dto.z, dto.w);
+	}
+
 	override copy(): Quat {
 		return new Quat(this.x, this.y, this.z, this.w);
 	}

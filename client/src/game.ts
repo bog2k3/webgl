@@ -1,3 +1,4 @@
+import { SPlayerSpawnedDTO } from "./common/s-player-spawned.dto";
 import { Car } from "./entities/car.entity";
 import { FreeCamera } from "./entities/free-camera";
 import { PlayerController } from "./entities/player.controller";
@@ -13,6 +14,7 @@ import { Entity } from "./joglfw/world/entity";
 import { World } from "./joglfw/world/world";
 import { CollisionChecker } from "./physics/collision-checker";
 import { PlayerInputHandler } from "./player-input-handler";
+import { WebSock } from "./websock";
 
 const console = logprefix("Game");
 
@@ -56,6 +58,8 @@ export class Game {
 		World.getInstance().addEntity(this.cameraCtrl);
 		this.godEntities.push(this.cameraCtrl);
 		this.cameraCtrl.attachToEntity(this.freeCam);
+
+		this.setupSocketHandlers();
 
 		console.log("Ready");
 	}
@@ -192,11 +196,17 @@ export class Game {
 		if (this.playerCar) {
 			throw new Error("Player already spawned");
 		}
-		this.playerCar = new Car(new Vector(0, this.terrain.getConfig().maxElevation + 3, 0), Quat.identity());
+		const position = new Vector(0, this.terrain.getConfig().maxElevation + 3, 0);
+		const orientation = Quat.identity();
+		this.playerCar = new Car(position, orientation);
 		World.getInstance().addEntity(this.playerCar);
 		this.resetPlayer();
 
 		this.playerController.setTargetCar(this.playerCar);
+		WebSock.sendPlayerSpawned({
+			position,
+			orientation,
+		});
 	}
 
 	private switchToFreeCamera(): void {
@@ -217,5 +227,14 @@ export class Game {
 		// this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING);
 		// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
 		this.playerInputHandler.setTargetObject(this.playerController);
+	}
+
+	private setupSocketHandlers(): void {
+		WebSock.onPlayerSpawned.add(this.handlePlayerSpawned.bind(this));
+	}
+
+	handlePlayerSpawned(data: SPlayerSpawnedDTO): void {
+		const car = new Car(Vector.fromDTO(data.position), Quat.fromDTO(data.orientation));
+		World.getInstance().addEntity(car);
 	}
 }

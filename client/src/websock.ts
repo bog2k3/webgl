@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { CPlayerSpawnedDTO } from "./common/c-player-spawned.dto";
 import { ClientState } from "./common/client-state.dto";
 import { SPlayerInfo } from "./common/s-player-info.dto";
 import { SPlayerSpawnedDTO } from "./common/s-player-spawned.dto";
@@ -53,6 +54,10 @@ export namespace WebSock {
 		socket.send(SocketMessage.C_STATE_CHANGED, state);
 	}
 
+	export function sendPlayerSpawned(data: CPlayerSpawnedDTO): void {
+		socket.send(SocketMessage.CS_PLAYER_SPAWNED, data);
+	}
+
 	// -------------------------------------------- PRIVATE AREA ----------------------------------------------- //
 
 	const messageMap: { [key in SocketMessage]?: (payload: any) => void } = {};
@@ -74,6 +79,7 @@ export namespace WebSock {
 			console.error("Received unknown message from server: ", message);
 			return;
 		}
+		console.debug(`[WebSock] Received ${message}: `, payload);
 		messageMap[message](payload);
 	}
 }

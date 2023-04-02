@@ -18,6 +18,10 @@ export class Vector {
 		return new Vector(0, 0, Math.sign(sign));
 	}
 
+	static fromDTO(dto: Partial<Vector>): Vector {
+		return new Vector(dto.x, dto.y, dto.z, dto.w);
+	}
+
 	copy(): Vector {
 		return new Vector(this.x, this.y, this.z, this.w);
 	}
