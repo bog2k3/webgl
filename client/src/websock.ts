@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { ClientState } from "./common/client-state.dto";
 import { SPlayerInfo } from "./common/s-player-info.dto";
 import { SPlayerSpawnedDTO } from "./common/s-player-spawned.dto";
 import { SocketMessage } from "./common/socket-message";
@@ -46,6 +47,10 @@ export namespace WebSock {
 	export function sendConfig(cfg: any): void {
 		socket.send(SocketMessage.CS_MAP_CONFIG, cfg);
 		console.log(`Sent map config to server (seed: ${cfg.seed})`);
+	}
+
+	export function updateState(state: ClientState): void {
+		socket.send(SocketMessage.C_STATE_CHANGED, state);
 	}
 
 	// -------------------------------------------- PRIVATE AREA ----------------------------------------------- //

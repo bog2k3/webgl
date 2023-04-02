@@ -1,8 +1,11 @@
+import { GlobalState } from "../global-state";
+
 export let context2d: CanvasRenderingContext2D;
 let nextTextY = 15;
 
 export type Render2dConfig = {
-	drawDebugText: boolean;
+	drawDebugKeys: boolean;
+	drawDebugPlayerList: boolean;
 	drawSpectateText: boolean;
 };
 
@@ -13,15 +16,18 @@ export function setContext2d(context: CanvasRenderingContext2D): void {
 export function render2D(config: Render2dConfig): void {
 	context2d.clearRect(0, 0, context2d.canvas.width, context2d.canvas.height);
 	nextTextY = 15; // reset
-	if (config.drawDebugText) {
-		drawDebugInfo();
+	if (config.drawDebugKeys) {
+		drawDebugKeys();
+	}
+	if (config.drawDebugPlayerList) {
+		drawDebugPlayerList();
 	}
 	if (config.drawSpectateText) {
 		drawSpectateText();
 	}
 }
 
-function drawDebugInfo(): void {
+function drawDebugKeys(): void {
 	context2d.font = "14px sans-serif";
 	context2d.fillStyle = "#fff";
 	context2d.textAlign = "left";
@@ -33,6 +39,15 @@ function drawDebugInfo(): void {
 	printText("I to pause/unpause game");
 	printText("Right-click to move up (in free-camera mode)");
 	printText("CTRL to move down (in free-camera mode)");
+}
+
+function drawDebugPlayerList(): void {
+	context2d.font = "15px sans-serif";
+	context2d.fillStyle = "#fff";
+	context2d.textAlign = "left";
+	for (let player of GlobalState.playerList.getPlayers()) {
+		printText(`${player.name} (${player.state})`);
+	}
 }
 
 function printText(text: string): void {

@@ -3,6 +3,7 @@ export enum SocketMessage {
 	C_IDENTIFY = "c-identify",
 	C_REQ_START_CONFIG = "c-req-start-config",
 	C_REQ_START_GAME = "c-req-start-game",
+	C_STATE_CHANGED = "c-state-changed", // ClientState
 
 	// Common messages
 	CS_MAP_CONFIG = "map-config", // map config

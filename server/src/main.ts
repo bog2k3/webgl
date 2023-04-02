@@ -74,6 +74,7 @@ function setupSocket(socket: Socket): void {
 	messageHandlers[SocketMessage.CS_MAP_CONFIG] = handleMapConfig;
 	messageHandlers[SocketMessage.C_REQ_START_GAME] = handleReqStartGame;
 	messageHandlers[SocketMessage.CS_PLAYER_SPAWNED] = handlePlayerSpawned;
+	messageHandlers[SocketMessage.C_STATE_CHANGED] = handlePlayerStateChanged;
 }
 
 function broadcastMessage(message: SocketMessage, payload: any, options?: BroadcastOptions): void {
@@ -95,7 +96,7 @@ function addClient(socket: Socket, name: string): void {
 		console.log(`No config to send to ${name}`);
 	}
 	socket.send(SocketMessage.CS_MAP_CONFIG, mapConfig);
-	socket.send(SocketMessage.S_PLAYER_LIST, buildPlayerList({ exceptId: socket.id }));
+	socket.send(SocketMessage.S_PLAYER_LIST, buildPlayerList());
 	if (masterConfigurerId) {
 		// someone is currently configuring the terrain, inform the new client
 		socket.send(SocketMessage.S_START_CONFIG_SLAVE);
@@ -124,18 +125,11 @@ function removeClient(id: string): void {
 	}
 }
 
-function buildPlayerList(options?: { exceptId: string }): SPlayerInfo[] {
-	const list: SPlayerInfo[] = [];
-	for (let sockId in clients) {
-		if (options?.exceptId === sockId) {
-			continue;
-		}
-		list.push({
-			name: clients[sockId].name,
-			state: clients[sockId].state,
-		});
-	}
-	return list;
+function buildPlayerList(): SPlayerInfo[] {
+	return Object.keys(clients).map((sockId) => ({
+		name: clients[sockId].name,
+		state: clients[sockId].state,
+	}));
 }
 
 function handleClientMessage(socket: Socket, message: string, payload: any): boolean {
@@ -196,16 +190,6 @@ function handleReqStartGame(socket: Socket, payload: never): void {
 function handlePlayerSpawned(socket: Socket, payload: CPlayerSpawnedDTO): void {
 	if (clients[socket.id].state !== ClientState.PLAY) {
 		clients[socket.id].state = ClientState.PLAY;
-		broadcastMessage(
-			SocketMessage.S_CLIENT_STATE_CHANGED,
-			{
-				name: clients[socket.id].name,
-				state: clients[socket.id].state,
-			},
-			{
-				except: socket.id,
-			},
-		);
 	}
 	broadcastMessage(
 		SocketMessage.CS_PLAYER_SPAWNED,
@@ -217,4 +201,12 @@ function handlePlayerSpawned(socket: Socket, payload: CPlayerSpawnedDTO): void {
 			except: socket.id,
 		},
 	);
+}
+
+function handlePlayerStateChanged(socket: Socket, payload: ClientState): void {
+	clients[socket.id].state = payload;
+	broadcastMessage(SocketMessage.S_PLAYER_STATE_CHANGED, <SPlayerInfo>{
+		name: clients[socket.id].name,
+		state: payload,
+	});
 }

@@ -17,6 +17,7 @@ import {
 } from "./terrain-config-handler";
 import { WebSock } from "./websock";
 import { GlobalState } from "./global-state";
+import { ClientState } from "./common/client-state.dto";
 
 const console = logprefix("ROOT");
 
@@ -28,7 +29,8 @@ let canvas3D: HTMLCanvasElement;
 let canvas2D: HTMLCanvasElement;
 
 const render2dConfig: Render2dConfig = {
-	drawDebugText: false,
+	drawDebugKeys: false,
+	drawDebugPlayerList: true,
 	drawSpectateText: false,
 };
 
@@ -158,11 +160,13 @@ function onGameStarted(): void {
 	GlobalState.renderData.renderCtx.enableWaterRender = true;
 	GlobalState.renderData.skyBox = GlobalState.game.skyBox;
 	GlobalState.renderData.terrain = GlobalState.game.terrain;
+	WebSock.updateState(ClientState.SPECTATE);
 }
 
 function onGameEnded(): void {
 	GlobalState.renderData.renderCtx.meshRenderer.setWaterNormalTexture(null);
 	GlobalState.renderData.renderCtx.enableWaterRender = false;
+	WebSock.updateState(ClientState.LOBBY);
 }
 
 function handleCanvasClicked(canvas: HTMLCanvasElement, event: PointerEvent): void {
@@ -296,6 +300,7 @@ function joinGame(): void {
 		GlobalState.game.setState(GameState.PLAY);
 		GUI.setSpectateMode({ spectate: false });
 		returnToGame();
+		WebSock.updateState(ClientState.PLAY);
 	}
 }
 
@@ -304,5 +309,6 @@ function spectate(): void {
 		GlobalState.game.setState(GameState.SPECTATE);
 		GUI.setSpectateMode({ spectate: true });
 		returnToGame();
+		WebSock.updateState(ClientState.SPECTATE);
 	}
 }
