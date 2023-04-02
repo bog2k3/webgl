@@ -5,6 +5,7 @@ import * as cors from "cors";
 import { Client, ClientState } from "./client";
 import { SocketMessage } from "./common/socket-message";
 import { CPlayerSpawnedDTO } from "./common/c-player-spawned.dto";
+import { SPlayerInfo } from "./common/s-player-info.dto";
 
 type BroadcastOptions = {
 	except?: string; // broadcast to all sockets except the one with this id
@@ -72,10 +73,44 @@ function setupSocket(socket: Socket): void {
 	messageHandlers[SocketMessage.C_REQ_START_CONFIG] = handleReqStartConfig;
 	messageHandlers[SocketMessage.CS_MAP_CONFIG] = handleMapConfig;
 	messageHandlers[SocketMessage.C_REQ_START_GAME] = handleReqStartGame;
-	messageHandlers[SocketMessage.C_PLAYER_SPAWNED] = handlePlayerSpawned;
+	messageHandlers[SocketMessage.CS_PLAYER_SPAWNED] = handlePlayerSpawned;
+}
+
+function broadcastMessage(message: SocketMessage, payload: any, options?: BroadcastOptions): void {
+	for (let clientId in clients) {
+		if (options?.except === clientId) {
+			continue;
+		}
+		clients[clientId].socket.send(message, payload);
+	}
+}
+
+function addClient(socket: Socket, name: string): void {
+	clients[socket.id] = new Client(socket, name);
+	console.log(`Client ${socket.id} identified as "${name}".`);
+	// send the map config to this client
+	if (mapConfig) {
+		console.log(`Sending map config to ${name}`);
+	} else {
+		console.log(`No config to send to ${name}`);
+	}
+	socket.send(SocketMessage.CS_MAP_CONFIG, mapConfig);
+	socket.send(SocketMessage.S_PLAYER_LIST, buildPlayerList({ exceptId: socket.id }));
+	if (masterConfigurerId) {
+		// someone is currently configuring the terrain, inform the new client
+		socket.send(SocketMessage.S_START_CONFIG_SLAVE);
+	} else if (mapConfig) {
+		// game is in progress
+		socket.send(SocketMessage.S_START_GAME);
+	}
+	broadcastMessage(SocketMessage.S_PLAYER_CONNECTED, { name }, { except: socket.id });
 }
 
 function removeClient(id: string): void {
+	if (!clients[id]) {
+		return;
+	}
+	broadcastMessage(SocketMessage.S_PLAYER_DISCONNECTED, { name: clients[id].name }, { except: id });
 	delete clients[id];
 	if (masterConfigurerId === id || Object.keys(clients).length === 0) {
 		// the master has left the chat, we promote a new client to master
@@ -87,6 +122,20 @@ function removeClient(id: string): void {
 			mapConfig = null; // the first player that will connect will have to configure a new map
 		}
 	}
+}
+
+function buildPlayerList(options?: { exceptId: string }): SPlayerInfo[] {
+	const list: SPlayerInfo[] = [];
+	for (let sockId in clients) {
+		if (options?.exceptId === sockId) {
+			continue;
+		}
+		list.push({
+			name: clients[sockId].name,
+			state: clients[sockId].state,
+		});
+	}
+	return list;
 }
 
 function handleClientMessage(socket: Socket, message: string, payload: any): boolean {
@@ -109,6 +158,8 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 	messageHandlers[message](socket, payload);
 	return true;
 }
+
+// ----------------------- MESSAGE HANDLERS BELOW ---------------------------------- //
 
 function handleReqStartConfig(socket: Socket, payload: never): void {
 	if (masterConfigurerId) {
@@ -156,35 +207,14 @@ function handlePlayerSpawned(socket: Socket, payload: CPlayerSpawnedDTO): void {
 			},
 		);
 	}
-	broadcastMessage(SocketMessage.S_PLAYER_SPAWNED, payload, {
-		except: socket.id,
-	});
-}
-
-function addClient(socket: Socket, name: string): void {
-	clients[socket.id] = new Client(socket, name);
-	console.log(`Client ${socket.id} identified as "${name}".`);
-	// send the map config to this client
-	if (mapConfig) {
-		console.log(`Sending map config to ${name}`);
-	} else {
-		console.log(`No config to send to ${name}`);
-	}
-	socket.send(SocketMessage.CS_MAP_CONFIG, mapConfig);
-	if (masterConfigurerId) {
-		// someone is currently configuring the terrain, inform the new client
-		socket.send(SocketMessage.S_START_CONFIG_SLAVE);
-	} else if (mapConfig) {
-		// game is in progress
-		socket.send(SocketMessage.S_START_GAME);
-	}
-}
-
-function broadcastMessage(message: SocketMessage, payload: any, options?: BroadcastOptions): void {
-	for (let clientId in clients) {
-		if (options?.except === clientId) {
-			continue;
-		}
-		clients[clientId].socket.send(message, payload);
-	}
+	broadcastMessage(
+		SocketMessage.CS_PLAYER_SPAWNED,
+		{
+			...payload,
+			name: clients[socket.id].name,
+		},
+		{
+			except: socket.id,
+		},
+	);
 }
