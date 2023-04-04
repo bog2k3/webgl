@@ -38,6 +38,14 @@ export namespace GUI {
 		return viewHandles[view].hasClass("show");
 	}
 
+	export function setNameMode(mode: { alreadyTaken: boolean }): void {
+		if (mode.alreadyTaken) {
+			$("#name-taken").css("display", "block");
+		} else {
+			$("#name-taken").css("display", "none");
+		}
+	}
+
 	export function setTerrainConfigMode(mode: { readonly: boolean }): void {
 		if (mode.readonly) {
 			// slave mode

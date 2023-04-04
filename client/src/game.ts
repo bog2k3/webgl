@@ -1,4 +1,4 @@
-import { SPlayerSpawnedDTO } from "./common/s-player-spawned.dto";
+import { SPlayerSpawnedDTO } from "./network/dto/s-player-spawned.dto";
 import { Car } from "./entities/car.entity";
 import { FreeCamera } from "./entities/free-camera";
 import { PlayerController } from "./entities/player.controller";
@@ -15,6 +15,9 @@ import { World } from "./joglfw/world/world";
 import { CollisionChecker } from "./physics/collision-checker";
 import { PlayerInputHandler } from "./player-input-handler";
 import { WebSock } from "./websock";
+import { GlobalState } from "./global-state";
+import { EntityTypes } from "./entities/entity-types";
+import { Projectile } from "./entities/projectile.entity";
 
 const console = logprefix("Game");
 
@@ -41,6 +44,10 @@ export class Game {
 	onStart = new Event<() => void>();
 	onStop = new Event<() => void>();
 
+	constructor() {
+		this.setupNetworkManagerFactories();
+	}
+
 	async initialize(): Promise<void> {
 		console.log("Initializing");
 		this.terrain = new Terrain({ previewMode: true });
@@ -58,8 +65,6 @@ export class Game {
 		World.getInstance().addEntity(this.cameraCtrl);
 		this.godEntities.push(this.cameraCtrl);
 		this.cameraCtrl.attachToEntity(this.freeCam);
-
-		this.setupSocketHandlers();
 
 		console.log("Ready");
 	}
@@ -123,6 +128,11 @@ export class Game {
 
 	// -------------------------- PRIVATE AREA ------------------------------- //
 
+	private setupNetworkManagerFactories(): void {
+		GlobalState.networkManager.addEntityFactory(EntityTypes.Car, () => new Car());
+		GlobalState.networkManager.addEntityFactory(EntityTypes.Projectile, () => new Projectile());
+	}
+
 	private checkCameraCollision(prevPos: Vector, nextPos: Vector): Vector {
 		if (!this.terrain) {
 			return nextPos;
@@ -154,7 +164,7 @@ export class Game {
 		// TODO here we tamper with the terrain, add buildings & vegetation
 		this.terrain.finishGenerate();
 
-		this.positionExhibitCamera(this.terrain.getConfig(), 0.8, 30, new Vector(-1, -0.5, 0));
+		this.positionExhibitCamera(this.terrain.getConfig(), 0.8, 30);
 
 		return skyboxPromise.then(() => {
 			this.onStart.trigger();
@@ -185,10 +195,10 @@ export class Game {
 		return Promise.resolve();
 	}
 
-	private positionExhibitCamera(cfg: TerrainConfig, distanceScale: number, height: number, direction?: Vector): void {
+	private positionExhibitCamera(cfg: TerrainConfig, distanceScale: number, height: number): void {
 		const cameraPos = new Vector(cfg.width * 0.39 * distanceScale, height, cfg.length * 0.39 * distanceScale);
 		this.freeCam.getTransform().moveTo(cameraPos);
-		this.freeCam.getTransform().lookAt(direction ? cameraPos.add(direction) : new Vector(0));
+		this.freeCam.getTransform().lookAt(new Vector(0));
 		this.cameraCtrl.update(0);
 	}
 
@@ -227,14 +237,5 @@ export class Game {
 		// this.cameraCtrl.setUpVectorMode(UpVectorMode.FLOATING);
 		// this.cameraCtrl.setUpVectorMode(UpVectorMode.FREE);
 		this.playerInputHandler.setTargetObject(this.playerController);
-	}
-
-	private setupSocketHandlers(): void {
-		WebSock.onPlayerSpawned.add(this.handlePlayerSpawned.bind(this));
-	}
-
-	handlePlayerSpawned(data: SPlayerSpawnedDTO): void {
-		const car = new Car(Vector.fromDTO(data.position), Quat.fromDTO(data.orientation));
-		World.getInstance().addEntity(car);
 	}
 }

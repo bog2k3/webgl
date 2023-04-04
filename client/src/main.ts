@@ -1,13 +1,15 @@
 import { Game, GameState } from "./game";
+import { GlobalState } from "./global-state";
 import { GUI } from "./gui";
 import { HtmlInputHandler, InputEvent, InputEventType } from "./input";
 import { initGL } from "./joglfw/glcontext";
 import { logprefix } from "./joglfw/log";
 import { Shaders } from "./joglfw/render/shaders";
 import { World, WorldConfig } from "./joglfw/world/world";
+import { ClientState } from "./network/dto/client-state.enum";
 import { initPhysics } from "./physics/physics";
 import { RenderData } from "./render/render-data";
-import { render2D, Render2dConfig, setContext2d } from "./render/render2d";
+import { Render2dConfig, render2D, setContext2d } from "./render/render2d";
 import { initRender, render3D, resetRenderSize } from "./render/render3d";
 import {
 	randomizeConfig,
@@ -16,8 +18,6 @@ import {
 	terrainParamChanged,
 } from "./terrain-config-handler";
 import { WebSock } from "./websock";
-import { GlobalState } from "./global-state";
-import { ClientState } from "./common/client-state.dto";
 
 const console = logprefix("ROOT");
 
@@ -56,6 +56,7 @@ async function main(): Promise<void> {
 		requestAnimationFrame(step);
 		GUI.displayView(GUI.Views.Loading, false);
 		GUI.displayView(GUI.Views.PlayerNameDialog, true);
+		GUI.setNameMode({ alreadyTaken: false });
 	}, 0);
 }
 
@@ -102,6 +103,7 @@ function initWebSocket(): void {
 	WebSock.onMapConfigReceived.add(terrainConfigReceived);
 	WebSock.onStartConfig.add(startTerrainConfig);
 	WebSock.onStartGame.add(startGame);
+	WebSock.onNameTaken.add(handleNameAlreadyTaken);
 }
 
 function initGui(): void {
@@ -275,6 +277,12 @@ function authenticate(playerName: string): void {
 	GUI.displayView(GUI.Views.PlayerNameDialog, false);
 	GUI.displayView(GUI.Views.Loading, true);
 	setTimeout(() => WebSock.authenticate(playerName), 50);
+}
+
+function handleNameAlreadyTaken(): void {
+	GUI.displayView(GUI.Views.Loading, false);
+	GUI.displayView(GUI.Views.PlayerNameDialog, true);
+	GUI.setNameMode({ alreadyTaken: true });
 }
 
 function startGame(): void {

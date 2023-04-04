@@ -1,5 +1,5 @@
-import { ClientState } from "./common/client-state.dto";
-import { SPlayerInfo } from "./common/s-player-info.dto";
+import { ClientState } from "./network/dto/client-state.enum";
+import { SPlayerInfo } from "./network/dto/s-player-info.dto";
 import { WebSock } from "./websock";
 
 export class PlayerList {

@@ -72,6 +72,14 @@ body {
 	border-radius: 5px;
 	padding: 5px;
 }
+#name-taken {
+	color: #ff8e8e;
+	text-shadow: 0 0 2px black;
+	text-align: left;
+	padding: 0;
+	margin: 0;
+	font-size: 1.3em;
+}
 #terrain-config-panel.show {
 	display: block !important;
 	width: 500px;

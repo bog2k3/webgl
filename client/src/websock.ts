@@ -1,9 +1,9 @@
 import { io, Socket } from "socket.io-client";
-import { CPlayerSpawnedDTO } from "./common/c-player-spawned.dto";
-import { ClientState } from "./common/client-state.dto";
-import { SPlayerInfo } from "./common/s-player-info.dto";
-import { SPlayerSpawnedDTO } from "./common/s-player-spawned.dto";
-import { SocketMessage } from "./common/socket-message";
+import { CPlayerSpawnedDTO } from "./network/dto/c-player-spawned.dto";
+import { ClientState } from "./network/dto/client-state.enum";
+import { SPlayerInfo } from "./network/dto/s-player-info.dto";
+import { SPlayerSpawnedDTO } from "./network/dto/s-player-spawned.dto";
+import { SocketMessage } from "./network/dto/socket-message";
 import { TerrainConfig } from "./entities/terrain/config";
 import { logprefix } from "./joglfw/log";
 import { Event } from "./joglfw/utils/event";
@@ -12,6 +12,7 @@ const console = logprefix("WebSock");
 let socket: Socket;
 
 export namespace WebSock {
+	export const onNameTaken = new Event<() => void>();
 	export const onMapConfigReceived = new Event<(config: TerrainConfig) => void>();
 	export const onStartConfig = new Event<(isMaster: boolean) => void>();
 	export const onStartGame = new Event<() => void>();
@@ -20,6 +21,10 @@ export namespace WebSock {
 	export const onPlayerSpawned = new Event<(data: SPlayerSpawnedDTO) => void>();
 	export const onPlayerListReceived = new Event<(list: SPlayerInfo[]) => void>();
 	export const onPlayerStateChanged = new Event<(data: SPlayerInfo) => void>();
+	export const onEntityCreated = new Event<(data: SNetworkEntityCreatedDTO) => void>();
+	export const onEntityUpdated = new Event<(data: SNetworkEntityUpdatedDTO) => void>();
+	export const onEntityDestroyed = new Event<(data: SNetworkEntityDestroyedDTO) => void>();
+	export const onNetworkEntityIdResolved = new Event<(data: SNetworkIdResolvedDTO) => void>();
 
 	export function init(): void {
 		socket = io({
@@ -72,6 +77,10 @@ export namespace WebSock {
 		messageMap[SocketMessage.CS_PLAYER_SPAWNED] = (payload) => onPlayerSpawned.trigger(payload);
 		messageMap[SocketMessage.S_PLAYER_STATE_CHANGED] = (payload) => onPlayerStateChanged.trigger(payload);
 		messageMap[SocketMessage.S_PLAYER_LIST] = (payload) => onPlayerListReceived.trigger(payload);
+		messageMap[SocketMessage.S_NAME_TAKEN] = () => onNameTaken.trigger();
+		messageMap[SocketMessage.CS_ENTITY_CREATED] = (payload) => onEntityCreated.trigger(payload);
+		messageMap[SocketMessage.CS_ENTITY_UPDATED] = (payload) => onEntityUpdated.trigger(payload);
+		messageMap[SocketMessage.CS_ENTITY_DESTROYED] = (payload) => onEntityDestroyed.trigger(payload);
 	}
 
 	function handleMessageFromServer(message: SocketMessage, payload: any): void {

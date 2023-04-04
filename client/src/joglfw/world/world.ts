@@ -144,6 +144,7 @@ export class World implements IRenderable, IUpdatable {
 		if (isUpdatable(e)) {
 			this.entsToUpdate_.push(e);
 		}
+		e["handleAddedToWorld"]();
 	}
 
 	removeEntity(e: Entity): void {
@@ -156,6 +157,7 @@ export class World implements IRenderable, IUpdatable {
 				this.entsToUpdate_.splice(this.entsToUpdate_.indexOf(e), 1);
 			}
 		}
+		e["handleRemovedFromWorld"]();
 	}
 
 	getEntities(filterTypes: string[], options?: { renderable?: boolean; updatable?: boolean }): Entity[] {

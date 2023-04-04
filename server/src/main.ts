@@ -3,9 +3,9 @@ import * as express from "express";
 import * as http from "http";
 import * as cors from "cors";
 import { Client, ClientState } from "./client";
-import { SocketMessage } from "./common/socket-message";
-import { CPlayerSpawnedDTO } from "./common/c-player-spawned.dto";
-import { SPlayerInfo } from "./common/s-player-info.dto";
+import { SocketMessage } from "./dto/socket-message";
+import { CPlayerSpawnedDTO } from "./dto/c-player-spawned.dto";
+import { SPlayerInfo } from "./dto/s-player-info.dto";
 
 type BroadcastOptions = {
 	except?: string; // broadcast to all sockets except the one with this id
@@ -138,7 +138,11 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 			console.warn(`Client ${socket.id} is already identified, ignoring IDENTIFY message.`);
 			return true;
 		}
-		addClient(socket, payload["name"]);
+		if (clientNameExists(payload["name"])) {
+			socket.send(SocketMessage.S_NAME_TAKEN);
+		} else {
+			addClient(socket, payload["name"]);
+		}
 		return true;
 	}
 	if (!clients[socket.id]) {
@@ -153,6 +157,15 @@ function handleClientMessage(socket: Socket, message: string, payload: any): boo
 	return true;
 }
 
+function clientNameExists(name: string): boolean {
+	for (let sockId in clients) {
+		if (clients[sockId].name === name) {
+			return true;
+		}
+	}
+	return false;
+}
+
 // ----------------------- MESSAGE HANDLERS BELOW ---------------------------------- //
 
 function handleReqStartConfig(socket: Socket, payload: never): void {
@@ -163,6 +176,9 @@ function handleReqStartConfig(socket: Socket, payload: never): void {
 		masterConfigurerId = socket.id;
 		socket.send(SocketMessage.S_START_CONFIG_MASTER);
 		console.log(`${clients[socket.id].name} Request to configure granted: MASTER`);
+		if (mapConfig) {
+			console.log(`Game stopped by ${clients[socket.id].name}`);
+		}
 		broadcastMessage(SocketMessage.S_START_CONFIG_SLAVE, null, { except: socket.id });
 	}
 }
@@ -182,15 +198,14 @@ function handleReqStartGame(socket: Socket, payload: never): void {
 	if (socket.id === masterConfigurerId) {
 		broadcastMessage(SocketMessage.S_START_GAME, null);
 		masterConfigurerId = null;
+		console.log(`Game started by ${clients[socket.id].name}.`);
 	} else {
 		console.log(`Ignoring start request from non-master user ${clients[socket.id].name}`);
 	}
 }
 
 function handlePlayerSpawned(socket: Socket, payload: CPlayerSpawnedDTO): void {
-	if (clients[socket.id].state !== ClientState.PLAY) {
-		clients[socket.id].state = ClientState.PLAY;
-	}
+	console.log(`${clients[socket.id].name} spawned at `, payload.position);
 	broadcastMessage(
 		SocketMessage.CS_PLAYER_SPAWNED,
 		{
@@ -204,7 +219,21 @@ function handlePlayerSpawned(socket: Socket, payload: CPlayerSpawnedDTO): void {
 }
 
 function handlePlayerStateChanged(socket: Socket, payload: ClientState): void {
+	let actionString: string;
+	switch (payload) {
+		case ClientState.LOBBY:
+			actionString = "exited to lobby";
+			break;
+		case ClientState.SPECTATE:
+			actionString =
+				clients[socket.id].state === ClientState.LOBBY ? "joined as spectator" : "started spectating";
+			break;
+		case ClientState.PLAY:
+			actionString = "joined as player";
+			break;
+	}
 	clients[socket.id].state = payload;
+	console.log(`${clients[socket.id].name} ${actionString}.`);
 	broadcastMessage(SocketMessage.S_PLAYER_STATE_CHANGED, <SPlayerInfo>{
 		name: clients[socket.id].name,
 		state: payload,

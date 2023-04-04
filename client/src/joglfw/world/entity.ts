@@ -34,6 +34,11 @@ export abstract class Entity {
 		}
 	}
 
+	/** Use this to create physics bodies and whatever else */
+	protected handleAddedToWorld(): void {}
+	/** Use this to remove physics bodies from world */
+	protected handleRemovedFromWorld(): void {}
+
 	protected rootTransform = new Transform();
 
 	private isDestroyed_ = false;

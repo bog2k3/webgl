@@ -16,10 +16,8 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 	static readonly MASS = 10;
 	static readonly COLLISION_RADIUS = 0.15;
 
-	constructor(position: Vector, velocity: Vector) {
-		super();
-		this.createBody(position, velocity);
-		this.onDestroyed.add(() => this.release());
+	setInitialVelocity(vel: Vector): void {
+		this.initialVelocity = vel;
 	}
 
 	getType(): string {
@@ -44,8 +42,14 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 	// ----------------------------- PRIVATE AREA ----------------------------- //
 	private physBody: PhysBodyProxy;
 	private physShape: Ammo.btCollisionShape;
+	private initialVelocity = new Vector(0);
 
-	private release(): void {
+	protected handleAddedToWorld(): void {
+		const position: Vector = this.rootTransform.position();
+		this.createBody(position, this.initialVelocity);
+	}
+
+	protected handleRemovedFromWorld(): void {
 		this.physBody.destroy();
 	}
 

@@ -60,24 +60,6 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 	static readonly INITIAL_PROJECTILE_VELOCITY = 20;
 
-	constructor(position: Vector, orientation: Quat) {
-		super();
-		this.createChassis(position, orientation);
-		for (let i = 0; i < 4; i++) {
-			this.createWheel(position, orientation, i);
-		}
-		// this.createSteeringConstraint(position);
-		this.cameraFrame = new VirtualFrame(this.chassisBody);
-		this.cameraFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5));
-		this.frames["camera-attachment"] = this.cameraFrame;
-		this.turretFrame = new VirtualFrame(this.chassisBody);
-		this.turretFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5 + Car.UPPER_BODY_HEIGHT));
-		this.frames["turret"] = this.turretFrame;
-		this.turretMesh = Mesh.makeGizmo();
-
-		this.onDestroyed.add(() => this.release());
-	}
-
 	getType(): string {
 		return EntityTypes.Car;
 	}
@@ -159,9 +141,10 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		this.turretFrame.getTransform(turretTransform);
 		const direction: Vector = turretTransform.axisZ();
 		const position: Vector = turretTransform.position().add(direction.scale(Projectile.COLLISION_RADIUS * 1.2));
-		World.getInstance().addEntity(
-			new Projectile(position, direction.scaleInPlace(Car.INITIAL_PROJECTILE_VELOCITY)),
-		);
+		const bullet = new Projectile();
+		bullet.getTransform().setPosition(position);
+		bullet.setInitialVelocity(direction.scaleInPlace(Car.INITIAL_PROJECTILE_VELOCITY));
+		World.getInstance().addEntity(bullet);
 	}
 
 	update(dt: number): void {
@@ -192,7 +175,24 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 	private constraints: Ammo.btTypedConstraint[] = [];
 
-	private release(): void {
+	protected handleAddedToWorld(): void {
+		const position: Vector = this.rootTransform.position();
+		const orientation: Quat = this.rootTransform.orientation();
+		this.createChassis(position, orientation);
+		for (let i = 0; i < 4; i++) {
+			this.createWheel(position, orientation, i);
+		}
+		// this.createSteeringConstraint(position);
+		this.cameraFrame = new VirtualFrame(this.chassisBody);
+		this.cameraFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5));
+		this.frames["camera-attachment"] = this.cameraFrame;
+		this.turretFrame = new VirtualFrame(this.chassisBody);
+		this.turretFrame.localTransform.setPosition(new Vector(0, Car.LOWER_BODY_HEIGHT * 0.5 + Car.UPPER_BODY_HEIGHT));
+		this.frames["turret"] = this.turretFrame;
+		this.turretMesh = Mesh.makeGizmo();
+	}
+
+	protected handleRemovedFromWorld(): void {
 		for (let c of this.constraints) {
 			physWorld.removeConstraint(c);
 		}
