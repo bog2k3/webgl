@@ -17,7 +17,7 @@ import {
 	terrainConfigReceived,
 	terrainParamChanged,
 } from "./terrain-config-handler";
-import { WebSock } from "./websock";
+import { WebSock } from "./network/websock";
 
 const console = logprefix("ROOT");
 

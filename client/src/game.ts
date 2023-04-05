@@ -14,7 +14,7 @@ import { Entity } from "./joglfw/world/entity";
 import { World } from "./joglfw/world/world";
 import { CollisionChecker } from "./physics/collision-checker";
 import { PlayerInputHandler } from "./player-input-handler";
-import { WebSock } from "./websock";
+import { WebSock } from "./network/websock";
 import { GlobalState } from "./global-state";
 import { EntityTypes } from "./entities/entity-types";
 import { Projectile } from "./entities/projectile.entity";
@@ -129,8 +129,8 @@ export class Game {
 	// -------------------------- PRIVATE AREA ------------------------------- //
 
 	private setupNetworkManagerFactories(): void {
-		GlobalState.networkManager.addEntityFactory(EntityTypes.Car, () => new Car());
-		GlobalState.networkManager.addEntityFactory(EntityTypes.Projectile, () => new Projectile());
+		GlobalState.networkManager.addEntityFactory(EntityTypes.Car, Car.deserialize);
+		GlobalState.networkManager.addEntityFactory(EntityTypes.Projectile, Projectile.deserialize);
 	}
 
 	private checkCameraCollision(prevPos: Vector, nextPos: Vector): Vector {
@@ -211,12 +211,7 @@ export class Game {
 		this.playerCar = new Car(position, orientation);
 		World.getInstance().addEntity(this.playerCar);
 		this.resetPlayer();
-
 		this.playerController.setTargetCar(this.playerCar);
-		WebSock.sendPlayerSpawned({
-			position,
-			orientation,
-		});
 	}
 
 	private switchToFreeCamera(): void {

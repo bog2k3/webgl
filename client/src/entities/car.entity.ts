@@ -20,8 +20,9 @@ import { EntityTypes } from "./entity-types";
 import { Projectile } from "./projectile.entity";
 import { Terrain } from "./terrain/terrain.entity";
 import { VirtualFrame } from "./virtual-frame";
+import { INetworkSerializable } from "../network/network-serializable";
 
-export class Car extends Entity implements IUpdatable, IRenderable {
+export class Car extends Entity implements IUpdatable, IRenderable, INetworkSerializable {
 	static readonly UPPER_BODY_WIDTH = 1.0;
 	static readonly UPPER_BODY_LENGTH = 2.0;
 	static readonly UPPER_BODY_HEIGHT = 0.9;
@@ -60,12 +61,32 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 
 	static readonly INITIAL_PROJECTILE_VELOCITY = 20;
 
+	static deserialize(params: Record<string, any>): Car {
+		// todo
+	}
+
+	constructor(position: Vector, orientation: Quat) {
+		super();
+		this.rootTransform.setPosition(position);
+		this.rootTransform.setOrientation(orientation);
+	}
+
 	getType(): string {
 		return EntityTypes.Car;
 	}
 
 	getAABB(): AABB {
 		return AABB.empty(); // TODO implement
+	}
+
+	/** Returns a record of parameters to be sent over the network for updating the remote entity */
+	getNWParameters(): Record<string, any> {
+		// todo
+	}
+
+	/** Updates the local entity with the parameters received from the network */
+	setNWParameters(params: Record<string, any>): void {
+		// todo
 	}
 
 	render(ctx: RenderContext): void {
@@ -141,10 +162,9 @@ export class Car extends Entity implements IUpdatable, IRenderable {
 		this.turretFrame.getTransform(turretTransform);
 		const direction: Vector = turretTransform.axisZ();
 		const position: Vector = turretTransform.position().add(direction.scale(Projectile.COLLISION_RADIUS * 1.2));
-		const bullet = new Projectile();
-		bullet.getTransform().setPosition(position);
-		bullet.setInitialVelocity(direction.scaleInPlace(Car.INITIAL_PROJECTILE_VELOCITY));
-		World.getInstance().addEntity(bullet);
+		World.getInstance().addEntity(
+			new Projectile(position, direction.scaleInPlace(Car.INITIAL_PROJECTILE_VELOCITY)),
+		);
 	}
 
 	update(dt: number): void {

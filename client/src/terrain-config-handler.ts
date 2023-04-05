@@ -3,7 +3,7 @@ import { GameState } from "./game";
 import { GlobalState } from "./global-state";
 import { GUI } from "./gui";
 import { rand, randi } from "./joglfw/utils/random";
-import { WebSock } from "./websock";
+import { WebSock } from "./network/websock";
 
 let gameConfig: TerrainConfig = null;
 

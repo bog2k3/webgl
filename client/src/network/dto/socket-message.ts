@@ -7,10 +7,9 @@ export enum SocketMessage {
 
 	// Common messages
 	CS_MAP_CONFIG = "cs-map-config", // map config
-	CS_PLAYER_SPAWNED = "cs-player-spawned", // [CS]PlayerSpawnedDTO
 	CS_ENTITY_CREATED = "cs-entity-created", // [CS]NetworkEntityCreatedDTO
-	CS_ENTITY_UPDATED = "cs-entity-updated", // [CS]NetworkEntityUpdatedDTO
-	CS_ENTITY_DESTROYED = "cs-entity-destroyed", // [CS]NetworkEntityDestroyedDTO
+	CS_ENTITY_UPDATED = "cs-entity-updated", // NetworkEntityUpdatedDTO
+	CS_ENTITY_DESTROYED = "cs-entity-destroyed", // NetworkEntityDestroyedDTO
 
 	// Server messages
 	S_NAME_TAKEN = "s-name-taken",
@@ -21,4 +20,5 @@ export enum SocketMessage {
 	S_PLAYER_LIST = "s-player-list", // SPlayerInfo[]
 	S_PLAYER_CONNECTED = "s-player-connected", // {name: string}
 	S_PLAYER_DISCONNECTED = "s-player-disconnected", // {name: string}
+	S_NETWORK_ID_RESOLVED = "s-network-id-resolved", // SNetworkIdResolvedDTO
 }

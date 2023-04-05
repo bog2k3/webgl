@@ -1,11 +1,12 @@
-import { Server, Socket } from "socket.io";
+import * as cors from "cors";
 import * as express from "express";
 import * as http from "http";
-import * as cors from "cors";
+import { Server, Socket } from "socket.io";
 import { Client, ClientState } from "./client";
-import { SocketMessage } from "./dto/socket-message";
-import { CPlayerSpawnedDTO } from "./dto/c-player-spawned.dto";
+import { CNetworkEntityCreatedDTO, SNetworkEntityCreatedDTO } from "./dto/network-entity-created.dto";
+import { SNetworkIdResolvedDTO } from "./dto/network-id-resolved.dto";
 import { SPlayerInfo } from "./dto/s-player-info.dto";
+import { SocketMessage } from "./dto/socket-message";
 
 type BroadcastOptions = {
 	except?: string; // broadcast to all sockets except the one with this id
@@ -73,8 +74,10 @@ function setupSocket(socket: Socket): void {
 	messageHandlers[SocketMessage.C_REQ_START_CONFIG] = handleReqStartConfig;
 	messageHandlers[SocketMessage.CS_MAP_CONFIG] = handleMapConfig;
 	messageHandlers[SocketMessage.C_REQ_START_GAME] = handleReqStartGame;
-	messageHandlers[SocketMessage.CS_PLAYER_SPAWNED] = handlePlayerSpawned;
 	messageHandlers[SocketMessage.C_STATE_CHANGED] = handlePlayerStateChanged;
+	messageHandlers[SocketMessage.CS_ENTITY_CREATED] = handleEntityCreated;
+	messageHandlers[SocketMessage.CS_ENTITY_UPDATED] = handleEntityUpdated;
+	messageHandlers[SocketMessage.CS_ENTITY_DESTROYED] = handleEntityDestroyed;
 }
 
 function broadcastMessage(message: SocketMessage, payload: any, options?: BroadcastOptions): void {
@@ -204,20 +207,6 @@ function handleReqStartGame(socket: Socket, payload: never): void {
 	}
 }
 
-function handlePlayerSpawned(socket: Socket, payload: CPlayerSpawnedDTO): void {
-	console.log(`${clients[socket.id].name} spawned at `, payload.position);
-	broadcastMessage(
-		SocketMessage.CS_PLAYER_SPAWNED,
-		{
-			...payload,
-			name: clients[socket.id].name,
-		},
-		{
-			except: socket.id,
-		},
-	);
-}
-
 function handlePlayerStateChanged(socket: Socket, payload: ClientState): void {
 	let actionString: string;
 	switch (payload) {
@@ -238,4 +227,25 @@ function handlePlayerStateChanged(socket: Socket, payload: ClientState): void {
 		name: clients[socket.id].name,
 		state: payload,
 	});
+}
+
+let nextNetworkEntityId = 1;
+function handleEntityCreated(socket: Socket, payload: CNetworkEntityCreatedDTO): void {
+	const networkId: number = nextNetworkEntityId++;
+	socket.send(SocketMessage.S_NETWORK_ID_RESOLVED, <SNetworkIdResolvedDTO>{
+		interimId: payload.interimNetworkId,
+		resolvedId: networkId,
+	});
+	delete payload.interimNetworkId;
+	const sPayload: SNetworkEntityCreatedDTO = payload as unknown as SNetworkEntityCreatedDTO;
+	sPayload.networkId = networkId;
+	broadcastMessage(SocketMessage.CS_ENTITY_CREATED, sPayload, { except: socket.id });
+}
+
+function handleEntityUpdated(socket: Socket, payload: any): void {
+	broadcastMessage(SocketMessage.CS_ENTITY_UPDATED, payload, { except: socket.id });
+}
+
+function handleEntityDestroyed(socket: Socket, payload: any): void {
+	broadcastMessage(SocketMessage.CS_ENTITY_DESTROYED, payload, { except: socket.id });
 }

@@ -1,6 +1,6 @@
 import { ClientState } from "./network/dto/client-state.enum";
 import { SPlayerInfo } from "./network/dto/s-player-info.dto";
-import { WebSock } from "./websock";
+import { WebSock } from "./network/websock";
 
 export class PlayerList {
 	constructor() {

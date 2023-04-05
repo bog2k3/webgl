@@ -1,6 +1,6 @@
 import { ClientState } from "../client";
 
-export class SPlayerInfo {
+export type SPlayerInfo = {
 	name: string;
 	state: ClientState;
-}
+};

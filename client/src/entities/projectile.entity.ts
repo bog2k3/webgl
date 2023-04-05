@@ -11,13 +11,19 @@ import { bullet2Vec } from "../physics/functions";
 import { CollisionEvent, PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
+import { INetworkSerializable } from "../network/network-serializable";
 
-export class Projectile extends Entity implements IUpdatable, IRenderable {
+export class Projectile extends Entity implements IUpdatable, IRenderable, INetworkSerializable {
 	static readonly MASS = 10;
 	static readonly COLLISION_RADIUS = 0.15;
 
-	setInitialVelocity(vel: Vector): void {
-		this.initialVelocity = vel;
+	static deserialize(params: Record<string, any>): Projectile {
+		// todo
+	}
+
+	constructor(position: Vector, private readonly initialVelocity: Vector) {
+		super();
+		this.rootTransform.setPosition(position);
 	}
 
 	getType(): string {
@@ -26,6 +32,16 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 
 	getAABB(): AABB {
 		return AABB.empty(); // TODO
+	}
+
+	/** Returns a record of parameters to be sent over the network for updating the remote entity */
+	getNWParameters(): Record<string, any> {
+		// todo
+	}
+
+	/** Updates the local entity with the parameters received from the network */
+	setNWParameters(params: Record<string, any>): void {
+		// todo
 	}
 
 	update(dt: number): void {
@@ -42,7 +58,6 @@ export class Projectile extends Entity implements IUpdatable, IRenderable {
 	// ----------------------------- PRIVATE AREA ----------------------------- //
 	private physBody: PhysBodyProxy;
 	private physShape: Ammo.btCollisionShape;
-	private initialVelocity = new Vector(0);
 
 	protected handleAddedToWorld(): void {
 		const position: Vector = this.rootTransform.position();

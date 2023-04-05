@@ -1,6 +1,6 @@
-export function assert(cond: boolean, message: string = "") {
+export function assert(cond: boolean, errorMessage: string = "") {
 	if (!cond) {
 		debugger;
-		throw new Error("Assertion failed" + message ? ": " + message : "");
+		throw new Error("Assertion failed" + errorMessage ? ": " + errorMessage : "");
 	}
 }

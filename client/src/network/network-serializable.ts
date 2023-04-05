@@ -1,7 +1,7 @@
 export interface INetworkSerializable {
-	/** Returns a (potentially empty) record of attributes to be sent over the network */
-	getNWAttributes(): Record<string, any>;
+	/** Returns a record of parameters to be sent over the network for updating the remote entity */
+	getNWParameters(): Record<string, any>;
 
-	/** Updates the entity with the attributes received from the network */
-	setNWAttributes(attribs: Record<string, any>): void;
+	/** Updates the local entity with the parameters received from the network */
+	setNWParameters(params: Record<string, any>): void;
 }
