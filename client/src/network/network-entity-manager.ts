@@ -6,8 +6,9 @@ import { WebSock } from "./websock";
 import { CNetworkEntityCreatedDTO, SNetworkEntityCreatedDTO } from "./dto/network-entity-created.dto";
 import { NetworkEntityDestroyedDTO } from "./dto/network-entity-destroyed.dto";
 import { NetworkEntityUpdatedDTO } from "./dto/network-entity-updated.dto";
-import { INetworkSerializable } from "./network-serializable";
+import { INetworkSerializable, isNetworkSerializable } from "./network-serializable";
 import { SNetworkIdResolvedDTO } from "./dto/network-id-resolved.dto";
+import { CustomEntity } from "../entities/custom-entity";
 
 const NETWORK_UPDATE_TIME = 0.1; // sec
 
@@ -16,7 +17,10 @@ export class NetworkEntityManager implements IUpdatable {
 		this.setupHandlers();
 	}
 
-	addEntityFactory(entType: string, factoryFn: (params: Record<string, any>) => Entity & INetworkSerializable): void {
+	addEntityFactory(
+		entType: string,
+		factoryFn: (params: Record<string, any>) => CustomEntity & INetworkSerializable,
+	): void {
 		this.entityFactory[entType] = factoryFn;
 	}
 
@@ -25,41 +29,58 @@ export class NetworkEntityManager implements IUpdatable {
 			w.updateTimer += dt;
 			if (w.updateTimer > NETWORK_UPDATE_TIME) {
 				w.updateTimer -= NETWORK_UPDATE_TIME;
-				this.sendLocalEntityUpdate(w.entity, w.networkId);
+				this.sendLocalEntityUpdate(w.entity);
 			}
 		}
 	}
 
-	addLocalEntity(ent: Entity & INetworkSerializable): void {
-		const wrapper = new LocalEntityWrapper(ent);
-		this.sendLocalEntityCreated(ent).then((networkId: number) => {
-			wrapper.networkId = networkId;
-			this.localEntities.push(wrapper);
-		});
-	}
-
-	removeLocalEntity(ent: Entity & INetworkSerializable): void {
-		const index: number = this.localEntities.findIndex((w) => w.entity === ent);
-		this.sendLocalEntityDestroyed(ent, this.localEntities[index].networkId);
-		this.localEntities.splice(index, 1);
-	}
-
 	// ----------------------------- PRIVATE AREA ----------------------------------- //
 
-	nextInterimNetworkId = 1;
-	localEntities: LocalEntityWrapper[] = [];
-	remoteEntities: { [networkId: number]: Entity & INetworkSerializable } = {};
-	pendingIdResolution: { [interimId: number]: (number) => void } = {};
-	entityFactory: { [entityType: string]: (params: Record<string, any>) => Entity & INetworkSerializable } = {};
+	private nextInterimNetworkId = 1;
+	private localEntities: LocalEntityWrapper[] = [];
+	private remoteEntities: { [networkId: number]: CustomEntity & INetworkSerializable } = {};
+	private pendingIdResolution: { [interimId: number]: (number) => void } = {};
+	private entityFactory: {
+		[entityType: string]: (params: Record<string, any>) => CustomEntity & INetworkSerializable;
+	} = {};
 
-	setupHandlers(): void {
+	private isRemoteEntity(ent: Entity): boolean {
+		return ent instanceof CustomEntity && ent.isRemote();
+	}
+
+	private setupHandlers(): void {
 		WebSock.onEntityCreated.add((payload) => this.addNetworkEntity(payload));
 		WebSock.onEntityUpdated.add((payload) => this.updateNetworkEntity(payload));
 		WebSock.onEntityDestroyed.add((payload) => this.removeNetworkEntity(payload));
 		WebSock.onNetworkEntityIdResolved.add((payload) => this.resolveNetworkId(payload));
+
+		World.getInstance().onEntityAdded.add((ent: Entity) => {
+			if (ent instanceof CustomEntity && isNetworkSerializable(ent) && !this.isRemoteEntity(ent)) {
+				this.addLocalEntity(ent);
+			}
+		});
+		World.getInstance().onEntityRemoved.add((ent: Entity) => {
+			if (ent instanceof CustomEntity && isNetworkSerializable(ent) && !this.isRemoteEntity(ent)) {
+				this.removeLocalEntity(ent);
+			}
+		});
 	}
 
-	resolveNetworkId(data: SNetworkIdResolvedDTO): void {
+	private addLocalEntity(ent: CustomEntity & INetworkSerializable): void {
+		const wrapper = new LocalEntityWrapper(ent);
+		this.sendLocalEntityCreated(ent).then((networkId: number) => {
+			ent.setAttribute("networkId", networkId);
+			this.localEntities.push(wrapper);
+		});
+	}
+
+	private removeLocalEntity(ent: CustomEntity & INetworkSerializable): void {
+		const index: number = this.localEntities.findIndex((w) => w.entity === ent);
+		this.sendLocalEntityDestroyed(ent);
+		this.localEntities.splice(index, 1);
+	}
+
+	private resolveNetworkId(data: SNetworkIdResolvedDTO): void {
 		if (!this.pendingIdResolution[data.interimId]) {
 			console.warn(`Received network entity id resolution for unknown interimId: ${data.interimId}.`);
 			return;
@@ -68,11 +89,11 @@ export class NetworkEntityManager implements IUpdatable {
 		delete this.pendingIdResolution[data.interimId];
 	}
 
-	addNetworkEntity(data: SNetworkEntityCreatedDTO): void {
+	private addNetworkEntity(data: SNetworkEntityCreatedDTO): void {
 		if (!this.entityFactory[data.entityType]) {
 			throw new Error(`No known factory for entity type "${data.entityType}"`);
 		}
-		const ent: Entity & INetworkSerializable = this.entityFactory[data.entityType](data.parameters);
+		const ent: CustomEntity & INetworkSerializable = this.entityFactory[data.entityType](data.parameters);
 		assert(
 			ent.getType() === data.entityType,
 			`Wrong entity type (${ent.getType()}) created by factory for "${data.entityType}"`,
@@ -81,7 +102,7 @@ export class NetworkEntityManager implements IUpdatable {
 		World.getInstance().addEntity(ent);
 	}
 
-	updateNetworkEntity(data: NetworkEntityUpdatedDTO): void {
+	private updateNetworkEntity(data: NetworkEntityUpdatedDTO): void {
 		if (!this.remoteEntities[data.networkId]) {
 			console.warn(`Received update for unknown network entity with id ${data.networkId}.`);
 			return;
@@ -89,18 +110,17 @@ export class NetworkEntityManager implements IUpdatable {
 		this.remoteEntities[data.networkId].setNWParameters(data.parameters);
 	}
 
-	removeNetworkEntity(data: NetworkEntityDestroyedDTO): void {
+	private removeNetworkEntity(data: NetworkEntityDestroyedDTO): void {
 		if (!this.remoteEntities[data.networkId]) {
 			console.warn(`Received remove for unknown network entity with id ${data.networkId}.`);
 			return;
 		}
-		this.remoteEntities[data.networkId].setNWParameters(data.parameters);
 		this.remoteEntities[data.networkId].destroy();
 		delete this.remoteEntities[data.networkId];
 	}
 
 	/** @returns the networkId generated by the server for the entity */
-	sendLocalEntityCreated(ent: Entity & INetworkSerializable): Promise<number> {
+	private sendLocalEntityCreated(ent: CustomEntity & INetworkSerializable): Promise<number> {
 		return new Promise((resolve) => {
 			const interimId = this.nextInterimNetworkId;
 			this.pendingIdResolution[this.nextInterimNetworkId++] = resolve;
@@ -112,27 +132,25 @@ export class NetworkEntityManager implements IUpdatable {
 		});
 	}
 
-	sendLocalEntityUpdate(ent: INetworkSerializable, networkId: number): void {
+	private sendLocalEntityUpdate(ent: CustomEntity & INetworkSerializable): void {
 		WebSock.sendEntityUpdated(<NetworkEntityUpdatedDTO>{
-			networkId,
+			networkId: ent.getAttribute("networkId"),
 			parameters: ent.getNWParameters(),
 		});
 	}
 
-	sendLocalEntityDestroyed(ent: INetworkSerializable, networkId: number): void {
+	private sendLocalEntityDestroyed(ent: CustomEntity & INetworkSerializable): void {
 		WebSock.sendEntityDestroyed(<NetworkEntityDestroyedDTO>{
-			networkId,
-			parameters: ent.getNWParameters(),
+			networkId: ent.getAttribute("networkId"),
 		});
 	}
 }
 
 class LocalEntityWrapper {
-	entity: Entity & INetworkSerializable;
-	networkId: number;
+	entity: CustomEntity & INetworkSerializable;
 	updateTimer = 0;
 
-	constructor(ent: Entity & INetworkSerializable) {
+	constructor(ent: CustomEntity & INetworkSerializable) {
 		this.entity = ent;
 	}
 }

@@ -23,6 +23,9 @@ export class WorldConfig {
 }
 
 export class World implements IRenderable, IUpdatable {
+	onEntityAdded = new Event<(ent: Entity) => void>();
+	onEntityRemoved = new Event<(ent: Entity) => void>();
+
 	constructor(config: WorldConfig) {
 		assert(!World.instance_, "World is alread initialized");
 		this.config_ = config;
@@ -145,6 +148,7 @@ export class World implements IRenderable, IUpdatable {
 			this.entsToUpdate_.push(e);
 		}
 		e["handleAddedToWorld"]();
+		this.onEntityAdded.trigger(e);
 	}
 
 	removeEntity(e: Entity): void {
@@ -158,6 +162,7 @@ export class World implements IRenderable, IUpdatable {
 			}
 		}
 		e["handleRemovedFromWorld"]();
+		this.onEntityRemoved.trigger(e);
 	}
 
 	getEntities(filterTypes: string[], options?: { renderable?: boolean; updatable?: boolean }): Entity[] {
@@ -198,15 +203,15 @@ export class World implements IRenderable, IUpdatable {
 
 	// --------------------- PRIVATE AREA --------------------- //
 
-	static instance_: World = null;
-	config_: WorldConfig;
-	entities_: Entity[] = [];
-	entsToUpdate_: IUpdatable[] = [];
-	entsToRender_: IRenderable[] = [];
-	frameNumber_ = 0;
-	resetting_ = false;
-	globals: { [className: string]: unknown } = {};
+	private static instance_: World = null;
+	private config_: WorldConfig;
+	private entities_: Entity[] = [];
+	private entsToUpdate_: IUpdatable[] = [];
+	private entsToRender_: IRenderable[] = [];
+	private frameNumber_ = 0;
+	private resetting_ = false;
+	private globals: { [className: string]: unknown } = {};
 
-	mapUserEvents_: Record<string, Event<(param: number) => void>> = {};
+	private mapUserEvents_: Record<string, Event<(param: number) => void>> = {};
 	// std::unordered_map<std::type_index, void*> userGlobals_;
 }

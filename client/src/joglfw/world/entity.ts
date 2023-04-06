@@ -22,16 +22,24 @@ export abstract class Entity {
 
 	abstract getAABB(): AABB;
 
-	protected getFrameTransform(frameName: string): Transform {
-		throw new Error("This method must be overridden.");
-	}
-
 	getTransform(frameName = "root"): Transform {
 		if (frameName === "root") {
 			return this.rootTransform;
 		} else {
 			return this.getFrameTransform(frameName);
 		}
+	}
+
+	setAttribute(name: string, value: any): void {
+		this.attributes[name] = value;
+	}
+
+	getAttribute(name: string): any {
+		return this.attributes[name];
+	}
+
+	protected getFrameTransform(frameName: string): Transform {
+		throw new Error("This method must be overridden.");
 	}
 
 	/** Use this to create physics bodies and whatever else */
@@ -42,4 +50,6 @@ export abstract class Entity {
 	protected rootTransform = new Transform();
 
 	private isDestroyed_ = false;
+
+	private attributes: Record<string, any> = {};
 }

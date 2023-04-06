@@ -3,12 +3,12 @@ import { clamp, matrixFromPositionDirection } from "../joglfw/math/functions";
 import { Matrix } from "../joglfw/math/matrix";
 import { matrixToQuat, quatRotation } from "../joglfw/math/quat-functions";
 import { Vector } from "../joglfw/math/vector";
-import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
+import { CustomEntity } from "./custom-entity";
 import { EntityTypes } from "./entity-types";
 import { Direction, IUserControllable } from "./user-controllable";
 
-export class FreeCamera extends Entity implements IUserControllable, IUpdatable {
+export class FreeCamera extends CustomEntity implements IUserControllable, IUpdatable {
 	constructor(position: Vector, direction: Vector) {
 		super();
 		this.rootTransform.setPosition(position);

@@ -9,3 +9,7 @@ export interface INetworkSerializable {
 	/** Updates the local entity with the parameters received from the network */
 	setNWParameters(params: Record<string, any>): void;
 }
+
+export function isNetworkSerializable(x: any): x is INetworkSerializable {
+	return "getNWParameters" in x && "setNWParameters" in x;
+}

@@ -6,12 +6,12 @@ import { Mesh } from "../joglfw/mesh";
 import { MeshRenderer } from "../joglfw/render/mesh-renderer";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
-import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
 import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
+import { CustomEntity } from "./custom-entity";
 import { EntityTypes } from "./entity-types";
 
-export class RigidObject extends Entity implements IRenderable, IUpdatable {
+export class RigidObject extends CustomEntity implements IRenderable, IUpdatable {
 	constructor(
 		public mesh: Mesh,
 		position: Vector,

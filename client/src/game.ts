@@ -1,10 +1,12 @@
-import { SPlayerSpawnedDTO } from "./network/dto/s-player-spawned.dto";
 import { Car } from "./entities/car.entity";
+import { EntityTypes } from "./entities/entity-types";
 import { FreeCamera } from "./entities/free-camera";
 import { PlayerController } from "./entities/player.controller";
+import { Projectile } from "./entities/projectile.entity";
 import { SkyBox } from "./entities/skybox";
 import { TerrainConfig } from "./entities/terrain/config";
 import { Terrain } from "./entities/terrain/terrain.entity";
+import { GlobalState } from "./global-state";
 import { logprefix } from "./joglfw/log";
 import { Quat } from "./joglfw/math/quat";
 import { Vector } from "./joglfw/math/vector";
@@ -14,10 +16,6 @@ import { Entity } from "./joglfw/world/entity";
 import { World } from "./joglfw/world/world";
 import { CollisionChecker } from "./physics/collision-checker";
 import { PlayerInputHandler } from "./player-input-handler";
-import { WebSock } from "./network/websock";
-import { GlobalState } from "./global-state";
-import { EntityTypes } from "./entities/entity-types";
-import { Projectile } from "./entities/projectile.entity";
 
 const console = logprefix("Game");
 
@@ -41,8 +39,7 @@ export class Game {
 	/** these are entities that are never destroyed */
 	readonly godEntities: Entity[] = [];
 
-	onStart = new Event<() => void>();
-	onStop = new Event<() => void>();
+	onStateChanged = new Event<(state: GameState, prevState: GameState) => void>();
 
 	constructor() {
 		this.setupNetworkManagerFactories();
@@ -95,16 +92,16 @@ export class Game {
 		}
 	}
 
-	setState(state: GameState): Promise<void> {
+	async setState(state: GameState): Promise<void> {
 		if (state === this.state) {
 			return;
 		}
 		const oldState = this.state;
 		this.state = state;
 		if (oldState !== GameState.CONFIGURE_TERRAIN && state === GameState.CONFIGURE_TERRAIN) {
-			return this.stop();
+			await this.stop();
 		} else if (oldState === GameState.CONFIGURE_TERRAIN && state !== GameState.CONFIGURE_TERRAIN) {
-			return this.start();
+			await this.start();
 		}
 		if (this.state === GameState.PLAY) {
 			this.spawnPlayer();
@@ -118,6 +115,7 @@ export class Game {
 			}
 			this.switchToFreeCamera();
 		}
+		this.onStateChanged.trigger(state, oldState);
 	}
 
 	updateConfig(cfg: TerrainConfig): void {
@@ -167,14 +165,12 @@ export class Game {
 		this.positionExhibitCamera(this.terrain.getConfig(), 0.8, 30);
 
 		return skyboxPromise.then(() => {
-			this.onStart.trigger();
 			console.log("Game started.");
 		});
 	}
 
 	private stop(): Promise<void> {
 		console.log("Stopping game...");
-		this.onStop.trigger();
 		this.playerCar = null;
 		this.cameraCtrl.checkCollision = null;
 		this.switchToFreeCamera();

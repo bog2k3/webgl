@@ -12,5 +12,5 @@ export namespace GlobalState {
 	export let inputHandler: HtmlInputHandler;
 	export let isPaused = false;
 	export let playerList = new PlayerList();
-	export let networkManager = new NetworkEntityManager();
+	export let networkManager: NetworkEntityManager;
 }

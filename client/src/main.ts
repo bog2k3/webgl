@@ -18,6 +18,7 @@ import {
 	terrainParamChanged,
 } from "./terrain-config-handler";
 import { WebSock } from "./network/websock";
+import { NetworkEntityManager } from "./network/network-entity-manager";
 
 const console = logprefix("ROOT");
 
@@ -88,18 +89,20 @@ function initWorld(): void {
 
 	// auto pImgDebugDraw = new ImgDebugDraw();
 	// World::setGlobal<ImgDebugDraw>(pImgDebugDraw);
+
+	GlobalState.networkManager = new NetworkEntityManager();
 }
 
 async function initGame(): Promise<void> {
 	GlobalState.game = new Game();
 	await GlobalState.game.initialize();
 	GlobalState.game.cameraCtrl.setTargetCamera(GlobalState.renderData.viewport.camera());
-	GlobalState.game.onStart.add(onGameStarted);
-	GlobalState.game.onStop.add(onGameEnded);
+	GlobalState.game.onStateChanged.add(handleGameStateChanged);
 }
 
 function initWebSocket(): void {
 	WebSock.init();
+	// WebSock.ENABLE_LOGGING_ALL = true;
 	WebSock.onMapConfigReceived.add(terrainConfigReceived);
 	WebSock.onStartConfig.add(startTerrainConfig);
 	WebSock.onStartGame.add(startGame);
@@ -135,6 +138,7 @@ function update(dt: number): void {
 	for (let event of GlobalState.inputHandler.getEvents()) {
 		handleInputEvent(event);
 	}
+	GlobalState.networkManager.update(dt);
 	if (!GlobalState.isPaused) {
 		GlobalState.game.update(dt);
 		GlobalState.renderData.renderCtx.time += dt;
@@ -146,7 +150,16 @@ function update(dt: number): void {
 	}
 }
 
-function onGameStarted(): void {
+function handleGameStateChanged(state: GameState, prevState: GameState): void {
+	if (prevState !== GameState.CONFIGURE_TERRAIN && state === GameState.CONFIGURE_TERRAIN) {
+		handleGameEnded();
+	} else if (prevState === GameState.CONFIGURE_TERRAIN) {
+		handleGameStarted();
+	}
+	WebSock.updateState(gameStateToClientState(state));
+}
+
+function handleGameStarted(): void {
 	GUI.displayView(GUI.Views.Loading, false);
 	GlobalState.inputHandler.clear();
 	GlobalState.game.terrain.setWaterReflectionTex(
@@ -165,10 +178,21 @@ function onGameStarted(): void {
 	WebSock.updateState(ClientState.SPECTATE);
 }
 
-function onGameEnded(): void {
+function handleGameEnded(): void {
 	GlobalState.renderData.renderCtx.meshRenderer.setWaterNormalTexture(null);
 	GlobalState.renderData.renderCtx.enableWaterRender = false;
-	WebSock.updateState(ClientState.LOBBY);
+}
+
+function gameStateToClientState(state: GameState): ClientState {
+	switch (state) {
+		case GameState.CONFIGURE_TERRAIN:
+			return ClientState.LOBBY;
+		case GameState.PLAY:
+			return ClientState.PLAY;
+		case GameState.SPECTATE:
+			return ClientState.SPECTATE;
+	}
+	return null;
 }
 
 function handleCanvasClicked(canvas: HTMLCanvasElement, event: PointerEvent): void {

@@ -14,6 +14,7 @@ const console = logprefix("WebSock");
 let socket: Socket;
 
 export namespace WebSock {
+	export let ENABLE_LOGGING_ALL = false;
 	export const onNameTaken = new Event<() => void>();
 	export const onMapConfigReceived = new Event<(config: TerrainConfig) => void>();
 	export const onStartConfig = new Event<(isMaster: boolean) => void>();
@@ -97,7 +98,9 @@ export namespace WebSock {
 			console.error("Received unknown message from server: ", message);
 			return;
 		}
-		console.debug(`[WebSock] Received ${message}: `, payload);
+		if (ENABLE_LOGGING_ALL) {
+			console.debug(`[WebSock] Received ${message}: `, payload);
+		}
 		messageMap[message](payload);
 	}
 }

@@ -4,17 +4,16 @@ import { Quat } from "../joglfw/math/quat";
 import { Vector } from "../joglfw/math/vector";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
-import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
+import { INetworkSerializable } from "../network/network-serializable";
 import { CollisionGroups } from "../physics/collision-groups";
 import { bullet2Vec, quat2Bullet, vec2Bullet } from "../physics/functions";
 import { CollisionEvent, PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
+import { CustomEntity, CustomEntityOptions } from "./custom-entity";
 import { EntityTypes } from "./entity-types";
-import { INetworkSerializable } from "../network/network-serializable";
-import { param } from "jquery";
 
-export class Projectile extends Entity implements IUpdatable, IRenderable, INetworkSerializable {
+export class Projectile extends CustomEntity implements IUpdatable, IRenderable, INetworkSerializable {
 	static readonly MASS = 10;
 	static readonly COLLISION_RADIUS = 0.15;
 
@@ -22,11 +21,13 @@ export class Projectile extends Entity implements IUpdatable, IRenderable, INetw
 		if (!params.position || !params.initialVelocity) {
 			throw new Error("Can't deserialize Projectile from invalid data!");
 		}
-		return new Projectile(Vector.fromDTO(params.position), Vector.fromDTO(params.initialVelocity));
+		return new Projectile(Vector.fromDTO(params.position), Vector.fromDTO(params.initialVelocity), {
+			isRemote: true,
+		});
 	}
 
-	constructor(position: Vector, private readonly initialVelocity: Vector) {
-		super();
+	constructor(position: Vector, private readonly initialVelocity: Vector, options?: CustomEntityOptions) {
+		super(options);
 		this.rootTransform.setPosition(position);
 	}
 
@@ -39,12 +40,16 @@ export class Projectile extends Entity implements IUpdatable, IRenderable, INetw
 	}
 
 	/** Returns a record of parameters to be sent over the network for updating the remote entity */
-	getNWParameters(): Record<string, any> {
-		return {
+	getNWParameters(options?: { includeInitial?: boolean }): Record<string, any> {
+		const params: any = {
 			position: this.rootTransform.position(),
 			velocity: bullet2Vec(this.physBody.body.getLinearVelocity()),
 			orientation: this.rootTransform.orientation(),
 		};
+		if (options?.includeInitial) {
+			params.initialVelocity = this.initialVelocity;
+		}
+		return params;
 	}
 
 	/** Updates the local entity with the parameters received from the network */
@@ -114,7 +119,9 @@ export class Projectile extends Entity implements IUpdatable, IRenderable, INetw
 	}
 
 	private handleCollision(ev: CollisionEvent): void {
-		// TODO create explosion
-		this.destroy();
+		if (!this.isRemote()) {
+			// TODO create explosion
+			this.destroy();
+		}
 	}
 }

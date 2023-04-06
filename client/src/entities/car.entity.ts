@@ -9,20 +9,20 @@ import { MeshRenderer } from "../joglfw/render/mesh-renderer";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
 import { ShapeRenderer } from "../joglfw/render/shape-renderer";
-import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
 import { World } from "../joglfw/world/world";
+import { INetworkSerializable } from "../network/network-serializable";
 import { CollisionGroups } from "../physics/collision-groups";
 import { bullet2Vec, quat2Bullet, vec2Bullet } from "../physics/functions";
 import { PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
+import { CustomEntity, CustomEntityOptions } from "./custom-entity";
 import { EntityTypes } from "./entity-types";
 import { Projectile } from "./projectile.entity";
 import { Terrain } from "./terrain/terrain.entity";
 import { VirtualFrame } from "./virtual-frame";
-import { INetworkSerializable } from "../network/network-serializable";
 
-export class Car extends Entity implements IUpdatable, IRenderable, INetworkSerializable {
+export class Car extends CustomEntity implements IUpdatable, IRenderable, INetworkSerializable {
 	static readonly UPPER_BODY_WIDTH = 1.0;
 	static readonly UPPER_BODY_LENGTH = 2.0;
 	static readonly UPPER_BODY_HEIGHT = 0.9;
@@ -65,11 +65,11 @@ export class Car extends Entity implements IUpdatable, IRenderable, INetworkSeri
 		if (!params.position || !params.orientation) {
 			throw new Error("Can't deserialize Car from invalid data!");
 		}
-		return new Car(Vector.fromDTO(params.position), Quat.fromDTO(params.orientation));
+		return new Car(Vector.fromDTO(params.position), Quat.fromDTO(params.orientation), { isRemote: true });
 	}
 
-	constructor(position: Vector, orientation: Quat) {
-		super();
+	constructor(position: Vector, orientation: Quat, options?: CustomEntityOptions) {
+		super(options);
 		this.rootTransform.setPosition(position);
 		this.rootTransform.setOrientation(orientation);
 	}
@@ -87,6 +87,7 @@ export class Car extends Entity implements IUpdatable, IRenderable, INetworkSeri
 		return {
 			position: this.rootTransform.position(),
 			orientation: this.rootTransform.orientation(),
+			velocity: bullet2Vec(this.chassisBody.body.getLinearVelocity()),
 			// todo include turret and wheel angles
 			// TODO include linear and angular velocity
 		};
@@ -95,6 +96,9 @@ export class Car extends Entity implements IUpdatable, IRenderable, INetworkSeri
 	/** Updates the local entity with the parameters received from the network */
 	setNWParameters(params: Record<string, any>): void {
 		this.teleport(Vector.fromDTO(params.position), Quat.fromDTO(params.orientation));
+		if (params.velocity) {
+			this.chassisBody.body.setLinearVelocity(vec2Bullet(params.velocity));
+		}
 	}
 
 	render(ctx: RenderContext): void {
