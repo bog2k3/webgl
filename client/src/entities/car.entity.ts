@@ -62,7 +62,10 @@ export class Car extends Entity implements IUpdatable, IRenderable, INetworkSeri
 	static readonly INITIAL_PROJECTILE_VELOCITY = 20;
 
 	static deserialize(params: Record<string, any>): Car {
-		// todo
+		if (!params.position || !params.orientation) {
+			throw new Error("Can't deserialize Car from invalid data!");
+		}
+		return new Car(Vector.fromDTO(params.position), Quat.fromDTO(params.orientation));
 	}
 
 	constructor(position: Vector, orientation: Quat) {
@@ -80,13 +83,18 @@ export class Car extends Entity implements IUpdatable, IRenderable, INetworkSeri
 	}
 
 	/** Returns a record of parameters to be sent over the network for updating the remote entity */
-	getNWParameters(): Record<string, any> {
-		// todo
+	getNWParameters(options?: { includeInitial?: boolean }): Record<string, any> {
+		return {
+			position: this.rootTransform.position(),
+			orientation: this.rootTransform.orientation(),
+			// todo include turret and wheel angles
+			// TODO include linear and angular velocity
+		};
 	}
 
 	/** Updates the local entity with the parameters received from the network */
 	setNWParameters(params: Record<string, any>): void {
-		// todo
+		this.teleport(Vector.fromDTO(params.position), Quat.fromDTO(params.orientation));
 	}
 
 	render(ctx: RenderContext): void {

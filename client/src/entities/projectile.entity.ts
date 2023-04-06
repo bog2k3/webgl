@@ -7,18 +7,22 @@ import { IRenderable } from "../joglfw/render/renderable";
 import { Entity } from "../joglfw/world/entity";
 import { IUpdatable } from "../joglfw/world/updateable";
 import { CollisionGroups } from "../physics/collision-groups";
-import { bullet2Vec } from "../physics/functions";
+import { bullet2Vec, quat2Bullet, vec2Bullet } from "../physics/functions";
 import { CollisionEvent, PhysBodyConfig, PhysBodyProxy } from "../physics/phys-body-proxy";
 import { physWorld } from "../physics/physics";
 import { EntityTypes } from "./entity-types";
 import { INetworkSerializable } from "../network/network-serializable";
+import { param } from "jquery";
 
 export class Projectile extends Entity implements IUpdatable, IRenderable, INetworkSerializable {
 	static readonly MASS = 10;
 	static readonly COLLISION_RADIUS = 0.15;
 
 	static deserialize(params: Record<string, any>): Projectile {
-		// todo
+		if (!params.position || !params.initialVelocity) {
+			throw new Error("Can't deserialize Projectile from invalid data!");
+		}
+		return new Projectile(Vector.fromDTO(params.position), Vector.fromDTO(params.initialVelocity));
 	}
 
 	constructor(position: Vector, private readonly initialVelocity: Vector) {
@@ -36,12 +40,25 @@ export class Projectile extends Entity implements IUpdatable, IRenderable, INetw
 
 	/** Returns a record of parameters to be sent over the network for updating the remote entity */
 	getNWParameters(): Record<string, any> {
-		// todo
+		return {
+			position: this.rootTransform.position(),
+			velocity: bullet2Vec(this.physBody.body.getLinearVelocity()),
+			orientation: this.rootTransform.orientation(),
+		};
 	}
 
 	/** Updates the local entity with the parameters received from the network */
 	setNWParameters(params: Record<string, any>): void {
-		// todo
+		if (!params.position || !params.orientation) {
+			console.warn(`Ignoring invalid network data for Projectile.setNWParams()`);
+			return;
+		}
+		const bOrientation: Ammo.btQuaternion = quat2Bullet(params.orientation);
+		const bPosition: Ammo.btVector3 = vec2Bullet(params.position);
+		this.physBody.body.setWorldTransform(new Ammo.btTransform(bOrientation, bPosition));
+		if (params.velocity) {
+			this.physBody.body.setLinearVelocity(vec2Bullet(params.velocity));
+		}
 	}
 
 	update(dt: number): void {

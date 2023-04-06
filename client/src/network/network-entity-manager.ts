@@ -107,7 +107,7 @@ export class NetworkEntityManager implements IUpdatable {
 			WebSock.sendEntityCreated(<CNetworkEntityCreatedDTO>{
 				interimNetworkId: interimId,
 				entityType: ent.getType(),
-				parameters: ent.getNWParameters(),
+				parameters: ent.getNWParameters({ includeInitial: true }),
 			});
 		});
 	}
