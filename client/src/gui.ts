@@ -103,12 +103,12 @@ export namespace GUI {
 		$("#max-elevation").on("input", handleMaxElevationChanged);
 		$("#variation").on("input", handleVariationChanged);
 		$("#roughness").on("input", handleRoughnessChanged);
-		$("#randomize-all").on("click", () => onRandomizeAll.trigger());
-		$("#start-game").on("click", () => onStartGame.trigger());
-		$("#btn-continue").on("click", () => onReturnToGame.trigger());
-		$("#btn-change-config").on("click", () => onReqChangeConfig.trigger());
-		$("#btn-spectate").on("click", () => onSpectate.trigger());
-		$("#btn-join").on("click", () => onJoinGame.trigger());
+		$("#randomize-all").on("click", onRandomizeAll.asCallback());
+		$("#start-game").on("click", onStartGame.asCallback());
+		$("#btn-continue").on("click", onReturnToGame.asCallback());
+		$("#btn-change-config").on("click", onReqChangeConfig.asCallback());
+		$("#btn-spectate").on("click", onSpectate.asCallback());
+		$("#btn-join").on("click", onJoinGame.asCallback());
 	}
 
 	function triggerButton(buttonId: string, event: KeyboardEvent): void {

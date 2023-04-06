@@ -6,7 +6,7 @@ import { RenderContext } from "../../joglfw/render/render-context";
 import { IRenderable } from "../../joglfw/render/renderable";
 import { VertexAttribSource } from "../../joglfw/render/shader-program";
 import { VertexArrayObject } from "../../joglfw/render/vao";
-import { TextureInfo, TextureLoader } from "../../joglfw/texture-loader";
+import { TextureInfo, TextureLoader } from "../../joglfw/loaders/texture-loader";
 import { assert } from "../../joglfw/utils/assert";
 import { srand } from "../../joglfw/utils/random";
 import { Progress } from "../../progress";

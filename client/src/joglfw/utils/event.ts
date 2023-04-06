@@ -1,5 +1,4 @@
 export class Event<CALLBACK_TYPE> {
-
 	/** Adds a new subscriber to the event and returns the subscriber id; The id can be used later to remove the subscriber */
 	add(fn: CALLBACK_TYPE): number {
 		this.subscribers_.push(fn);
@@ -37,6 +36,10 @@ export class Event<CALLBACK_TYPE> {
 				s["call"](null, ...args);
 			}
 		}
+	}
+
+	asCallback(): CALLBACK_TYPE {
+		return ((...args) => this.trigger(...args)) as unknown as CALLBACK_TYPE;
 	}
 
 	private subscribers_: CALLBACK_TYPE[] = [];

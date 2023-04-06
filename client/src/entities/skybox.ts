@@ -6,7 +6,7 @@ import { Mesh, MeshVertex } from "../joglfw/mesh";
 import { RenderContext } from "../joglfw/render/render-context";
 import { IRenderable } from "../joglfw/render/renderable";
 import { VertexAttribSource } from "../joglfw/render/shader-program";
-import { TextureLoader } from "../joglfw/texture-loader";
+import { TextureLoader } from "../joglfw/loaders/texture-loader";
 import { Entity } from "../joglfw/world/entity";
 import { ShaderSkybox } from "../render/programs/shader-skybox";
 import { ShaderProgramManager } from "../render/shader-program-manager";
@@ -19,9 +19,7 @@ export class SkyBox extends Entity implements IRenderable, IGLResource {
 		super();
 		this.renderData.shaderProgram = ShaderProgramManager.requestProgram(ShaderSkybox);
 		this.renderData.screenQuad = Mesh.makeScreenQuad();
-		this.renderData.reloadHandler = this.renderData.shaderProgram.onProgramReloaded.add(() => {
-			this.setupVAO();
-		});
+		this.renderData.reloadHandler = this.renderData.shaderProgram.onProgramReloaded.add(() => this.setupVAO());
 		this.setupVAO();
 	}
 

@@ -1,0 +1,54 @@
+# Blender MTL File: 'export.blend'
+# Material Count: 4
+
+newmtl Material
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\textures\\body\\4k\\carroserie_Material_Normal_OpenGL.png
+map_Kd C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\textures\\body\\4k\\carroserie_Material_BaseColor.png
+map_Ns C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\textures\\body\\4k\\carroserie_Material_Roughness.png
+refl C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\textures\\body\\4k\\carroserie_Material_Metallic.png
+
+newmtl frame_material
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\frame\\frame 3_frame_Normal_OpenGL.png
+map_Kd C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\frame\\frame 3_frame_BaseColor.png
+map_Ns C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\frame\\frame 3_frame_Roughness.png
+refl C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\frame\\frame 3_frame_Metallic.png
+
+newmtl gauges
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.000000 0.000000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl wheels_material
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\wheels\\wheel lopo_DefaultMaterial_Normal_OpenGL.png
+map_Kd C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\wheels\\wheel lopo_DefaultMaterial_BaseColor.png
+map_Ns C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\wheels\\wheel lopo_DefaultMaterial_Roughness.png
+refl C:\\Users\\matdi\\Pictures\\blender\\trophy truck\\wheels\\wheel lopo_DefaultMaterial_Metallic.png

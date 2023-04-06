@@ -114,11 +114,11 @@ function initGui(): void {
 	GUI.onPlayerName.add(authenticate);
 	GUI.onParameterChanged.add(terrainParamChanged);
 	GUI.onRandomizeAll.add(randomizeConfig);
-	GUI.onStartGame.add(() => WebSock.requestStartGame());
-	GUI.onReturnToGame.add(() => returnToGame());
-	GUI.onReqChangeConfig.add(() => requestChangeConfig());
-	GUI.onSpectate.add(() => spectate());
-	GUI.onJoinGame.add(() => joinGame());
+	GUI.onStartGame.add(WebSock.requestStartGame);
+	GUI.onReturnToGame.add(returnToGame);
+	GUI.onReqChangeConfig.add(requestChangeConfig);
+	GUI.onSpectate.add(spectate);
+	GUI.onJoinGame.add(joinGame);
 }
 
 let lastTime = new Date();
