@@ -84,3 +84,30 @@ export function rayIntersectBox(length: number, width: number, direction: number
 	// 	return ret;
 	// }
 }
+
+// export function rayIntersectSphere() {
+// 	// sphere equation is (x-cx)^2 + (y-cy)^2 + (z-cz)^2 = R^2
+// 	// ray equation is (x,y,z) = pos + t*dir
+// 	// from these two we obtain a 2nd degree algebraic equation with variable t and factors a,b,c
+// 	vec3 M = r.pos - s.center;
+// 	float a = dot(r.dir, r.dir);
+// 	float b = 2 * dot(M, r.dir);
+// 	float c = dot(M, M) - pow(s.radius, 2);
+
+// 	float delta = pow(b, 2) - 4*a*c;
+// 	if (delta <= 0) {
+// 		// delta < 0 -> no solutions means no intersection
+// 		// delta == 0 means tangent intersection which we discard
+// 		return {false};
+// 	}
+// 	// two solutions corresponding to entrance and exit, we take the closer one (or the only one in front if we're inside the sphere)
+// 	float rd = sqrt(delta);
+// 	float t1 = (-b + rd) / (2*a);
+// 	float t2 = (-b - rd) / (2*a);
+// 	float t = min(t1, t2);
+// 	if (t < 0)
+// 		t = max(t1, t2);
+// 	vec3 point = r.pos + r.dir * t;
+// 	vec3 normal = normalize(point - s.center);
+// 	return {true, point, t, normal, &s.material};
+// }
