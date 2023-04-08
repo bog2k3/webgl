@@ -21,8 +21,10 @@ import { EntityTypes } from "./entity-types";
 import { Projectile } from "./projectile.entity";
 import { Terrain } from "./terrain/terrain.entity";
 import { VirtualFrame } from "./virtual-frame";
+import { DamageConfig, IDestructable, SplashDamage } from "./destructable";
+import { Event } from "../joglfw/utils/event";
 
-export class Car extends CustomEntity implements IUpdatable, IRenderable, INetworkSerializable {
+export class Car extends CustomEntity implements IUpdatable, IRenderable, INetworkSerializable, IDestructable {
 	static readonly UPPER_BODY_WIDTH = 1.0;
 	static readonly UPPER_BODY_LENGTH = 2.0;
 	static readonly UPPER_BODY_HEIGHT = 0.9;
@@ -62,13 +64,17 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 	static readonly INITIAL_PROJECTILE_VELOCITY = 20;
 
 	static deserialize(params: Record<string, any>): Car {
-		if (!params.position || !params.orientation) {
+		if (!params.name || !params.position || !params.orientation) {
 			throw new Error("Can't deserialize Car from invalid data!");
 		}
-		return new Car(Vector.fromDTO(params.position), Quat.fromDTO(params.orientation), { isRemote: true });
+		return new Car(params.name, Vector.fromDTO(params.position), Quat.fromDTO(params.orientation), {
+			isRemote: true,
+		});
 	}
 
-	constructor(position: Vector, orientation: Quat, options?: CustomEntityOptions) {
+	onDied = new Event<(car: Car) => void>();
+
+	constructor(public readonly name: string, position: Vector, orientation: Quat, options?: CustomEntityOptions) {
 		super(options);
 		this.rootTransform.setPosition(position);
 		this.rootTransform.setOrientation(orientation);
@@ -84,13 +90,17 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 
 	/** Returns a record of parameters to be sent over the network for updating the remote entity */
 	getNWParameters(options?: { includeInitial?: boolean }): Record<string, any> {
-		return {
+		const params: any = {
 			position: this.rootTransform.position(),
 			orientation: this.rootTransform.orientation(),
 			velocity: bullet2Vec(this.chassisBody.body.getLinearVelocity()),
 			// todo include turret and wheel angles
 			// TODO include linear and angular velocity
 		};
+		if (options?.includeInitial) {
+			params.name = this.name;
+		}
+		return params;
 	}
 
 	/** Updates the local entity with the parameters received from the network */
@@ -128,6 +138,9 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 	}
 
 	accelerate(): void {
+		if (this.isDead()) {
+			return;
+		}
 		const torque = new Ammo.btVector3(100, 0, 0);
 		this.wheelBodies[2].body.applyLocalTorque(torque);
 		this.wheelBodies[3].body.applyLocalTorque(torque);
@@ -136,6 +149,9 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 	}
 
 	brake(): void {
+		if (this.isDead()) {
+			return;
+		}
 		const torque = new Ammo.btVector3(-100, 0, 0);
 		this.wheelBodies[0].body.applyLocalTorque(torque);
 		this.wheelBodies[1].body.applyLocalTorque(torque);
@@ -144,18 +160,27 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 	}
 
 	steerLeft(): void {
+		if (this.isDead()) {
+			return;
+		}
 		const torque = new Ammo.btVector3(0, -100, 0);
 		this.wheelBodies[0].body.applyTorque(torque);
 		this.wheelBodies[1].body.applyTorque(torque);
 	}
 
 	steerRight(): void {
+		if (this.isDead()) {
+			return;
+		}
 		const torque = new Ammo.btVector3(0, +100, 0);
 		this.wheelBodies[0].body.applyTorque(torque);
 		this.wheelBodies[1].body.applyTorque(torque);
 	}
 
 	rotateTarget(yaw: number, pitch: number): void {
+		if (this.isDead()) {
+			return;
+		}
 		const chassisTransform = new Transform();
 		this.chassisBody.getTransform(chassisTransform);
 		this.cameraFrame.localTransform.rotateLocal(Quat.axisAngle(Vector.axisX(), pitch));
@@ -164,12 +189,15 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 
 	toggleFire(on: boolean): void {
 		// TODO as long as fire is on, we should fire continuously at an interval
-		if (on) {
+		if (on && !this.isDead()) {
 			this.fire();
 		}
 	}
 
 	fire(): void {
+		if (this.isDead()) {
+			return;
+		}
 		const turretTransform = new Transform();
 		this.turretFrame.getTransform(turretTransform);
 		const direction: Vector = turretTransform.axisZ();
@@ -186,6 +214,50 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		this.updateTurret(dt);
 	}
 
+	takeDamage(damage: DamageConfig) {
+		if (damage.directDamage) {
+			this.health -= damage.directDamage / this.armor;
+		}
+		if (damage.splashDamage) {
+			for (let body of [this.chassisBody, ...this.wheelBodies]) {
+				this.applySplashDamage(body, damage.splashDamage);
+			}
+		}
+		if (this.health <= 0) {
+			this.health = 0;
+			this.die();
+		}
+	}
+
+	private applySplashDamage(body: PhysBodyProxy, damage: SplashDamage): void {
+		// step 1 - determine the aproximate point where the splash damage hits
+		//		a local force from the epicenter of the splash damage to this point will be applied
+		// step 2 - splash damage also applies a central force to the body
+
+		// 1.
+		const bodyCenter: Vector = bullet2Vec(body.body.getWorldTransform().getOrigin());
+
+
+		body.body.applyForce()
+		const cb = new Ammo.RayResultCallback();
+		physWorld.rayTest(vec2Bullet(damage.wEpicenter), body.body.getWorldTransform().getOrigin(), cb);
+		if (cb.hasHit()) {
+			cb.
+		}
+	}
+
+	getHealth(): number {
+		return this.health;
+	}
+
+	getMaxHealth(): number {
+		return 100;
+	}
+
+	isDead(): boolean {
+		return this.health <= 0;
+	}
+
 	protected override getFrameTransform(frameName: string): Transform {
 		if (!this.frames[frameName]) {
 			throw new Error(`Non-existent frame "${frameName}" in Car entity`);
@@ -196,6 +268,8 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 	}
 
 	// ----------------------------- PRIVATE AREA ----------------------------- //
+	private health: number = this.getMaxHealth();
+	private armor = 1;
 	private chassisBody: PhysBodyProxy;
 	private wheelBodies: PhysBodyProxy[] = []; // 0: front-left, 1: front-right, 2: rear-left, 3: rear-right
 	private bodyShapes: Ammo.btBoxShape[] = [];
@@ -230,9 +304,16 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		}
 		this.constraints.splice(0);
 		this.chassisBody.destroy();
+		this.chassisBody = null;
 		for (let w of this.wheelBodies) {
 			w.destroy();
 		}
+		this.wheelBodies.splice(0);
+	}
+
+	private die(): void {
+		// TODO implement - create explosion and whatever
+		this.onDied.trigger(this);
 	}
 
 	private createChassis(position: Vector, orientation: Quat): void {
@@ -312,6 +393,7 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		spring.setLinearLowerLimit(new Ammo.btVector3(0, 0, 0));
 		spring.setLinearUpperLimit(new Ammo.btVector3(0, Car.WHEEL_DIAMETER, 0));
 		spring.setEquilibriumPoint();
+		spring.setBreakingImpulseThreshold(10); // TODO check if this works
 		physWorld.addConstraint(spring);
 		this.constraints.push(spring);
 

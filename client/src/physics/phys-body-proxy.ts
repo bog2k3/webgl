@@ -26,6 +26,7 @@ export class CollisionEvent {
 // construction config for physics body
 export class PhysBodyConfig {
 	shape: Ammo.btCollisionShape;
+	averageRadius: number;
 	mass = 1.0;
 	friction = 0.5;
 	position = new Vector(0);
@@ -78,6 +79,8 @@ export class PhysBodyProxy {
 	createBody(cfg: PhysBodyConfig): void {
 		assert(cfg.shape != null);
 		assert(cfg.mass >= 0);
+		assert(cfg.averageRadius > 0);
+		(this as any)["averageRadius"] = cfg.averageRadius;
 		let inertia = cfg.customInertia;
 		if (!inertia) {
 			inertia = new Ammo.btVector3();
@@ -109,6 +112,7 @@ export class PhysBodyProxy {
 
 	/** type of associated entity */
 	readonly entityType: string;
+	readonly averageRadius: number;
 	/** the rigid body (or null if the btCollisionObject is not a btRigidBody) */
 	body: Ammo.btRigidBody = null;
 	/** body's motion state */

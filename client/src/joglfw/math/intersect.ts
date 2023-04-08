@@ -23,7 +23,7 @@ export function rayIntersectPlane(start: Vector, dir: Vector, plane: Plane): Vec
  * Computes the intersection point between a ray and a triangle.
  * Returns null if the ray doesn't intersect the triangle.
  */
-export function rayIntersectTri(start: Vector, dir: Vector, p1: Vector, p2: Vector, p3: Vector): Vector {
+export function rayIntersectTri(start: Vector, dir: Vector, p1: Vector, p2: Vector, p3: Vector): Vector | null {
 	const p1p3: Vector = p3.sub(p1);
 	const p1p2: Vector = p2.sub(p1);
 	const triNorm: Vector = p1p2.cross(p1p3).normalize(); // triangle normal
@@ -60,6 +60,44 @@ export function rayIntersectTri(start: Vector, dir: Vector, p1: Vector, p2: Vect
 }
 
 /**
+ * Checks if a ray intersects a sphere and returns the intersection point, or null if it did not intersect the sphere
+ * The direction is assumed to be normalized.
+ * If the starting point is inside the sphere already, then this point is returned.
+ */
+export function rayIntersectSphere(
+	start: Vector,
+	dir: Vector,
+	sphereCenter: Vector,
+	sphereRadius: number,
+): Vector | null {
+	// sphere equation is (x-cx)^2 + (y-cy)^2 + (z-cz)^2 = R^2
+	// ray equation is (x,y,z) = pos + t*dir
+	// from these two we obtain a 2nd degree algebraic equation with variable t and factors a,b,c
+	const sphereRadiusSq = sphereRadius * sphereRadius;
+	const M: Vector = start.sub(sphereCenter);
+	const a: number = dir.dot(dir);
+	const b: number = 2 * M.dot(dir);
+	const c: number = M.dot(M) - sphereRadiusSq;
+
+	const delta = b * b - 4 * a * c;
+	if (delta <= 0) {
+		// delta < 0 -> no solutions means no intersection
+		// delta == 0 means tangent intersection which we discard
+		return null;
+	}
+	// two solutions corresponding to entrance and exit, we take the closer one (or the only one in front if we're inside the sphere)
+	const rd: number = Math.sqrt(delta);
+	const t1: number = (-b + rd) / (2 * a);
+	const t2: number = (-b - rd) / (2 * a);
+	let t: number = Math.min(t1, t2);
+	if (t < 0) {
+		t = Math.max(t1, t2);
+	}
+	const point = start.add(dir.scale(t));
+	return point;
+}
+
+/**
  * Casts a ray from the box's center in the given direction and returns the coordinates of the point
  * on the edge of the box that is intersected by the ray
  * length is along OX axis, and width along OY. direction is relative to trigonometric zero (OX+)
@@ -84,30 +122,3 @@ export function rayIntersectBox(length: number, width: number, direction: number
 	// 	return ret;
 	// }
 }
-
-// export function rayIntersectSphere() {
-// 	// sphere equation is (x-cx)^2 + (y-cy)^2 + (z-cz)^2 = R^2
-// 	// ray equation is (x,y,z) = pos + t*dir
-// 	// from these two we obtain a 2nd degree algebraic equation with variable t and factors a,b,c
-// 	vec3 M = r.pos - s.center;
-// 	float a = dot(r.dir, r.dir);
-// 	float b = 2 * dot(M, r.dir);
-// 	float c = dot(M, M) - pow(s.radius, 2);
-
-// 	float delta = pow(b, 2) - 4*a*c;
-// 	if (delta <= 0) {
-// 		// delta < 0 -> no solutions means no intersection
-// 		// delta == 0 means tangent intersection which we discard
-// 		return {false};
-// 	}
-// 	// two solutions corresponding to entrance and exit, we take the closer one (or the only one in front if we're inside the sphere)
-// 	float rd = sqrt(delta);
-// 	float t1 = (-b + rd) / (2*a);
-// 	float t2 = (-b - rd) / (2*a);
-// 	float t = min(t1, t2);
-// 	if (t < 0)
-// 		t = max(t1, t2);
-// 	vec3 point = r.pos + r.dir * t;
-// 	vec3 normal = normalize(point - s.center);
-// 	return {true, point, t, normal, &s.material};
-// }
