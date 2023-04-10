@@ -19,6 +19,7 @@ import {
 } from "./terrain-config-handler";
 import { WebSock } from "./network/websock";
 import { NetworkEntityManager } from "./network/network-entity-manager";
+import { DamageBroker } from "./entities/damage-broker";
 
 const console = logprefix("ROOT");
 
@@ -87,6 +88,7 @@ function initWorld(): void {
 	worldConfig.drawBoundaries = true;
 	GlobalState.world = new World(worldConfig);
 
+	World.setGlobal(DamageBroker, new DamageBroker());
 	// auto pImgDebugDraw = new ImgDebugDraw();
 	// World::setGlobal<ImgDebugDraw>(pImgDebugDraw);
 
@@ -298,6 +300,7 @@ function scheduleResetRenderSize(newWidth: number, newHeight: number): void {
 }
 
 function authenticate(playerName: string): void {
+	GlobalState.playerName = playerName;
 	GUI.displayView(GUI.Views.PlayerNameDialog, false);
 	GUI.displayView(GUI.Views.Loading, true);
 	setTimeout(() => WebSock.authenticate(playerName), 50);

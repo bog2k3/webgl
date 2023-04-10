@@ -6,6 +6,7 @@ import { PlayerList } from "./player-list";
 import { RenderData } from "./render/render-data";
 
 export namespace GlobalState {
+	export let playerName: string;
 	export let renderData: RenderData;
 	export let world: World;
 	export let game: Game;

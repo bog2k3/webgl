@@ -3,6 +3,8 @@ import { Vector } from "../joglfw/math/vector";
 export type SplashDamage = {
 	/** Epicenter of explosion, in world space. Use this to compute distance and direction of hit */
 	wEpicenter: Vector;
+	/** The normal vector at the impact point */
+	hitNormal: Vector;
 	/**
 	 * The amount of damage that would be received at the epicenter.
 	 * This has a dropoff proportional to the squared distance from the epicenter plus 1

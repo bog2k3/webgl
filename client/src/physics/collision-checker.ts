@@ -24,8 +24,12 @@ export class CollisionChecker implements IUpdatable {
 			);
 
 			// each one of objects A and B treats its collision events differently
-			if (pMetaA.collisionCfg[pMetaB.entityType]) this.checkCollision(pMetaA, pMetaB, contactManifold, false);
-			if (pMetaB.collisionCfg[pMetaA.entityType]) this.checkCollision(pMetaB, pMetaA, contactManifold, true);
+			if (pMetaA.collisionCfg[pMetaB.entityType]) {
+				this.checkCollision(pMetaA, pMetaB, contactManifold, false);
+			}
+			if (pMetaB.collisionCfg[pMetaA.entityType]) {
+				this.checkCollision(pMetaB, pMetaA, contactManifold, true);
+			}
 		}
 	}
 
@@ -53,10 +57,11 @@ export class CollisionChecker implements IUpdatable {
 				if (reverse) {
 					[ptA, ptB] = [ptB, ptA];
 				}
-				//const btVector3& normalOnB = reverse ? pt.m_normalWorldOnB;
+				const normalOnB: Ammo.btVector3 = reverse ? null : pt.get_m_normalWorldOnB();
 				ev.contacts.push(<ContactPoint>{
 					worldPointOnThis: bullet2Vec(ptA),
 					worldPointOnOther: bullet2Vec(ptB),
+					worldNormalOnOther: bullet2Vec(normalOnB),
 				});
 			}
 		}

@@ -230,20 +230,26 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 	}
 
 	private applySplashDamage(body: PhysBodyProxy, damage: SplashDamage): void {
-		// step 1 - determine the aproximate point where the splash damage hits
-		//		a local force from the epicenter of the splash damage to this point will be applied
-		// step 2 - splash damage also applies a central force to the body
+		// TODO improve the behavior of receiving splash damage for better realism
+		// TODO we should sample the force at different points on the body and apply forces
+		// TODO to each of them for a composite effect
 
-		// 1.
+		// apply some jolt (centralForce + torque)
 		const bodyCenter: Vector = bullet2Vec(body.body.getWorldTransform().getOrigin());
+		const direction: Vector = bodyCenter.sub(damage.wEpicenter);
+		const distance: number = direction.length();
+		direction.normalizeInPlace();
+		const distanceFactor: number = 1.0 / (1 + distance * distance);
+		const forceFactor: number = damage.maxForce * distanceFactor;
+		const force: Vector = direction.scale(forceFactor);
+		body.body.applyCentralForce(vec2Bullet(force));
+		const torqueRelFactor = 0.5;
+		body.body.applyTorque(
+			vec2Bullet(damage.hitNormal.cross(direction).scaleInPlace(forceFactor * torqueRelFactor)),
+		);
 
-
-		body.body.applyForce()
-		const cb = new Ammo.RayResultCallback();
-		physWorld.rayTest(vec2Bullet(damage.wEpicenter), body.body.getWorldTransform().getOrigin(), cb);
-		if (cb.hasHit()) {
-			cb.
-		}
+		// subtract some hit points
+		this.health -= (damage.maxDamage * distanceFactor) / this.armor;
 	}
 
 	getHealth(): number {
@@ -492,7 +498,7 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 	private renderCannonTrajectory(ctx: RenderContext): void {
 		const timeStep = 0.1; // seconds
 		const v0 = Car.INITIAL_PROJECTILE_VELOCITY; // initial projectile velocity, m/s
-		const terrain: Terrain = World.getInstance().getGlobal<Terrain>(Terrain);
+		const terrain: Terrain = World.getGlobal<Terrain>(Terrain);
 		const gravity: Vector = bullet2Vec(physWorld.getGravity());
 		const turretTransform = new Transform();
 		this.turretFrame.getTransform(turretTransform);

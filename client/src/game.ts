@@ -50,7 +50,7 @@ export class Game {
 		this.terrain = new Terrain({ previewMode: true });
 
 		World.getInstance().addEntity(this.terrain);
-		World.getInstance().setGlobal(Terrain, this.terrain);
+		World.setGlobal(Terrain, this.terrain);
 		this.godEntities.push(this.terrain);
 
 		this.freeCam = new FreeCamera(new Vector(0, 0, -1), new Vector(0, 0, 1));
@@ -204,7 +204,7 @@ export class Game {
 		}
 		const position = new Vector(0, this.terrain.getConfig().maxElevation + 3, 0);
 		const orientation = Quat.identity();
-		this.playerCar = new Car(position, orientation);
+		this.playerCar = new Car(GlobalState.playerName, position, orientation);
 		World.getInstance().addEntity(this.playerCar);
 		this.resetPlayer();
 		this.playerController.setTargetCar(this.playerCar);

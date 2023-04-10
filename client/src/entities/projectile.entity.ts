@@ -12,10 +12,16 @@ import { CollisionEvent, PhysBodyConfig, PhysBodyProxy } from "../physics/phys-b
 import { physWorld } from "../physics/physics";
 import { CustomEntity, CustomEntityOptions } from "./custom-entity";
 import { EntityTypes } from "./entity-types";
+import { World } from "../joglfw/world/world";
+import { DamageBroker } from "./damage-broker";
+import { SplashDamage, isDestructable } from "./destructable";
 
 export class Projectile extends CustomEntity implements IUpdatable, IRenderable, INetworkSerializable {
 	static readonly MASS = 10;
 	static readonly COLLISION_RADIUS = 0.15;
+	static readonly MAX_DIRECT_DAMAGE = 40;
+	static readonly MAX_SPLASH_DAMAGE = 60;
+	static readonly MAX_SPLASH_FORCE = 4000;
 
 	static deserialize(params: Record<string, any>): Projectile {
 		if (!params.position || !params.initialVelocity) {
@@ -29,6 +35,7 @@ export class Projectile extends CustomEntity implements IUpdatable, IRenderable,
 	constructor(position: Vector, private readonly initialVelocity: Vector, options?: CustomEntityOptions) {
 		super(options);
 		this.rootTransform.setPosition(position);
+		this.onDestroyed.add(() => this.handleDestroyed());
 	}
 
 	getType(): string {
@@ -119,9 +126,24 @@ export class Projectile extends CustomEntity implements IUpdatable, IRenderable,
 	}
 
 	private handleCollision(ev: CollisionEvent): void {
-		if (!this.isRemote()) {
-			// TODO create explosion
-			this.destroy();
+		if (this.isRemote()) {
+			return;
 		}
+		this.destroy();
+		World.getGlobal(DamageBroker).dealSplashDamage(<SplashDamage>{
+			hitNormal: ev.contacts[0].worldNormalOnOther,
+			wEpicenter: ev.contacts[0].worldPointOnOther,
+			maxDamage: Projectile.MAX_SPLASH_DAMAGE,
+			maxForce: Projectile.MAX_SPLASH_FORCE,
+		});
+		if (isDestructable(ev.otherMeta.entity)) {
+			ev.otherMeta.entity.takeDamage({
+				directDamage: Projectile.MAX_DIRECT_DAMAGE,
+			});
+		}
+	}
+
+	private handleDestroyed() {
+		// TODO create explosion
 	}
 }
