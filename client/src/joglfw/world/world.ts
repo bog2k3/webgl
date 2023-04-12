@@ -37,12 +37,12 @@ export class World implements IRenderable, IUpdatable {
 		return World.instance_;
 	}
 
-	static setGlobal<T>(className: new (...args) => T, instance: T): void {
-		World.globals[className.constructor.name] = instance;
+	static setGlobal<T>(class_: new (...args) => T, instance: T): void {
+		World.globals[class_.name] = instance;
 	}
 
-	static getGlobal<T>(className: new (...args) => T): T | null {
-		return World.globals[className.constructor.name] as T;
+	static getGlobal<T>(class_: new (...args) => T): T | null {
+		return World.globals[class_.name] as T;
 	}
 
 	reset(): void {
