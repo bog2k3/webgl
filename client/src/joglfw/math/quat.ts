@@ -130,4 +130,8 @@ export class Quat extends Vector {
 
 		return new Vector(pitch, yaw, roll);
 	}
+
+	inverse(): Quat {
+		return new Quat(-this.x, -this.y, -this.z, this.w);
+	}
 }

@@ -51,6 +51,12 @@ export class Transform {
 		return Vector.axisZ().mulQ(this.orient_);
 	}
 
+	/** returns the inverse transformation */
+	inverse(): Transform {
+		const inverseRotation: Quat = this.orient_.inverse();
+		return new Transform(this.pos_.scale(-1).mulQ(inverseRotation), inverseRotation);
+	}
+
 	/** set a new position for the transform, expressed in parent's coordinate space */
 	setPosition(pos: Vector): void {
 		this.pos_ = pos;

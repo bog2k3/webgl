@@ -7,9 +7,9 @@ export type SplashDamage = {
 	hitNormal: Vector;
 	/**
 	 * The amount of damage that would be received at the epicenter.
-	 * This has a dropoff proportional to the squared distance from the epicenter plus 1
+	 * This has a dropoff proportional to the 4th power of the distance from the epicenter plus 1
 	 * The amount of received damage should be
-	 * dh = maxDamage / (1 + square(distance_from_epicenter)) / targetArmor
+	 * dh = maxDamage / (1 + distance_from_epicenter^4) / targetArmor
 	 **/
 	maxDamage: number;
 	/**

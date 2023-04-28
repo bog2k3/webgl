@@ -140,7 +140,7 @@ export function render3D(renderData: RenderData, world: World): void {
 		renderData.renderCtx.cameraUnderwater = renderData.viewport.camera().position().y < 0;
 
 		const underDraw: IRenderable[] = [];
-		const underEntities: Entity[] = world.getEntities([], { renderable: true });
+		const underEntities: Entity[] = world.getAllEntities({ renderable: true });
 		// append all drawable entities from world:
 		// TODO - use a BSP or something to only get entities under water level
 		for (let e of underEntities) {
@@ -149,7 +149,7 @@ export function render3D(renderData: RenderData, world: World): void {
 		}
 
 		const aboveDraw: IRenderable[] = [];
-		const aboveEntities: Entity[] = world.getEntities([], { renderable: true });
+		const aboveEntities: Entity[] = world.getAllEntities({ renderable: true });
 		// append all drawable entities from world:
 		// TODO - use a BSP or something to only get entities above water level
 		for (let e of aboveEntities) aboveDraw.push(e as unknown as IRenderable);

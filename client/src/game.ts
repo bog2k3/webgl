@@ -181,9 +181,9 @@ export class Game {
 			World.getInstance().removeEntity(e);
 		}
 		World.getInstance().reset();
-		World.getInstance().addEntity(this.terrain);
-		World.getInstance().addEntity(this.cameraCtrl);
-		World.getInstance().addEntity(this.freeCam);
+		for (let e of this.godEntities) {
+			World.getInstance().addEntity(e);
+		}
 		this.terrain.setPreviewMode(true);
 		this.terrain.regenerate();
 		this.terrain.finishGenerate();

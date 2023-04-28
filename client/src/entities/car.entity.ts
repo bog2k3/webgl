@@ -1,6 +1,6 @@
 import Ammo from "ammojs-typed";
 import { AABB } from "../joglfw/math/aabb";
-import { clamp } from "../joglfw/math/functions";
+import { clamp, sqr } from "../joglfw/math/functions";
 import { Quat } from "../joglfw/math/quat";
 import { Transform } from "../joglfw/math/transform";
 import { Vector } from "../joglfw/math/vector";
@@ -48,8 +48,10 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		new Vector(+Car.WHEEL_X, Car.AXLES_Y, Car.REAR_AXLE_Z), // rear-right
 	];
 	static readonly WHEEL_FRICTION = 0.9;
+	static readonly WHEEL_RESTITUTION = 0.5;
 	static readonly SPRING_STIFFNESS = (Car.LOWER_BODY_MASS + Car.UPPER_BODY_MASS) * 12.5;
 	static readonly SPRING_DAMPING = 0.0001;
+	static readonly WHEEL_SUSPENSION_TRAVEL = Car.WHEEL_DIAMETER * 1.0;
 	static readonly STEERING_STIFFNESS = 50000;
 	static readonly STEERING_DAMPING = 0.01;
 	static readonly STEERING_MAX_ANGLE = Math.PI / 8;
@@ -212,6 +214,7 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		this.chassisBody.getTransform(this.rootTransform);
 
 		this.updateTurret(dt);
+		this.checkJoints();
 	}
 
 	takeDamage(damage: DamageConfig) {
@@ -239,7 +242,7 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		const direction: Vector = bodyCenter.sub(damage.wEpicenter);
 		const distance: number = direction.length();
 		direction.normalizeInPlace();
-		const distanceFactor: number = 1.0 / (1 + distance * distance);
+		const distanceFactor: number = 1.0 / (1 + Math.pow(distance, 4));
 		const forceFactor: number = damage.maxForce * distanceFactor;
 		const force: Vector = direction.scale(forceFactor);
 		body.body.applyCentralForce(vec2Bullet(force));
@@ -377,6 +380,7 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 			}),
 		);
 		this.wheelBodies[i].body.setRollingFriction(Car.WHEEL_FRICTION * 2);
+		this.wheelBodies[i].body.setRestitution(Car.WHEEL_RESTITUTION);
 		const spring = new Ammo.btGeneric6DofSpringConstraint(
 			this.chassisBody.body,
 			this.wheelBodies[i].body,
@@ -397,9 +401,9 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		spring.setAngularLowerLimit(new Ammo.btVector3(0, -steerAngle, 0));
 		spring.setAngularUpperLimit(new Ammo.btVector3(-1, +steerAngle, 0));
 		spring.setLinearLowerLimit(new Ammo.btVector3(0, 0, 0));
-		spring.setLinearUpperLimit(new Ammo.btVector3(0, Car.WHEEL_DIAMETER, 0));
+		spring.setLinearUpperLimit(new Ammo.btVector3(0, Car.WHEEL_SUSPENSION_TRAVEL, 0));
 		spring.setEquilibriumPoint();
-		spring.setBreakingImpulseThreshold(10); // TODO check if this works
+		spring.setBreakingImpulseThreshold(500);
 		physWorld.addConstraint(spring);
 		this.constraints.push(spring);
 
@@ -523,6 +527,44 @@ export class Car extends CustomEntity implements IUpdatable, IRenderable, INetwo
 		for (let i = 0; i < points.length - 1; i++) {
 			const color = startColor.lerp(endColor, i / (points.length - 2));
 			ShapeRenderer.get().queueLine(points[i], points[i + 1], color);
+		}
+	}
+
+	private checkJoints(): void {
+		const ctr = new Transform();
+		this.chassisBody.getTransform(ctr);
+		// Maximum distance the wheel can be moved radially from its normal position before the joint breaks.
+		// Radially means forward-back and up-down (exceeding the travel of the suspension)
+		const MAX_RADIAL_DIST = Car.WHEEL_DIAMETER * 0.25;
+		// Maximum distance the wheel can be moved longitudinally (along its axle, left-right) before the joint breaks.
+		const MAX_LONGITUDINAL_DIST = Car.WHEEL_WIDTH * 0.5;
+		const wtr = new Transform();
+		for (let i = 0; i < this.wheelBodies.length; i++) {
+			if (!this.constraints[i]) {
+				continue; // this wheel has already broken off
+			}
+			const w = this.wheelBodies[i];
+			w.getTransform(wtr);
+			/*
+				wheelWpos = wheelLpos * wheelWTransform // wheelLpos is relative to chassis pos
+				wheelWTransform = wheelLTransform * chassisWTransform
+				wheelWpos = wheelLpos * wheelLTransform * chassisWTransform
+				wheelLpos * wheelWTransform = wheelLpos * wheelLTransform * chassisWTransform
+				wheelWTransform = wheelLTransform * chassisWTransform
+				wheelWTransform * chassisWTransform^-1 = wheelLTransform
+			*/
+			const wheelLocalTransform: Transform = wtr.combine(ctr.inverse());
+			const wheelLocalPos: Vector = wheelLocalTransform.position();
+			const wheelYDelta = wheelLocalPos.y - Car.WHEEL_POSTIONS[i].y;
+			const yDist: number =
+				wheelYDelta < 0 ? -wheelYDelta : Math.max(0, wheelYDelta - Car.WHEEL_SUSPENSION_TRAVEL);
+			const rDist = Math.sqrt(sqr(wheelLocalPos.z - Car.WHEEL_POSTIONS[i].z) + sqr(yDist));
+			const lDist = Math.abs(wheelLocalPos.x - Car.WHEEL_POSTIONS[i].x);
+			if (rDist > MAX_RADIAL_DIST || lDist > MAX_LONGITUDINAL_DIST) {
+				console.log(`wheel ${i} broke`);
+				physWorld.removeConstraint(this.constraints[i]);
+				this.constraints[i] = null;
+			}
 		}
 	}
 }

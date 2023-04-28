@@ -8,6 +8,8 @@ import { assert } from "../utils/assert";
 import { physWorld } from "../../physics/physics";
 import { Vector } from "../math/vector";
 import { ShapeRenderer } from "../render/shape-renderer";
+import { isDestructable } from "../../entities/destructable";
+import { AABB } from "../math/aabb";
 
 export class WorldConfig {
 	/** set to true to disable propagation of user events */
@@ -21,6 +23,13 @@ export class WorldConfig {
 	extent_Zn = -10;
 	extent_Zp = 10;
 }
+
+export type EntityFilterOptions = {
+	types?: string[];
+	renderable?: boolean;
+	updatable?: boolean;
+	destructable?: boolean;
+};
 
 export class World implements IRenderable, IUpdatable {
 	onEntityAdded = new Event<(ent: Entity) => void>();
@@ -173,19 +182,16 @@ export class World implements IRenderable, IUpdatable {
 		this.onEntityRemoved.trigger(e);
 	}
 
-	getEntities(filterTypes: string[], options?: { renderable?: boolean; updatable?: boolean }): Entity[] {
-		return this.entities_.filter((e) => {
-			if (filterTypes.length && !filterTypes.includes(e.getType())) {
-				return false;
-			}
-			if (options?.renderable && !isRenderable(e)) {
-				return false;
-			}
-			if (options?.updatable && !isUpdatable(e)) {
-				return false;
-			}
-			return true;
-		});
+	getAllEntities(options?: EntityFilterOptions): Entity[] {
+		return this.filterEntities(this.entities_, options);
+	}
+
+	getEntitiesInBox(aabb: AABB, filters?: EntityFilterOptions): Entity[] {
+		throw new Error("Not implemented");
+	}
+
+	getEntitiesInArea(center: Vector, radius: number, filters?: EntityFilterOptions): Entity[] {
+		throw new Error("Not implemented");
 	}
 
 	/** registers an event handler and returns the subscription id */
@@ -214,4 +220,22 @@ export class World implements IRenderable, IUpdatable {
 
 	private mapUserEvents_: Record<string, Event<(param: number) => void>> = {};
 	// std::unordered_map<std::type_index, void*> userGlobals_;
+
+	private filterEntities(ents: Entity[], filters?: EntityFilterOptions): Entity[] {
+		return ents.filter((e) => {
+			if (filters?.types?.length && !filters.types.includes(e.getType())) {
+				return false;
+			}
+			if (filters?.renderable && !isRenderable(e)) {
+				return false;
+			}
+			if (filters?.updatable && !isUpdatable(e)) {
+				return false;
+			}
+			if (filters?.destructable && !isDestructable(e)) {
+				return false;
+			}
+			return true;
+		});
+	}
 }

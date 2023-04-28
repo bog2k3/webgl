@@ -183,7 +183,6 @@ export class Matrix {
 	}
 
 	inverse(): Matrix {
-		// FIXME test - this may be transposed
 		const A2323 = this.m[2 * 4 + 2] * this.m[3 * 4 + 3] - this.m[2 * 4 + 3] * this.m[3 * 4 + 2];
 		const A1323 = this.m[2 * 4 + 1] * this.m[3 * 4 + 3] - this.m[2 * 4 + 3] * this.m[3 * 4 + 1];
 		const A1223 = this.m[2 * 4 + 1] * this.m[3 * 4 + 2] - this.m[2 * 4 + 2] * this.m[3 * 4 + 1];
